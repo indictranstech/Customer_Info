@@ -503,23 +503,6 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocType", 
   "field_name": null, 
-  "modified": "2016-02-16 19:07:43.738513", 
-  "name": "Customer-read_only_onload", 
-  "property": "read_only_onload", 
-  "property_type": "Check", 
-  "value": null
- }, 
- {
-  "_assign": null, 
-  "_comments": null, 
-  "_liked_by": null, 
-  "_user_tags": null, 
-  "default_value": null, 
-  "doc_type": "Customer", 
-  "docstatus": 0, 
-  "doctype": "Property Setter", 
-  "doctype_or_field": "DocType", 
-  "field_name": null, 
   "modified": "2016-02-16 19:07:47.874086", 
   "name": "Customer-_idx", 
   "property": "_idx", 
@@ -559,5 +542,22 @@
   "property": "_idx", 
   "property_type": "Text", 
   "value": "[\"contact_section\", \"first_name\", \"phone\", \"email_id\", \"best_time_for_contact\", \"gender\", \"personal_code\", \"cb00\", \"last_name\", \"phone_no_2\", \"email_2\", \"birthdate\", \"age\", \"accommodation_and_employment\", \"customer_lives_in_rented_apartment\", \"position\", \"duration_of_employment\", \"manager\", \"c\", \"working_place\", \"work_phone\", \"salary\", \"nearest_salary_payment_day\", \"marital_status\", \"married_or_lives_with_partner\", \"spouse_name\", \"spouse_email_id\", \"spouse_working_place\", \"spouse_contact_no\", \"col\", \"spouse_last_name\", \"spouse_salary\", \"do_you_have_childern\", \"no_of_childern\", \"contact_details\", \"user\", \"customer\", \"customer_name\", \"column_break1\", \"supplier\", \"supplier_name\", \"sales_partner\", \"is_primary_contact\", \"more_info\", \"mobile_no\", \"department\", \"designation\", \"unsubscribed\", \"status\"]"
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Customer", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocType", 
+  "field_name": null, 
+  "modified": "2016-02-16 20:02:52.322329", 
+  "name": "Customer-read_only_onload", 
+  "property": "read_only_onload", 
+  "property_type": "Check", 
+  "value": null
  }
 ]
