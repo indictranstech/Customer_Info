@@ -1,0 +1,11 @@
+[
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Contact", 
+  "modified": "2016-02-17 11:44:12.010754", 
+  "name": "Contact-Client", 
+  "script": "frappe.ui.form.on(\"Contact\",\"birthdate\",function(frm){\n\tif(cur_frm.doc.birthdate){\n\t\tvar birthdate = new Date(cur_frm.doc.birthdate)\n\t\tvar cur = new Date();\n\t\tvar diff = cur-birthdate; // This is the difference in milliseconds\n\t\tvar age = Math.floor(diff/31536000000); // Divide by 1000*60*60*24*365\n\t\tcur_frm.doc.age = age + \" \" +\" Years\"\n\t\trefresh_field('age');\n\t}\n\telse{\n\t\tcur_frm.doc.age = \"\"\n\t\trefresh_field('age')\n\t} \n})", 
+  "script_type": "Client"
+ }
+]

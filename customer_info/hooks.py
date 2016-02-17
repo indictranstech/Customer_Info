@@ -37,7 +37,7 @@ app_license = "GNU General Public License"
 # get_website_user_home_page = "customer_info.utils.get_home_page"
 
 # Add Fixtures
-fixtures =['Custom Field', "Property Setter"]
+fixtures =['Custom Field', "Property Setter","Custom Script"]
 
 
 # Generators
