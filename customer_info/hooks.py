@@ -75,11 +75,12 @@ fixtures =['Custom Field', "Property Setter","Custom Script"]
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
+# 	"Contact": {
+# 		"validate":"",
+		# "on_update": "method",
+		# "on_cancel": "method",
+		# "on_trash": "method"
+# 	}
 # }
 
 # Scheduled Tasks
