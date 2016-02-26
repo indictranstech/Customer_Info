@@ -79,3 +79,18 @@ frappe.ui.form.on("Customer","birthdate",function(frm){
         refresh_field('age')
     } 
 })
+
+frappe.ui.form.on("Customer","validate",function(frm){
+    if (cur_frm.doc.customer_is_interested_in) {
+        $(frm.fields_dict['click_here'].wrapper)
+            .html(repl('<div class="row">\
+                <label class="control-label" style="margin-left: 16px;">Visit URL</label></div>\
+                <div class="row">\
+                <a target="_blank" href=%(link)s style="margin-left:26px">%(link)s%0A</a>%0A\
+                </div>', {
+                    link: cur_frm.doc.customer_is_interested_in
+                }))                                
+    }
+ /*   cur_frm.doc.set_df_property("customer_is_interested_in","hidden",1)*/
+})
+
