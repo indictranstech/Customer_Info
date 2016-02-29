@@ -860,23 +860,6 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocType", 
   "field_name": null, 
-  "modified": "2016-02-26 18:27:54.743333", 
-  "name": "Customer-read_only_onload", 
-  "property": "read_only_onload", 
-  "property_type": "Check", 
-  "value": null
- }, 
- {
-  "_assign": null, 
-  "_comments": null, 
-  "_liked_by": null, 
-  "_user_tags": null, 
-  "default_value": null, 
-  "doc_type": "Customer", 
-  "docstatus": 0, 
-  "doctype": "Property Setter", 
-  "doctype_or_field": "DocType", 
-  "field_name": null, 
   "modified": "2016-02-26 18:28:12.436253", 
   "name": "Customer-_idx", 
   "property": "_idx", 
@@ -933,5 +916,22 @@
   "property": "_idx", 
   "property_type": "Text", 
   "value": "[\"address_details\", \"address_title\", \"address_type\", \"address_line1\", \"address_line2\", \"city\", \"state\", \"pincode\", \"country\", \"customer\", \"column_break0\", \"email_id\", \"phone\", \"fax\", \"customer_name\", \"is_primary_address\", \"is_shipping_address\", \"linked_with\", \"supplier\", \"supplier_name\", \"sales_partner\", \"column_break_22\", \"lead\", \"lead_name\"]"
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Customer", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocType", 
+  "field_name": null, 
+  "modified": "2016-02-29 13:08:36.998133", 
+  "name": "Customer-read_only_onload", 
+  "property": "read_only_onload", 
+  "property_type": "Check", 
+  "value": null
  }
 ]
