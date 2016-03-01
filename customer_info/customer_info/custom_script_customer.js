@@ -80,17 +80,59 @@ frappe.ui.form.on("Customer","birthdate",function(frm){
     } 
 })
 
-frappe.ui.form.on("Customer","validate",function(frm){
-    if (cur_frm.doc.customer_is_interested_in) {
-        $(frm.fields_dict['click_here'].wrapper)
-            .html(repl('<div class="row">\
-                <label class="control-label" style="margin-left: 16px;">Visit URL</label></div>\
-                <div class="row">\
-                <a target="_blank" href=%(link)s style="margin-left:26px">%(link)s%0A</a>%0A\
-                </div>', {
-                    link: cur_frm.doc.customer_is_interested_in
-                }))                                
-    }
- /*   cur_frm.doc.set_df_property("customer_is_interested_in","hidden",1)*/
-})
+// frappe.ui.form.on("Customer","customer_is_interested_in",function(frm){
+//     if (cur_frm.doc.customer_is_interested_in) {
+//         $(frm.fields_dict['click_here'].wrapper)
+//             .html(repl('<div class="row">\
+//                 <label class="control-label" style="margin-left: 16px;">Visit URL</label></div>\
+//                 <div class="row">\
+//                 <a target="_blank" href=%(link)s style="margin-left:26px">%(link)s%0A</a>%0A\
+//                 </div>', {
+//                     link: cur_frm.doc.customer_is_interested_in
+//                 }))
+//         refresh_field("click_here")                                        
+//     }
+//  /*   cur_frm.doc.set_df_property("customer_is_interested_in","hidden",1)*/
+// })
 
+frappe.ui.form.on("Customer", "customer_is_interested_in", function(frm,doctype,name) {
+    if(cur_frm.doc.customer_is_interested_in){
+        var html='';
+        html+=repl('<div class="row">\
+                    <label class="control-label" style="margin-left: 16px;">Visit URL</label></div>\
+                    <div class="row">\
+                    <a target="_blank" href=%(link)s style="margin-left:26px">%(show_link)s</a>\
+                    </div>', {
+                        link: cur_frm.doc.customer_is_interested_in,
+                        show_link: cur_frm.doc.customer_is_interested_in.slice(0,40)
+
+                    })
+
+        $(cur_frm.fields_dict.click_here.wrapper).html(html);
+    }    
+});
+frappe.ui.form.on("Customer", "onload", function(frm,doctype,name) {
+    if(cur_frm.doc.customer_is_interested_in){
+        var html='';
+        html+=repl('<div class="row">\
+                    <label class="control-label" style="margin-left: 16px;">Visit URL</label></div>\
+                    <div class="row">\
+                    <a target="_blank" href=%(link)s style="margin-left:26px">%(show_link)s</a>\
+                    </div>', {
+                        link: cur_frm.doc.customer_is_interested_in,
+                        show_link: cur_frm.doc.customer_is_interested_in.slice(0,40)
+                    })
+
+        $(cur_frm.fields_dict.click_here.wrapper).html(html);
+    } 
+});
+
+
+/*get_customer_is_interested_in = function(frm){
+    if(cur_frm.doc.customer_is_interested_in.length > 40){
+        return cur_frm.doc.customer_is_interested_in.slice(0,40)
+    }
+    else{
+        return cur_frm.doc.customer_is_interested_in
+    }
+}*/
