@@ -889,23 +889,6 @@
   "_liked_by": null, 
   "_user_tags": null, 
   "default_value": null, 
-  "doc_type": "Customer", 
-  "docstatus": 0, 
-  "doctype": "Property Setter", 
-  "doctype_or_field": "DocType", 
-  "field_name": null, 
-  "modified": "2016-02-29 19:25:07.061566", 
-  "name": "Customer-read_only_onload", 
-  "property": "read_only_onload", 
-  "property_type": "Check", 
-  "value": null
- }, 
- {
-  "_assign": null, 
-  "_comments": null, 
-  "_liked_by": null, 
-  "_user_tags": null, 
-  "default_value": null, 
   "doc_type": "Contact", 
   "docstatus": 0, 
   "doctype": "Property Setter", 
@@ -950,5 +933,22 @@
   "property": "_idx", 
   "property_type": "Text", 
   "value": "[\"contact_section\", \"first_name\", \"phone\", \"email_id\", \"cb00\", \"last_name\", \"position\", \"customer\", \"contact_details\", \"user\", \"customer_name\", \"column_break1\", \"supplier\", \"supplier_name\", \"sales_partner\", \"is_primary_contact\", \"more_info\", \"mobile_no\", \"department\", \"designation\", \"unsubscribed\", \"status\"]"
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Customer", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocType", 
+  "field_name": null, 
+  "modified": "2016-03-02 10:24:57.255276", 
+  "name": "Customer-read_only_onload", 
+  "property": "read_only_onload", 
+  "property_type": "Check", 
+  "value": null
  }
 ]

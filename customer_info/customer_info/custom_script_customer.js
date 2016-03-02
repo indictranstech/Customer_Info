@@ -111,6 +111,7 @@ frappe.ui.form.on("Customer", "customer_is_interested_in", function(frm,doctype,
         $(cur_frm.fields_dict.click_here.wrapper).html(html);
     }    
 });
+
 frappe.ui.form.on("Customer", "onload", function(frm,doctype,name) {
     if(cur_frm.doc.customer_is_interested_in){
         var html='';
@@ -127,12 +128,16 @@ frappe.ui.form.on("Customer", "onload", function(frm,doctype,name) {
     } 
 });
 
-
-/*get_customer_is_interested_in = function(frm){
-    if(cur_frm.doc.customer_is_interested_in.length > 40){
-        return cur_frm.doc.customer_is_interested_in.slice(0,40)
+frappe.ui.form.on("Customer", "prersonal_code", function(frm) {
+    var tempVal = cur_frm.doc.prersonal_code;
+    if(!/^\d+$/.test(tempVal)){
+        msgprint(__("Enter Digits From [0-9] Only"))
+        cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")  
     }
-    else{
-        return cur_frm.doc.customer_is_interested_in
+    else if (!/^[0-9]{1,11}$/.test(tempVal)){ // OR if (/^[0-9]{1,10}$/.test(+tempVal) && tempVal.length<=10) 
+        msgprint(__("Personal Code Length Not Greater Than 11 Digits"))
+        cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")
     }
-}*/
+})    
