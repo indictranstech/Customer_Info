@@ -1,7 +1,6 @@
 frappe.ui.form.on("Item","serial_number",function(frm){
 	cur_frm.doc.item_code = cur_frm.doc.brand + "-" +cur_frm.doc.serial_number
 	cur_frm.doc.item_name = cur_frm.doc.item_code
-	cur_frm.doc.item_group = cur_frm.doc.product_category
 	refresh_field(["item_code","item_name"])	
 })
 
