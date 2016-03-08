@@ -68,8 +68,8 @@ frappe.ui.form.on("Customer","birthdate",function(frm){
     } 
     if(cur_frm.doc.birthdate){
         var birthdate = new Date(cur_frm.doc.birthdate)
-        var cur = new Date();
-        var diff = cur-birthdate; // This is the difference in milliseconds
+        var current_date = new Date();
+        var diff = current_date - birthdate; // This is the difference in milliseconds
         var age = Math.floor(diff/31536000000); // Divide by 1000*60*60*24*365
         cur_frm.doc.age = age + " " +" Years"
         refresh_field('age');
@@ -140,4 +140,9 @@ frappe.ui.form.on("Customer", "prersonal_code", function(frm) {
         cur_frm.doc.prersonal_code = "",
         refresh_field("prersonal_code")
     }
+    /*else if (cur_frm.doc.prersonal_code.length < 11){
+        msgprint(__("Personal Code Should Be Of 11 Digits"))
+        cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")
+    }*/
 })    
