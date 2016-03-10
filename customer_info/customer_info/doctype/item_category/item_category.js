@@ -6,3 +6,6 @@ frappe.ui.form.on("Item Category","validate",function(frm){
 		}
 	})
 })	
+
+cur_frm.add_fetch('period', 'period', 'period_value');
+cur_frm.add_fetch('ratio', 'ratio', 'ratio_value');

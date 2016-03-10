@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Brand", 
+  "modified": "2016-03-10 15:19:13.880973", 
+  "name": "Brand-Client", 
+  "script": "frappe.ui.form.on(\"Brand\",\"model\",function(frm){\n\tcur_frm.doc.brand = cur_frm.doc.brand_name + \"-\" + cur_frm.doc.model\n\trefresh_field(\"brand\")\t\n})", 
+  "script_type": "Client"
+ }
+]

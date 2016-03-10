@@ -72,8 +72,7 @@ fixtures =['Custom Field', "Property Setter","Custom Script"]
 
 # Document Events
 # ---------------
-# Hook on document methods and events
-
+# Hook on document methods and events	
 # doc_events = {
 # 	"Contact": {
 # 		"validate":"",
