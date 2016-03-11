@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
+
 class ItemCategory(Document):
 	pass
 
@@ -17,3 +18,5 @@ def new_item_group(category_name):
 	group.is_group = "No"
 	group.save(ignore_permissions = True)
 	return "True"
+
+
