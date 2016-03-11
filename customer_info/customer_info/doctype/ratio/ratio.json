@@ -7,7 +7,7 @@
  "custom": 0, 
  "docstatus": 0, 
  "doctype": "DocType", 
- "document_type": "", 
+ "document_type": "Document", 
  "fields": [
   {
    "allow_on_submit": 0, 
@@ -43,7 +43,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2016-03-10 15:37:51.233079", 
+ "modified": "2016-03-11 11:12:13.248094", 
  "modified_by": "Administrator", 
  "module": "Customer Info", 
  "name": "Ratio", 
