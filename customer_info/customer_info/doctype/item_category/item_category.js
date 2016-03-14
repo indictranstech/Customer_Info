@@ -7,5 +7,41 @@ frappe.ui.form.on("Item Category","validate",function(frm){
 	})
 })	
 
-cur_frm.add_fetch('period', 'period', 'period_value');
-cur_frm.add_fetch('ratio', 'ratio', 'ratio_value');
+frappe.ui.form.on("Item Category", "period", function(frm){
+	if(cur_frm.doc.period){
+	    frappe.call({
+	        method: "frappe.client.get_value",
+	        args: {
+	            doctype: "Period",
+	            fieldname: "period",
+	            filters: { name: cur_frm.doc.period },
+	        },
+	       	callback: function(res){
+	          	if (res && res.message){
+	          		cur_frm.doc.period_value = res.message['period']
+	          		refresh_field("period_value");
+	           	}
+	       	}  	
+	    });
+	}    
+});
+
+
+frappe.ui.form.on("Item Category", "ratio", function(frm){
+    if(cur_frm.doc.ratio){
+	    frappe.call({
+	        method: "frappe.client.get_value",
+	        args: {
+	            doctype: "Ratio",
+	            fieldname: "ratio",
+	            filters: { name: cur_frm.doc.ratio },
+	        },
+	       	callback: function(res){
+	          	if (res && res.message){
+	          		cur_frm.doc.ratio_value = res.message['ratio']
+	          		refresh_field("ratio_value");
+	           	}
+	       	}  	
+	    });
+	}    
+});
