@@ -1,10 +1,12 @@
 frappe.ui.form.on("Item Category","validate",function(frm){	
-	return frappe.call({
-		method: "customer_info.customer_info.doctype.item_category.item_category.new_item_group",
-		args: {
-			"category_name":cur_frm.doc.category_name
-		}
-	})
+	if(cur_frm.doc.__islocal){
+		return frappe.call({
+			method: "customer_info.customer_info.doctype.item_category.item_category.new_item_group",
+			args: {
+				"category_name":cur_frm.doc.category_name
+			}
+		})
+	}	
 })	
 
 frappe.ui.form.on("Item Category", "period", function(frm){
@@ -45,3 +47,22 @@ frappe.ui.form.on("Item Category", "ratio", function(frm){
 	    });
 	}    
 });
+
+
+frappe.ui.form.on("Item Category", "category_name", function(frm){
+	if(cur_frm.doc.category_name){
+	    frappe.call({
+	        method: "customer_info.customer_info.doctype.item_category.item_category.get_category_name",
+	        args: {
+	            "name":cur_frm.doc.category_name
+	        },
+	       	callback: function(r){
+	       		if(r.message){
+	     			msgprint(r.message)
+	     			cur_frm.doc.category_name = ""
+	     			refresh_field("category_name")
+	       		}
+	       	}  	
+	    });
+	}
+})
