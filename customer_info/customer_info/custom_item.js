@@ -7,7 +7,7 @@ cur_frm.add_fetch('product_category', 'ratio_value', 'ratio');*/
 	refresh_field("period")	
 })*/
 
-frappe.ui.form.on("Item","purchase_date",function(frm){
+/*frappe.ui.form.on("Item","purchase_date",function(frm){
      var d = moment().format('YYYY-MM-DD')
      var current_date = new Date(d)
      var expected_start_date = new Date(cur_frm.doc.purchase_date)
@@ -16,7 +16,7 @@ frappe.ui.form.on("Item","purchase_date",function(frm){
           cur_frm.doc.purchase_date = ""
           refresh_field('purchase_date')
      }         
-})
+})*/
 
 frappe.ui.form.on("Item", "product_category", function(frm){
     if(cur_frm.doc.product_category){
