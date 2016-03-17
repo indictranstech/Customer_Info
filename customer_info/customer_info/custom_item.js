@@ -90,17 +90,17 @@ frappe.ui.form.on("Item","purchase_price_with_vat",function(frm){
      }
      if(cur_frm.doc.purchase_price_with_vat >= 1 && cur_frm.doc.purchase_price_with_vat <= 430.99){
           var div = (cur_frm.doc.purchase_price_with_vat * 15) / 100
-          var de = cur_frm.doc.purchase_price_with_vat - div
+          var de = cur_frm.doc.purchase_price_with_vat + div
           calculation_for_90d_sac(de)
      }            
      else if(cur_frm.doc.purchase_price_with_vat >= 431 && cur_frm.doc.purchase_price_with_vat <= 580.99){
           var div = (cur_frm.doc.purchase_price_with_vat * 12) / 100
-          var de = cur_frm.doc.purchase_price_with_vat - div
+          var de = cur_frm.doc.purchase_price_with_vat + div
           calculation_for_90d_sac(de)                  
      }
      else if(cur_frm.doc.purchase_price_with_vat >= 581){
           var div = (cur_frm.doc.purchase_price_with_vat * 10) / 100
-          var de = cur_frm.doc.purchase_price_with_vat - div
+          var de = cur_frm.doc.purchase_price_with_vat + div
           calculation_for_90d_sac(de)      
      }
 })            
