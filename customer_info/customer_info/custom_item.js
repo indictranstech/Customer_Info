@@ -28,6 +28,12 @@ frappe.ui.form.on("Item", {
     },
     purchase_price_with_vat: function(frm){
         this.calculation_for_monthly_rental_and_90d(frm)
+    },
+    insurance_fee: function(frm){
+        if(cur_frm.doc.monthly_rental_payment){
+            cur_frm.doc.total = cur_frm.doc.monthly_rental_payment + cur_frm.doc.insurance_fee
+            refresh_field("total")
+        }
     }
 
 });
