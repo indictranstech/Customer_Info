@@ -1,10 +1,6 @@
 cur_frm.add_fetch('product', '90d_sac_price', '90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
 cur_frm.add_fetch('product', 'agreement_period', 'agreement_period');
-cur_frm.add_fetch('address', 'address_line1', 'address_line1');
-cur_frm.add_fetch('address', 'address_line2', 'address_line2');
-cur_frm.add_fetch('address', 'city', 'city');
-
 
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
@@ -16,20 +12,55 @@ frappe.ui.form.on("Customer Agreement",{
 	customer: function(frm){
 		if(cur_frm.doc.customer){
 			frappe.call({
-                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_address",
+                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_primary_address",
                 args: {
                     "customer": cur_frm.doc.customer,
                 },
              	callback: function(r){
                     if(r.message){
-                        cur_frm.doc.address = r.message[0]["name"],
-                        cur_frm.doc.address_line1 = r.message[0]["address_line1"],
-		          		cur_frm.doc.address_line2 = r.message[0]["address_line2"],
-		          		cur_frm.doc.city = r.message[0]["city"],
-		          		refresh_field(["address","address_line1","address_line2","city"]);
+                        cur_frm.doc.address = r.message[0]["name"],                        
+		          		cur_frm.doc.address_line1 = r.message[0]["address_line1"]
+		          		cur_frm.doc.city = r.message[0]["city"]
+		          		refresh_field(["address","address_line1","city"]);
                     }
+                    if(r.message[0]['address_line2']){
+                    	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
+             			cur_frm.doc.address_line2 = r.message[0]["address_line2"]
+             			refresh_field(['full_address','address_line2'])
+             		}
+             		else{
+             			cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
+             			refresh_field("full_address")
+             		}
              	}  	
             });			
+		}
+	},
+	address: function(frm){
+		if(cur_frm.doc.customer && cur_frm.doc.address){
+			frappe.call({
+                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_address",
+                args: {
+                    "customer": cur_frm.doc.customer,
+                	"address": cur_frm.doc.address
+                },
+             	callback: function(r){
+                    if(r.message){     
+		          		cur_frm.doc.address_line1 = r.message[0]["address_line1"]
+		          		cur_frm.doc.city = r.message[0]["city"]
+		          		refresh_field(["address","address_line1","city"]);
+                    }
+                    if(r.message[0]['address_line2']){
+                    	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
+             			cur_frm.doc.address_line2 = r.message[0]["address_line2"]
+             			refresh_field(['full_address','address_line2'])
+             		}
+             		else{
+             			cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
+             			refresh_field("full_address")
+             		}
+             	}  	
+            });	
 		}
 	},
 	onload:function(frm){

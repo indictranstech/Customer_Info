@@ -38,9 +38,17 @@ class CustomerAgreement(Document):
 			item.save(ignore_permissions = True)
 
 @frappe.whitelist()
-def get_address(customer):
+def get_primary_address(customer):
 	address = frappe.db.sql("""select name,address_line1,address_line2,city 
 								from `tabAddress` 
 								where customer = '{0}' 
 								and is_primary_address = 1 """.format(customer),as_dict=1)
-	return address	
+	return address
+
+@frappe.whitelist()
+def get_address(customer,address):
+	address = frappe.db.sql("""select address_line1,address_line2,city 
+								from `tabAddress` 
+								where customer = '{0}' 
+								and name = '{1}' """.format(customer,address),as_dict=1)
+	return address		
