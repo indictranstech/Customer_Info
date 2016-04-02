@@ -1999,28 +1999,11 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocField", 
   "field_name": "stock_uom", 
-  "modified": "2016-04-02 14:49:23.783656", 
-  "name": "Item-stock_uom-hidden", 
-  "property": "hidden", 
-  "property_type": "Check", 
-  "value": "1"
- }, 
- {
-  "_assign": null, 
-  "_comments": null, 
-  "_liked_by": null, 
-  "_user_tags": null, 
-  "default_value": null, 
-  "doc_type": "Item", 
-  "docstatus": 0, 
-  "doctype": "Property Setter", 
-  "doctype_or_field": "DocField", 
-  "field_name": "stock_uom", 
-  "modified": "2016-04-02 14:49:23.850283", 
+  "modified": "2016-04-02 18:48:00.421158", 
   "name": "Item-stock_uom-default", 
   "property": "default", 
   "property_type": "Text", 
-  "value": "Unit"
+  "value": ""
  }, 
  {
   "_assign": null, 
@@ -2033,10 +2016,27 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocType", 
   "field_name": null, 
-  "modified": "2016-04-02 16:46:39.549010", 
+  "modified": "2016-04-02 18:50:51.269762", 
   "name": "Item-read_only_onload", 
   "property": "read_only_onload", 
   "property_type": "Check", 
   "value": null
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Item", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocField", 
+  "field_name": "stock_uom", 
+  "modified": "2016-04-02 18:50:51.393689", 
+  "name": "Item-stock_uom-hidden", 
+  "property": "hidden", 
+  "property_type": "Check", 
+  "value": "1"
  }
 ]

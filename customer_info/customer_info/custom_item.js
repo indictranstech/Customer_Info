@@ -40,6 +40,10 @@ frappe.ui.form.on("Item", {
             cur_frm.doc.old_status = cur_frm.doc.merchandise_status
             refresh_field("old_status")
         }
+    },
+    validate: function(frm){
+        cur_frm.doc.stock_uom = "Unit"
+        refresh_field("stock_uom")
     }
 
 
