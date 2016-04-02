@@ -81,7 +81,11 @@ fixtures =['Custom Field', "Property Setter","Custom Script","Letter Head"]
 		# "on_trash": "method"
 # 	}
 # }
-
+doc_events = {
+	"Item": {
+		"on_update": "customer_info.customer_info.custom_item.purchase_date_comment"
+	}	
+}
 # Scheduled Tasks
 # ---------------
 

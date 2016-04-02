@@ -4,7 +4,7 @@ frappe.ui.form.on("Item", {
             frappe.call({
                 method: "frappe.client.get_value",
                 args: {
-                    doctype: "Item Category",
+                    doctype: "Product Category",
                     fieldname: ["period_value","ratio_value","period"],
                     filters: { name: cur_frm.doc.product_category },
                 },
@@ -34,7 +34,14 @@ frappe.ui.form.on("Item", {
             cur_frm.doc.total = cur_frm.doc.monthly_rental_payment + cur_frm.doc.insurance_fee
             refresh_field("total")
         }
+    },
+    merchandise_status: function(frm){
+        if(cur_frm.doc.merchandise_status && cur_frm.doc.__islocal){
+            cur_frm.doc.old_status = cur_frm.doc.merchandise_status
+            refresh_field("old_status")
+        }
     }
+
 
 });
 
