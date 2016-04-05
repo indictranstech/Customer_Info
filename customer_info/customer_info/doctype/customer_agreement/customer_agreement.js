@@ -1,6 +1,7 @@
 cur_frm.add_fetch('product', '90d_sac_price', '90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
-cur_frm.add_fetch('product', 'agreement_period', 'agreement_period');
+cur_frm.add_fetch('product', 'period', 'agreement_period');
+cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
 
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
