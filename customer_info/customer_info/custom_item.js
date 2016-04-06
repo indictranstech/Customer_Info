@@ -27,7 +27,20 @@ frappe.ui.form.on("Item", {
         refresh_field(["item_code","item_name"])    
     },
     purchase_price_with_vat: function(frm){
-        this.calculation_for_monthly_rental_and_90d(frm)
+        if(cur_frm.doc.period){
+            this.calculation_for_monthly_rental_and_90d(frm)
+        }
+        else{
+            msgprint("Please Enter Value Of Agreement Period For Update Monthly Rental Payment")  
+        }
+    },
+    period: function(frm){
+        if(cur_frm.doc.purchase_price_with_vat){
+            this.calculation_for_monthly_rental_and_90d(frm)
+        }
+        else{
+            msgprint("Please Enter Value Of Purchase Price with Vat")  
+        }
     },
     insurance_fee: function(frm){
         if(cur_frm.doc.monthly_rental_payment){
