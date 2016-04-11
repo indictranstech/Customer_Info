@@ -1,6 +1,6 @@
 frappe.ui.form.on("Item", {
     product_category: function(frm){
-    if(cur_frm.doc.product_category){
+        if(cur_frm.doc.product_category){
             frappe.call({
                 method: "frappe.client.get_value",
                 args: {
