@@ -3,9 +3,9 @@
   "docstatus": 0, 
   "doctype": "Custom Script", 
   "dt": "Brand", 
-  "modified": "2016-03-16 18:34:15.716467", 
+  "modified": "2016-04-11 11:25:52.825289", 
   "name": "Brand-Client", 
-  "script": "frappe.ui.form.on(\"Brand\",\"model\",function(frm){\n\tcur_frm.doc.brand = cur_frm.doc.brand_name + \"-\" + cur_frm.doc.model\n\trefresh_field(\"brand\")\t\n})\n\n\nfrappe.ui.form.on(\"Brand\",\"refresh\",function(frm){\n      if(cur_frm.doc.brand){\n           cur_frm.doc.category = cur_frm.doc.brand\n           refresh_field(\"category\")\n      }\n})", 
+  "script": "frappe.ui.form.on(\"Brand\",\"model\",function(frm){\n\tcur_frm.doc.brand = cur_frm.doc.brand_name + \"-\" + cur_frm.doc.model\n\trefresh_field(\"brand\")\t\n})", 
   "script_type": "Client"
  }
 ]
