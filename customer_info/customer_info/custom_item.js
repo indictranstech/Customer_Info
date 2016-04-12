@@ -33,6 +33,10 @@ frappe.ui.form.on("Item", {
         else{
             msgprint("Please Enter Value Of Agreement Period For Update Monthly Rental Payment")  
         }
+        if(cur_frm.doc.purchase_price_with_vat && cur_frm.doc.__islocal){
+            cur_frm.doc.old_purchase_price_with_vat = cur_frm.doc.purchase_price_with_vat
+            refresh_field("old_purchase_price_with_vat")
+        }
     },
     period: function(frm){
         if(cur_frm.doc.purchase_price_with_vat){
@@ -54,12 +58,30 @@ frappe.ui.form.on("Item", {
             refresh_field("old_status")
         }
     },
+    s90d_sac_price: function(frm){
+        if(cur_frm.doc.s90d_sac_price && cur_frm.doc.__islocal){
+            cur_frm.doc.old_90d_sac_price = cur_frm.doc.s90d_sac_price
+            refresh_field("old_90d_sac_price")
+        }
+        if(cur_frm.doc.monthly_rental_payment && cur_frm.doc.__islocal){
+            cur_frm.doc.old_monthly_rental_payment = cur_frm.doc.monthly_rental_payment
+            refresh_field("old_monthly_rental_payment")
+        }
+        if(cur_frm.doc.period && cur_frm.doc.__islocal){
+            cur_frm.doc.old_agreement_period = cur_frm.doc.period
+            refresh_field("old_agreement_period")
+        }
+    },
     validate: function(frm){
+        if (cur_frm.doc.serial_number){
+            cur_frm.set_df_property("serial_number","read_only",1)
+        }
+        if (cur_frm.doc.brand){
+            cur_frm.set_df_property("brand","read_only",1)
+        }
         cur_frm.doc.stock_uom = "Unit"
-        refresh_field("stock_uom")
+        refresh_field(["stock_uom","serial_number","brand"])
     }
-
-
 });
 
 cur_frm.fields_dict['brand'].get_query = function(doc) {
@@ -132,13 +154,13 @@ calculation_for_90d_sac = function(de){
 
     if(float_concade >= 0.00 && float_concade <= 5.00){
       var minus = 5 - int_str_floor
-      cur_frm.set_value("90d_sac_price",(floor + minus))
-      refresh_field("90d_sac_price")
+      cur_frm.set_value("s90d_sac_price",(floor + minus))
+      refresh_field("s90d_sac_price")
     }
 
     if(float_concade >= 5.01 && float_concade <= 9.99){
       var minus = 9 - int_str_floor
-      cur_frm.set_value("90d_sac_price",(floor + minus))
-      refresh_field("90d_sac_price")
+      cur_frm.set_value("s90d_sac_price",(floor + minus))
+      refresh_field("s90d_sac_price")
     }      
 }

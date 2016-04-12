@@ -13,7 +13,7 @@ def get_data():
 					"name": "Brand Name",
 					"description": _("Brand Name"),
 				},
-								{
+				{
 					"type": "doctype",
 					"name": "Brand",
 					"description": _("Details Of Brand"),

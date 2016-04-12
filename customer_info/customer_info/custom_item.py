@@ -7,10 +7,34 @@ from frappe.model.document import Document
 
 
 @frappe.whitelist(allow_guest = True)
-def purchase_date_comment(self,method):
+def product_status_change(self,method):
+	now = datetime.datetime.now()
+	date = now.strftime("%d-%m-%Y")
+	status = ""
+	vat = ""
+	monthly_rental = ""
+	agreement = ""
+	sac = ""	
 	if self.old_status != self.merchandise_status:
-		now = datetime.datetime.now()
-		date = now.strftime("%d-%m-%Y")	
-		comment = " Product Status Changed from '{0}' To '{1}' ON - '{2}' ".format(self.old_status,self.merchandise_status,date)
-		self.add_comment("Comment",comment)
+		status = " Product Status Changed from {0} To {1} ON - '{2}' ".format(self.old_status,self.merchandise_status,date)
 		self.old_status = self.merchandise_status
+
+	if self.old_agreement_period != self.period:
+		agreement  = "Agreement Period Month Changed from {0} To {1} ON - '{2}'".format(self.old_agreement_period,self.period,date)
+		self.old_agreement_period = self.period
+
+	if self.old_purchase_price_with_vat != self.purchase_price_with_vat:	
+		vat ="Purchase Price with vat Changed from {0} To {1} ON - {2} ".format(self.old_purchase_price_with_vat,self.purchase_price_with_vat,date)
+		self.old_purchase_price_with_vat = self.purchase_price_with_vat
+
+	if self.old_90d_sac_price != self.s90d_sac_price:
+		sac = "90d SAC Price Changed from {0} To {1} ON - {2} ".format(self.old_90d_sac_price,self.s90d_sac_price,date)
+		self.old_90d_sac_price = self.s90d_sac_price
+
+	if self.old_monthly_rental_payment != self.monthly_rental_payment:
+		monthly_rental = "Monthly Rental Payment Changed from {0} To {1} ON - {2} ".format(self.old_monthly_rental_payment,self.monthly_rental_payment,date)
+		self.old_monthly_rental_payment = self.monthly_rental_payment
+
+	if status or agreement or vat or sac or monthly_rental:
+		comment = """<p>{0}</p> <p>{1}</p> <p>{2}</p> <p>{3}</p> <p>{4}</p>""".format(status,agreement,vat,sac,monthly_rental)
+		self.add_comment("Comment", comment)					
