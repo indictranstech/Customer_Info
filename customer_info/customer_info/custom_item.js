@@ -75,12 +75,32 @@ frappe.ui.form.on("Item", {
     validate: function(frm){
         if (cur_frm.doc.serial_number){
             cur_frm.set_df_property("serial_number","read_only",1)
+            refresh_field("serial_number")
         }
         if (cur_frm.doc.brand){
             cur_frm.set_df_property("brand","read_only",1)
+            refresh_field("brand")
+        }
+        if (cur_frm.doc.product_category){
+            cur_frm.set_df_property("product_category","read_only",1)
+            refresh_field("product_category")
         }
         cur_frm.doc.stock_uom = "Unit"
-        refresh_field(["stock_uom","serial_number","brand"])
+        refresh_field("stock_uom")
+    },
+    onload:function(frm){
+        if (cur_frm.doc.serial_number){
+            cur_frm.set_df_property("serial_number","read_only",1)
+            refresh_field("serial_number")
+        }
+        if (cur_frm.doc.brand){
+            cur_frm.set_df_property("brand","read_only",1)
+            refresh_field("brand")
+        }
+        if (cur_frm.doc.product_category){
+            cur_frm.set_df_property("product_category","read_only",1)
+            refresh_field("product_category")
+        }
     }
 });
 
