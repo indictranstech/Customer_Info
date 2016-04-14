@@ -7,6 +7,9 @@ import frappe
 import datetime
 import frappe.defaults
 from frappe.utils import date_diff
+from frappe.utils import nowdate, getdate
+from frappe.utils import now_datetime
+from datetime import datetime, timedelta
 from frappe.model.document import Document
 
 class CustomerAgreement(Document):
@@ -16,6 +19,7 @@ class CustomerAgreement(Document):
 		self.changed_merchandise_status()
 		if self.name:
 			self.agreement_no = self.name
+		self.date = datetime.now().strftime("%Y-%m-%d")
 
 	def on_update(self):
 		self.payment_date_comment()
