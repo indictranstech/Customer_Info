@@ -11,7 +11,6 @@ frappe.ui.form.on("Customer Agreement",{
 		}
         if(cur_frm.doc.payment_day){
             var a = parseInt(cur_frm.doc.payment_day)
-            console.log(typeof(a),"typeeeeeeeee")
             cur_frm.set_value("today_plus_payment_day",frappe.datetime.add_days(frappe.datetime.nowdate(),a))
             refresh_field("today_plus_payment_day") 
         }
