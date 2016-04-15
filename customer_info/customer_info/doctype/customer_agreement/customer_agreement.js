@@ -1,4 +1,4 @@
-cur_frm.add_fetch('product', '90d_sac_price', '90d_sac_price');
+cur_frm.add_fetch('product', 's90d_sac_price', 's90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
 cur_frm.add_fetch('product', 'period', 'agreement_period');
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
@@ -9,6 +9,11 @@ frappe.ui.form.on("Customer Agreement",{
 			cur_frm.doc.old_date = cur_frm.doc.payment_day
 			refresh_field("old_date")
 		}
+        if(cur_frm.doc.payment_day){
+            var a = parseInt(cur_frm.doc.payment_day)
+            cur_frm.set_value("today_plus_payment_day",frappe.datetime.add_days(frappe.datetime.nowdate(),a))
+            refresh_field("today_plus_payment_day") 
+        }
 	},
 	customer: function(frm){
 		if(cur_frm.doc.customer){
@@ -70,8 +75,8 @@ frappe.ui.form.on("Customer Agreement",{
 		if(!cur_frm.doc.today_plus_90_days){
 			cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
 			refresh_field("today_plus_90_days")
-		}
-	}
+		}  
+    }
 })
 
 
