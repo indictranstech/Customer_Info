@@ -2050,10 +2050,27 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocType", 
   "field_name": null, 
-  "modified": "2016-04-12 19:00:20.350780", 
+  "modified": "2016-04-15 17:04:36.727678", 
   "name": "Item-read_only_onload", 
   "property": "read_only_onload", 
   "property_type": "Check", 
   "value": null
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Item", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocType", 
+  "field_name": null, 
+  "modified": "2016-04-15 17:04:37.317468", 
+  "name": "Item-search_fields", 
+  "property": "search_fields", 
+  "property_type": "Data", 
+  "value": "product_category, merchandise_status"
  }
 ]
