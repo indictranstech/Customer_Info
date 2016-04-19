@@ -19,8 +19,7 @@ class CustomerAgreement(Document):
 		self.changed_merchandise_status()
 		if self.name:
 			self.agreement_no = self.name
-		self.date = datetime.now().strftime("%Y-%m-%d")
-
+			
 	def on_update(self):
 		self.payment_date_comment()
 		self.last_status_update_date()

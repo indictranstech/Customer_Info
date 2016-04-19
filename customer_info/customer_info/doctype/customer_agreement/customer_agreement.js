@@ -82,7 +82,13 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.old_agreement_status = cur_frm.doc.agreement_status
             refresh_field("old_agreement_status")
         }
-    }
+    },
+    validate:function(frm){
+        if(cur_frm.doc.__islocal){
+            cur_frm.doc.date = frappe.datetime.nowdate()
+            refresh_field("date")
+        }
+    }    
 })
 
 
