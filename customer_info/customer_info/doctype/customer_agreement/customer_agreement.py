@@ -19,7 +19,7 @@ class CustomerAgreement(Document):
 		self.changed_merchandise_status()
 		if self.name:
 			self.agreement_no = self.name
-			
+
 	def on_update(self):
 		self.payment_date_comment()
 		self.last_status_update_date()
@@ -28,12 +28,13 @@ class CustomerAgreement(Document):
 		if self.payment_day and self.old_date and self.payment_day != self.old_date:
 			comment = """ Payment Day is Changed From '{0}' To '{1}' """.format(self.old_date,self.payment_day)
 			self.add_comment("Comment",comment)
-			self.old_date = self.payment_day
+			self.old_date = self.payment_day	
 	
 	def last_status_update_date(self):
 		if self.agreement_status and self.old_agreement_status and self.agreement_status != self.old_agreement_status:		
 			self.agreement_status_changed_date = datetime.now().strftime("%Y-%m-%d")
-			
+			self.old_agreement_status = self.agreement_status
+
 	def changed_merchandise_status(self):
 		if self.merchandise_status:
 			item = frappe.get_doc("Item",self.product)
