@@ -88,9 +88,25 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.date = frappe.datetime.nowdate()
             refresh_field("date")
         }
+    },
+    refresh:function(frm){
+        if(!cur_frm.doc.__islocal){
+            cur_frm.add_custom_button(__('Agreement Updation'),function(){
+                make_update_agreement();
+            });
+            cur_frm.set_df_property("agreement_no","hidden",0)
+        }
     }    
 })
 
+
+
+make_update_agreement  = function() {
+    frappe.model.open_mapped_doc({
+        method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.make_update_agreement",
+        frm: cur_frm
+    })
+}
 
 cur_frm.fields_dict['address'].get_query=function(doc){
 	return {
