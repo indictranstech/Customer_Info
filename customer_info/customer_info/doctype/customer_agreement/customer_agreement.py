@@ -47,7 +47,6 @@ class CustomerAgreement(Document):
 			 	self.agreement_no = self.name
 
 
-
 	def on_update(self):
 		self.payment_date_comment()
 		self.last_status_update_date()
