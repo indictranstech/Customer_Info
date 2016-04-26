@@ -69,8 +69,8 @@ class CustomerAgreement(Document):
 	def diff_of_agreement_date_and_last_status_update_date_in_month(self):
 		active_month = 0
 		if self.date and self.agreement_status_changed_date:	
-			d1 = map(int,self.date.split("-"))
-			d2 = map(int,self.agreement_status_changed_date.split("-"))
+			d1 = map(int,str(self.date).split("-"))
+			d2 = map(int,str(self.agreement_status_changed_date).split("-"))
 			active_month = (datetime(d2[0],d2[1],d2[2]).year - datetime(d1[0],d1[1],d1[2]).year)*12 + (datetime(d2[0],d2[1],d2[2]).month - datetime(d1[0],d1[1],d1[2]).month)
     		self.number_of_active_agreement_months = active_month
 
@@ -112,6 +112,7 @@ def make_update_agreement(source_name, target_doc=None):
 
 	target_doc.document_type = "Updated"	
 	target_doc.agreement_status = "Open"
+	target_doc.product = ""
 	target_doc.flag = 0
 	return target_doc
 				
