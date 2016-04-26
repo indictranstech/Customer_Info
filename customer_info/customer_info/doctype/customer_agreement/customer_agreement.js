@@ -72,34 +72,43 @@ frappe.ui.form.on("Customer Agreement",{
 		}
 	},
 	onload:function(frm){
-		if(!cur_frm.doc.today_plus_90_days){
-			cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
-			refresh_field("today_plus_90_days")
-		}  
+
+        if(!cur_frm.doc.today_plus_90_days){
+            cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
+            refresh_field("today_plus_90_days")
+        }
+        if(cur_frm.doc.document_type == "Updated"){
+            cur_frm.set_df_property("product","read_only",1)
+            cur_frm.set_df_property("agreement_period","read_only",0)
+            refresh_field(["product","agreement_period"])
+        }
     },
-    agreement_status:function(frm){
+    /*agreement_status:function(frm){
         if(cur_frm.doc.agreement_status && cur_frm.doc.__islocal){
             cur_frm.doc.old_agreement_status = cur_frm.doc.agreement_status
             refresh_field("old_agreement_status")
         }
-    },
+    },*/
     validate:function(frm){
         if(cur_frm.doc.__islocal){
             cur_frm.doc.date = frappe.datetime.nowdate()
             refresh_field("date")
         }
+        if(cur_frm.doc.agreement_status && cur_frm.doc.__islocal){
+            cur_frm.doc.old_agreement_status = cur_frm.doc.agreement_status
+            refresh_field("old_agreement_status")
+        }
     },
     refresh:function(frm){
         if(!cur_frm.doc.__islocal){
-            cur_frm.add_custom_button(__('Agreement Updation'),function(){
+            cur_frm.add_custom_button(__('Update Agreement'),function(){
                 make_update_agreement();
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
+            refresh_field("agreement_no")
         }
     }    
 })
-
-
 
 make_update_agreement  = function() {
     frappe.model.open_mapped_doc({
