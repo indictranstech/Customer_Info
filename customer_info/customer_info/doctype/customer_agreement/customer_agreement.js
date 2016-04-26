@@ -78,9 +78,8 @@ frappe.ui.form.on("Customer Agreement",{
             refresh_field("today_plus_90_days")
         }
         if(cur_frm.doc.document_type == "Updated"){
-            cur_frm.set_df_property("product","read_only",1)
             cur_frm.set_df_property("agreement_period","read_only",0)
-            refresh_field(["product","agreement_period"])
+            refresh_field("agreement_period")
         }
     },
     /*agreement_status:function(frm){
