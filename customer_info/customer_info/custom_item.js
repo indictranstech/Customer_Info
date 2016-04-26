@@ -85,6 +85,10 @@ frappe.ui.form.on("Item", {
             cur_frm.set_df_property("product_category","read_only",1)
             refresh_field("product_category")
         }
+        if (cur_frm.doc.monthly_rental_payment && !cur_frm.doc.insurance_fee){
+            cur_frm.doc.total = cur_frm.doc.monthly_rental_payment
+            refresh_field("total")
+        }
         cur_frm.doc.stock_uom = "Unit"
         refresh_field("stock_uom")
     },
