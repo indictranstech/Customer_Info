@@ -113,6 +113,8 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.document_type = "Updated"	
 	target_doc.agreement_status = "Open"
 	target_doc.product = ""
+	target_doc.date = ""
+	target_doc.agreement_status_changed_date = ""
 	target_doc.flag = 0
 	return target_doc
 				
