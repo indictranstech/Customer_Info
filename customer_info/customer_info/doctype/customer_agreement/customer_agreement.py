@@ -30,16 +30,18 @@ class CustomerAgreement(Document):
 			self.name = "BK-0" + str(count)
 			self.parent_name = self.name
 			self.flag = 1
+			
 
 		elif self.document_type == "Updated" and self.flag == 0:
 			parent_name = frappe.db.sql("""select name from 
 										`tabCustomer Agreement` 
 										where parent_name like "{0}" """.format(self.parent_name),as_list=1)
-			parent = frappe.get_doc("Customer Agreement", parent_name[0][0])
-			if parent:
+			
+			parent = frappe.get_doc("Customer Agreement", self.agreement_no)
+			if parent and parent.agreement_status != "Updated" and parent.merchandise_status != "Used":
 				parent.update({
 					"agreement_status": "Updated",
-					"merchandise_status": "Naudota"
+					"merchandise_status": "Used"
 				})
 				parent.save(ignore_permissions = True)
 			if len(parent_name) > 1:			
@@ -115,6 +117,7 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.product = ""
 	target_doc.date = ""
 	target_doc.agreement_status_changed_date = ""
+	target_doc.merchandise_status = ""
 	target_doc.flag = 0
 	return target_doc
 				
