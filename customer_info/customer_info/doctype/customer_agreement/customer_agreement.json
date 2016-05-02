@@ -1,6 +1,6 @@
 {
  "allow_copy": 0, 
- "allow_import": 0, 
+ "allow_import": 1, 
  "allow_rename": 0, 
  "autoname": "naming_series:", 
  "creation": "2016-03-28 13:16:24.407215", 
@@ -716,7 +716,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2016-04-28 15:12:14.099336", 
+ "modified": "2016-05-02 19:23:21.781302", 
  "modified_by": "Administrator", 
  "module": "Customer Info", 
  "name": "Customer Agreement", 

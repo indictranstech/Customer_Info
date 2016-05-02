@@ -44,6 +44,7 @@ class CustomerAgreement(Document):
 					"merchandise_status": "Used"
 				})
 				parent.save(ignore_permissions = True)
+				
 			if len(parent_name) > 1:			
 				old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
 				counter = int(old_name_list[-1]) + 1
