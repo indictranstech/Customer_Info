@@ -1,4 +1,11 @@
 frappe.ui.form.on("Customer",{
+    refresh:function(frm){
+        if(!cur_frm.doc.__islocal){
+            cur_frm.add_custom_button(__('Payments Management'),function(){
+                go_to_payments_management();
+            });
+        }    
+    },        
     onload:function(frm){
         if(cur_frm.doc.customer_type == "Individual"){
             cur_frm.set_df_property("first_name", "reqd",true);
@@ -112,4 +119,12 @@ get_url = function(frm){
 
         $(cur_frm.fields_dict.click_here.wrapper).html(html);
     }
-} 
+}
+
+
+go_to_payments_management = function(frm){
+    frappe.model.open_mapped_doc({
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.get_payments_management",
+        frm: cur_frm
+    })
+}
