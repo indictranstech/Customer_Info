@@ -7,19 +7,57 @@ import frappe
 import datetime
 import frappe.defaults
 from frappe.utils import date_diff
-from frappe.utils import nowdate, getdate
+from frappe.utils import nowdate, getdate,add_months
 from frappe.utils import now_datetime
 from datetime import datetime, timedelta
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
 class CustomerAgreement(Document):	 
-
 	def validate(self):
+		a = datetime.now()
+		print date_diff(self.current_due_date,a)
+		self.naming()
+		if not self.payments_record and self.name and self.due_date_of_next_month:
+			self.add_payments_record()
+
+	def onload(self):
+		payment_received = 0
+		no_of_late_days = 0
+		received_payments = []
+		if self.payments_record:
+			for row in self.payments_record:
+				if row.check_box == 1:
+					received_payments.append(row.monthly_rental_amount)
+				if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
+					no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+		if self.payments_record:
+			for row in self.payments_record:		
+				if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
+					self.current_date = row.due_date
+					self.next_due_date = self.get_next_due_date(self.current_due_date,1)
+					break
+				elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
+					self.current_due_date = row.due_date
+					self.next_due_date = row.due_date	
+					break
+		received_payments = map(float,received_payments)
+
+		for i in received_payments:
+			payment_received += i
+
+		if self.payments_record and self.date:
+			self.payments_left = len(self.payments_record) - len(received_payments)
+			self.balance = self.payments_left * self.monthly_rental_payment
+			self.payments_made = "{0} Out Of {1}".format(len(received_payments),self.agreement_period)
+			self.number_of_payments = int(self.agreement_period) - len(received_payments)
+			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
+
+	def naming(self):	
 		new_name_list = []
 		old_name_list = []
 		counter = 1
-		count = 1001		
+		count = 10001		
 		if self.document_type == "New" and self.flag == 0:
 			old_name = frappe.db.sql("""select name from 
 										`tabCustomer Agreement` 
@@ -50,13 +88,61 @@ class CustomerAgreement(Document):
 				counter = int(old_name_list[-1]) + 1
 			self.name = self.parent_name + "-" + str(counter)
 			self.flag = 1
-		self.agreement_no = self.name	
+			self.agreement_status = "Updated"
+		self.agreement_no = self.name
 
+	# add row in child table	
+	def add_payments_record(self):
+		print self.due_date_of_next_month
+		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+		print type(current_date),"type current_date"
+		print current_date,"current_dateeeeeeeeee"
+		list_of_payments_record = []
+		for i in range(int(self.agreement_period)):
+			list_of_payments_record.append({
+				'no_of_payments':'Payment {0}'.format(i+1),
+				'monthly_rental_amount':self.monthly_rental_payment,
+				'due_date':self.get_next_due_date(current_date,i),
+				'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
+				})
+
+		for d in list_of_payments_record:
+			nl = self.append('payments_record', {})
+			nl.no_of_payments = d['no_of_payments']
+			nl.monthly_rental_amount = d['monthly_rental_amount']
+			nl.due_date = d['due_date']
+			nl.payment_id = d['payment_id']
+
+	def get_next_due_date(self,date,i):
+		add_month_to_date = add_months(date,i)
+		return str(add_month_to_date)[0:10]	
+		
 	def on_update(self):
 		self.payment_date_comment()
 		self.last_status_update_date()
 		self.changed_merchandise_status()
 		self.diff_of_agreement_date_and_last_status_update_date_in_month()
+
+	
+	# def get_count_of_payments(self):
+	# 	payment_received = 0
+	# 	no_of_late_days = 0
+	# 	received_payments = []
+	# 	if self.payments_record:
+	# 		for row in self.payments_record:
+	# 			if row.check_box == 1:
+	# 				received_payments.append(row.monthly_rental_amount)
+	# 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
+	# 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+	# 	received_payments = map(float,received_payments)
+
+	# 	for i in received_payments:
+	# 		payment_received += i
+		
+	# 	total_payment = self.monthly_rental_payment * int(self.agreement_period)
+	# 	payment_left = total_payment - payment_received
+
+	# 	return {"length":len(received_payments),"payment_left":payment_left,"no_of_late_days":no_of_late_days}			
 
 	def payment_date_comment(self):
 		if self.payment_day and self.old_date and self.payment_day != self.old_date:
@@ -77,8 +163,6 @@ class CustomerAgreement(Document):
 			active_month = (datetime(d2[0],d2[1],d2[2]).year - datetime(d1[0],d1[1],d1[2]).year)*12 + (datetime(d2[0],d2[1],d2[2]).month - datetime(d1[0],d1[1],d1[2]).month)
     		self.number_of_active_agreement_months = active_month
 
-
-
 	def changed_merchandise_status(self):
 		if self.merchandise_status:
 			item = frappe.get_doc("Item",self.product)
@@ -96,13 +180,13 @@ def get_primary_address(customer):
 								and is_primary_address = 1 """.format(customer),as_dict=1)
 	return address
 
-@frappe.whitelist()
-def get_address(customer,address):
-	address = frappe.db.sql("""select address_line1,address_line2,city 
-								from `tabAddress` 
-								where customer = '{0}' 
-								and name = '{1}' """.format(customer,address),as_dict=1)
-	return address
+# @frappe.whitelist()
+# def get_address(customer,address):
+# 	address = frappe.db.sql("""select address_line1,address_line2,city 
+# 								from `tabAddress` 
+# 								where customer = '{0}' 
+# 								and name = '{1}' """.format(customer,address),as_dict=1)
+# 	return address
 
 @frappe.whitelist()
 def make_update_agreement(source_name, target_doc=None):
@@ -120,8 +204,17 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.agreement_status_changed_date = ""
 	target_doc.merchandise_status = ""
 	target_doc.flag = 0
+	target_doc.payments_record = ""
 	return target_doc
-				
+
+@frappe.whitelist()
+def get_product(doctype, txt, searchfield, start, page_len, filters):
+	return frappe.db.sql("""select name, merchandise_status from `tabItem` 
+							where name not in (select product from `tabCustomer Agreement` 
+												where agreement_status = "Open") 
+							and merchandise_status = "Used" or merchandise_status = "New" 
+							and (name like '{txt}'
+											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
 # comment for date change
 		# if self.payment_day and self.old_date and (date_diff(self.payment_day,self.old_date) > 0 or date_diff(self.payment_day,self.old_date) < 0):
 		# 	payment_date = datetime.datetime.strptime(self.payment_day,'%Y-%m-%d').strftime('%d-%m-%Y')
