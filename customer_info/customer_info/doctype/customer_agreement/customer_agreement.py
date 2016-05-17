@@ -15,8 +15,6 @@ from frappe.model.mapper import get_mapped_doc
 
 class CustomerAgreement(Document):	 
 	def validate(self):
-		a = datetime.now()
-		print date_diff(self.current_due_date,a)
 		self.naming()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.add_payments_record()
