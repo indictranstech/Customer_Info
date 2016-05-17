@@ -60,7 +60,7 @@ def update_payments_child_table_of_customer_agreement_on_submit(payment_date,cus
 							set check_box_of_submit = 1,
 							payment_date = '{0}' where check_box = 1
 							and parent in (select name from `tabCustomer Agreement`
-							where customer = '{1}')""".format(payment_date,customer))
+							where customer = '{1}' and agreement_status = 'Open')""".format(payment_date,customer))
 
 
 

@@ -46,48 +46,7 @@ frappe.ui.form.on("Payments Management", {
 		}
 	},
 	get_entries: function() {
-		list_of_row_to_update_on_submit = [];
-		var grid;
-
-		var buttonFormat = function (row, cell, value, columnDef, dataContext) {
-    		return "<input type='button' value='Detail' class='btn' style='height:20px;padding: 0px;width: 82px;'; />";    
-		}
-
-  		var columns = [
-		    {id: "serial", name: "#", field: "serial", cssClass: "cell-selection", width: 40, resizable: false, selectable: false, focusable: false },
-		    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 150},
-		    {id: "agreement_period", name: "Agreement Period", field: "agreement_period",width: 150},
-		    {id: "product", name: "Product", field: "product",width: 150},
-		    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 150},
-		    {id: "monthly_rental_payment", name: "Rental Payments", field: "monthly_rental_payment",width: 150},
-		    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 150},
-		    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 150},
-		    {id: "payments_left", name: "Payments left", field: "payments_left",width: 150},
-		    {id: "balance", name: "Balance", field: "balance",width: 150},
-		    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 150},
-		    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 150},
-		    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat,width: 100}
-	  	];
-	  	var options = {
-	    	enableCellNavigation: true,
-	    	enableColumnReorder: false
-	  	};
-	  	var data = [];
-	  	frappe.call({
-	            method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
-	            type: "GET",
-	            async: false,
-	            args: {
-	              "customer": cur_frm.doc.customer
-	            },
-	            callback: function(r){
-	              if(r.message){
-	              	console.log(r.message,"customer_agreementss")
-	                this.data = r.message;
-	                make_grid(r.message,columns,options)
-	            }
-	        }
-	    });
+		render_agreeemtns()
 	},
 	submit:function(){
 		/*console.log(list_of_row_to_update_on_submit,"list_of_row_to_update_on_submit")*/
@@ -108,6 +67,52 @@ frappe.ui.form.on("Payments Management", {
 	    });
 	}
 })
+
+render_agreeemtns = function(){
+	console.log("in common_function_for_render_agreeemtns")
+	list_of_row_to_update_on_submit = [];
+	var grid;
+
+	var buttonFormat = function (row, cell, value, columnDef, dataContext) {
+		return "<input type='button' value='Detail' class='btn' style='height:20px;padding: 0px;width: 82px;'; />";    
+	}
+
+		var columns = [
+	    {id: "serial", name: "#", field: "serial", cssClass: "cell-selection", width: 40, resizable: false, selectable: false, focusable: false },
+	    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 150},
+	    {id: "agreement_period", name: "Agreement Period", field: "agreement_period",width: 150},
+	    {id: "product", name: "Product", field: "product",width: 150},
+	    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 150},
+	    {id: "monthly_rental_payment", name: "Rental Payments", field: "monthly_rental_payment",width: 150},
+	    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 150},
+	    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 150},
+	    {id: "payments_left", name: "Payments left", field: "payments_left",width: 150},
+	    {id: "balance", name: "Balance", field: "balance",width: 150},
+	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 150},
+	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 150},
+	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat,width: 100}
+  	];
+  	var options = {
+    	enableCellNavigation: true,
+    	enableColumnReorder: false
+  	};
+  	var data = [];
+  	frappe.call({
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
+            type: "GET",
+            async: false,
+            args: {
+              "customer": cur_frm.doc.customer
+            },
+            callback: function(r){
+              if(r.message){
+              	console.log(r.message,"customer_agreementss")
+                this.data = r.message;
+                make_grid(r.message,columns,options)
+            }
+        }
+    });
+}
 
 
 make_grid= function(data1,columns,options){
@@ -246,6 +251,7 @@ Payments_Details = Class.extend({
 	           		"payment_date":cur_frm.doc.payment_date
 	            },
 	           	callback: function(res){
+	        		render_agreeemtns()
 	        		me.hide_dialog()
 	            	if(res && res.message){		
 	            	}
