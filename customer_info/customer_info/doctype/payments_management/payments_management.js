@@ -46,7 +46,7 @@ frappe.ui.form.on("Payments Management", {
 		}
 	},
 	get_entries: function() {
-		render_agreeemtns()
+		render_agreements()
 	},
 	submit:function(){
 		/*console.log(list_of_row_to_update_on_submit,"list_of_row_to_update_on_submit")*/
@@ -68,8 +68,7 @@ frappe.ui.form.on("Payments Management", {
 	}
 })
 
-render_agreeemtns = function(){
-	console.log("in common_function_for_render_agreeemtns")
+render_agreements = function(){
 	list_of_row_to_update_on_submit = [];
 	var grid;
 
@@ -251,7 +250,7 @@ Payments_Details = Class.extend({
 	           		"payment_date":cur_frm.doc.payment_date
 	            },
 	           	callback: function(res){
-	        		render_agreeemtns()
+	        		render_agreements()
 	        		me.hide_dialog()
 	            	if(res && res.message){		
 	            	}
