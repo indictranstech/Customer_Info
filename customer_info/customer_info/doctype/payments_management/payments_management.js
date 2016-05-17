@@ -1,29 +1,3 @@
-frappe.require("assets/customer_info/js/slick/lib/firebugx.js");
-frappe.require("assets/customer_info/js/slick/plugins/slick.cellrangedecorator.js");
-frappe.require("assets/customer_info/js/slick/plugins/slick.cellrangeselector.js");
-frappe.require("assets/customer_info/js/slick/plugins/slick.cellselectionmodel.js");
-
-
-
-frappe.require("assets/customer_info/js/slick/slick.formatters.js");
-frappe.require("assets/customer_info/js/slick/slick.editors.js");
-frappe.require("assets/customer_info/js/slick/slick.grid.js");
-frappe.require("assets/customer_info/js/slick/slick.core.js");
-
-
-
-frappe.require("assets/customer_info/js/slick/slick.groupitemmetadataprovider.js");
-frappe.require("assets/customer_info/js/slick/slick.dataview.js");
-frappe.require("assets/customer_info/js/slick/controls/slick.pager.js");
-frappe.require("assets/customer_info/js/slick/controls/slick.columnpicker.js");
-
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.checkboxselectcolumn.js");
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.rowselectionmodel.js");
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.autotooltips.js");
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.cellcopymanager.js");
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.cellexternalcopymanager.js");
-frappe.require("assets/frappe/js/lib/slickgrid/plugins/slick.rowselectionmodel.js");
-
 var list_of_row_to_update_on_submit = [];
 frappe.ui.form.on("Payments Management", {
 	refresh: function(frm) {
@@ -112,7 +86,6 @@ render_agreements = function(){
         }
     });
 }
-
 
 make_grid= function(data1,columns,options){
 	var data = [];
