@@ -50,7 +50,8 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("agreement_period","read_only",0)
-            refresh_field("agreement_period")
+            cur_frm.set_df_property("agreement_status","read_only",1)
+            refresh_field("agreement_period","agreement_status")
         }    
     },
     validate:function(frm){
