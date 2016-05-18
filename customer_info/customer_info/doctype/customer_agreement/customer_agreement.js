@@ -48,6 +48,14 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
             refresh_field("today_plus_90_days")
         }
+        if(cur_frm.doc.today_plus_90_days){
+            var today_date = frappe.datetime.nowdate()
+            var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
+            if(date_diff == 0){
+                cur_frm.doc.s90d_sac_price = 0
+                refresh_field('s90d_sac_price')
+            }
+        }
         if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("agreement_period","read_only",0)
             cur_frm.set_df_property("agreement_status","read_only",1)
