@@ -9,11 +9,11 @@ frappe.ui.form.on("Customer Agreement",{
 			cur_frm.doc.old_date = cur_frm.doc.payment_day
 			refresh_field("old_date")
 		}
-        if(cur_frm.doc.payment_day){
+        /*if(cur_frm.doc.payment_day){
             var a = parseInt(cur_frm.doc.payment_day)
             cur_frm.set_value("today_plus_payment_day",frappe.datetime.add_days(frappe.datetime.nowdate(),a))
             refresh_field("today_plus_payment_day") 
-        }
+        }*/
 	},
 	customer: function(frm){
 		if(cur_frm.doc.customer){
@@ -94,6 +94,10 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_period && cur_frm.doc.__islocal){
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
+        }
+        if(cur_frm.doc.suspended_until){
+            cur_frm.doc.suspended_from = frappe.datetime.nowdate()
+            refresh_field("suspended_from")
         }
     },
     refresh:function(frm){
