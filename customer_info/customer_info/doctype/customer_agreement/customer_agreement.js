@@ -71,6 +71,10 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.old_agreement_status = cur_frm.doc.agreement_status
             refresh_field("old_agreement_status")
         }
+        if(cur_frm.doc.merchandise_status && cur_frm.doc.__islocal){
+            cur_frm.doc.old_merchandise_status = cur_frm.doc.merchandise_status
+            refresh_field("old_merchandise_status")
+        }
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
             var date_after_one_month = frappe.datetime.add_months(cur_frm.doc.date,1)
             var newDate = new Date(date_after_one_month)

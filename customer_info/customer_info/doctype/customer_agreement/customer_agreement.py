@@ -51,6 +51,14 @@ class CustomerAgreement(Document):
 			self.number_of_payments = int(self.agreement_period) - len(received_payments)
 			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
 
+	def on_update(self):
+		self.payment_date_comment()
+		self.last_status_update_date()
+		self.changed_merchandise_status()
+		self.diff_of_agreement_date_and_last_status_update_date_in_month()
+		self.update_due_date_in_payments_records_according_to_payment_day()
+		self.old_merchandise_status = self.merchandise_status
+
 	def naming(self):	
 		new_name_list = []
 		old_name_list = []
@@ -91,10 +99,7 @@ class CustomerAgreement(Document):
 
 	# add row in child table	
 	def add_payments_record(self):
-		print self.due_date_of_next_month
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-		print type(current_date),"type current_date"
-		print current_date,"current_dateeeeeeeeee"
 		list_of_payments_record = []
 		for i in range(int(self.agreement_period)):
 			list_of_payments_record.append({
@@ -111,27 +116,21 @@ class CustomerAgreement(Document):
 			nl.due_date = d['due_date']
 			nl.payment_id = d['payment_id']
 
+	def update_due_date_in_payments_records_according_to_payment_day(self):
+		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+		if self.payments_record:
+			for row in self.payments_record:
+				if row.due_date:
+					row.update({
+							'due_date':self.get_next_due_date(current_date,row.idx-1)
+					})
+					row.save(ignore_permissions = True)
+	
 	def get_next_due_date(self,date,i):
 		add_month_to_date = add_months(date,i)
-		return str(add_month_to_date)[0:10]	
-		
-	def on_update(self):
-		self.payment_date_comment()
-		self.last_status_update_date()
-		self.changed_merchandise_status()
-		self.diff_of_agreement_date_and_last_status_update_date_in_month()
-		#self.update_due_date_according_to_payment_day()
+		return str(add_month_to_date)[0:10]					
 
-	# def update_due_date_according_to_payment_day(self):
-	# 	current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-	# 	if self.payments_record:
-	# 		for i in self.payments_record:
-	# 			print i.due_date,"iiiiiiiiiiii"
-	# 			if i.due_date:
-	# 				i.due_date = ""
-	# 				i.due_date = self.get_next_due_date(current_date,i)
-				# i.due_date = self.get_next_due_date(current_date,i)
-	
+
 	# def get_count_of_payments(self):
 	# 	payment_received = 0
 	# 	no_of_late_days = 0
@@ -172,7 +171,7 @@ class CustomerAgreement(Document):
     		self.number_of_active_agreement_months = active_month
 
 	def changed_merchandise_status(self):
-		if self.merchandise_status:
+		if self.merchandise_status and self.old_merchandise_status and self.merchandise_status != self.old_merchandise_status:
 			item = frappe.get_doc("Item",self.product)
 			item.update({
 			"merchandise_status": self.merchandise_status,
