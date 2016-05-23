@@ -120,7 +120,17 @@ class CustomerAgreement(Document):
 		self.last_status_update_date()
 		self.changed_merchandise_status()
 		self.diff_of_agreement_date_and_last_status_update_date_in_month()
+		#self.update_due_date_according_to_payment_day()
 
+	# def update_due_date_according_to_payment_day(self):
+	# 	current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+	# 	if self.payments_record:
+	# 		for i in self.payments_record:
+	# 			print i.due_date,"iiiiiiiiiiii"
+	# 			if i.due_date:
+	# 				i.due_date = ""
+	# 				i.due_date = self.get_next_due_date(current_date,i)
+				# i.due_date = self.get_next_due_date(current_date,i)
 	
 	# def get_count_of_payments(self):
 	# 	payment_received = 0
@@ -200,6 +210,8 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.product = ""
 	target_doc.date = ""
 	target_doc.agreement_status_changed_date = ""
+	target_doc.suspended_until = ""
+	target_doc.suspended_from = ""
 	target_doc.merchandise_status = ""
 	target_doc.flag = 0
 	target_doc.payments_record = ""
@@ -207,12 +219,12 @@ def make_update_agreement(source_name, target_doc=None):
 
 @frappe.whitelist()
 def get_product(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select name, merchandise_status from `tabItem` 
-							where name not in (select product from `tabCustomer Agreement` 
+	return frappe.db.sql("""select item_name, merchandise_status from `tabItem` 
+							where item_name not in (select product from `tabCustomer Agreement` 
 												where agreement_status = "Open") 
 							and merchandise_status = "Used" or merchandise_status = "New" 
-							and (name like '{txt}'
-											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
+							and (item_name like '{txt}'
+											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
 # comment for date change
 		# if self.payment_day and self.old_date and (date_diff(self.payment_day,self.old_date) > 0 or date_diff(self.payment_day,self.old_date) < 0):
 		# 	payment_date = datetime.datetime.strptime(self.payment_day,'%Y-%m-%d').strftime('%d-%m-%Y')
