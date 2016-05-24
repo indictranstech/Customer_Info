@@ -53,11 +53,12 @@ class CustomerAgreement(Document):
 
 	def on_update(self):
 		self.payment_date_comment()
-		self.last_status_update_date()
+		self.get_agreement_closed_date()
 		self.changed_merchandise_status()
-		self.diff_of_agreement_date_and_last_status_update_date_in_month()
 		self.update_due_date_in_payments_records_according_to_payment_day()
-		self.old_merchandise_status = self.merchandise_status
+
+
+	# For Naming	
 
 	def naming(self):	
 		new_name_list = []
@@ -94,7 +95,6 @@ class CustomerAgreement(Document):
 				counter = int(old_name_list[-1]) + 1
 			self.name = self.parent_name + "-" + str(counter)
 			self.flag = 1
-			self.agreement_status = "Updated"
 		self.agreement_no = self.name
 
 	# add row in child table	
@@ -116,9 +116,11 @@ class CustomerAgreement(Document):
 			nl.due_date = d['due_date']
 			nl.payment_id = d['payment_id']
 
+	#	update_due_date_in_payments_records_according_to_payment_day	
+
 	def update_due_date_in_payments_records_according_to_payment_day(self):
-		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-		if self.payments_record:
+		if len(self.payments_record) > 0:
+			current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 			for row in self.payments_record:
 				if row.due_date:
 					row.update({
@@ -126,43 +128,28 @@ class CustomerAgreement(Document):
 					})
 					row.save(ignore_permissions = True)
 	
+
+	# get date after i month
 	def get_next_due_date(self,date,i):
 		add_month_to_date = add_months(date,i)
 		return str(add_month_to_date)[0:10]					
 
-
-	# def get_count_of_payments(self):
-	# 	payment_received = 0
-	# 	no_of_late_days = 0
-	# 	received_payments = []
-	# 	if self.payments_record:
-	# 		for row in self.payments_record:
-	# 			if row.check_box == 1:
-	# 				received_payments.append(row.monthly_rental_amount)
-	# 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
-	# 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
-	# 	received_payments = map(float,received_payments)
-
-	# 	for i in received_payments:
-	# 		payment_received += i
-		
-	# 	total_payment = self.monthly_rental_payment * int(self.agreement_period)
-	# 	payment_left = total_payment - payment_received
-
-	# 	return {"length":len(received_payments),"payment_left":payment_left,"no_of_late_days":no_of_late_days}			
-
+	# Comment For Changing Payment Day
 	def payment_date_comment(self):
 		if self.payment_day and self.old_date and self.payment_day != self.old_date:
 			comment = """ Payment Day is Changed From '{0}' To '{1}' """.format(self.old_date,self.payment_day)
 			self.add_comment("Comment",comment)
 			self.old_date = self.payment_day	
 	
-	def last_status_update_date(self):
-		if self.agreement_status and self.old_agreement_status and self.agreement_status != self.old_agreement_status and self.agreement_status != "Open":		
-			self.agreement_status_changed_date = datetime.now().strftime("%Y-%m-%d")
+	# get_agreement_closed_date
+	def get_agreement_closed_date(self):
+		if self.agreement_status_changed_date:
 			self.old_agreement_status = self.agreement_status
+			self.get_active_agreement_month()
+	
 
-	def diff_of_agreement_date_and_last_status_update_date_in_month(self):
+	# get_active_agreement_month
+	def get_active_agreement_month(self):
 		active_month = 0
 		if self.date and self.agreement_status_changed_date:	
 			d1 = map(int,str(self.date).split("-"))
@@ -170,6 +157,8 @@ class CustomerAgreement(Document):
 			active_month = (datetime(d2[0],d2[1],d2[2]).year - datetime(d1[0],d1[1],d1[2]).year)*12 + (datetime(d2[0],d2[1],d2[2]).month - datetime(d1[0],d1[1],d1[2]).month)
     		self.number_of_active_agreement_months = active_month
 
+    
+    # changed_merchandise_status in Item Master 	
 	def changed_merchandise_status(self):
 		if self.merchandise_status and self.old_merchandise_status and self.merchandise_status != self.old_merchandise_status:
 			item = frappe.get_doc("Item",self.product)
@@ -178,6 +167,7 @@ class CustomerAgreement(Document):
 			"old_status": item.merchandise_status
 			})
 			item.save(ignore_permissions = True)
+			self.old_merchandise_status = self.merchandise_status
 
 @frappe.whitelist()
 def get_primary_address(customer):
@@ -186,14 +176,6 @@ def get_primary_address(customer):
 								where customer = '{0}' 
 								and is_primary_address = 1 """.format(customer),as_dict=1)
 	return address
-
-# @frappe.whitelist()
-# def get_address(customer,address):
-# 	address = frappe.db.sql("""select address_line1,address_line2,city 
-# 								from `tabAddress` 
-# 								where customer = '{0}' 
-# 								and name = '{1}' """.format(customer,address),as_dict=1)
-# 	return address
 
 @frappe.whitelist()
 def make_update_agreement(source_name, target_doc=None):
@@ -205,17 +187,23 @@ def make_update_agreement(source_name, target_doc=None):
 		}, target_doc)
 
 	target_doc.document_type = "Updated"	
-	target_doc.agreement_status = "Open"
 	target_doc.product = ""
 	target_doc.date = ""
 	target_doc.agreement_status_changed_date = ""
 	target_doc.suspended_until = ""
 	target_doc.suspended_from = ""
 	target_doc.merchandise_status = ""
+	target_doc.old_merchandise_status = ""
 	target_doc.flag = 0
-	target_doc.payments_record = ""
+	target_doc.due_date_of_next_month = ""
+	target_doc.payments_record = []
+	target_doc.payment_day = ""
+	target_doc.agreement_status = "Updated"
+
 	return target_doc
 
+
+# filter Product
 @frappe.whitelist()
 def get_product(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql("""select item_name, merchandise_status from `tabItem` 
@@ -224,10 +212,3 @@ def get_product(doctype, txt, searchfield, start, page_len, filters):
 							and merchandise_status = "Used" or merchandise_status = "New" 
 							and (item_name like '{txt}'
 											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
-# comment for date change
-		# if self.payment_day and self.old_date and (date_diff(self.payment_day,self.old_date) > 0 or date_diff(self.payment_day,self.old_date) < 0):
-		# 	payment_date = datetime.datetime.strptime(self.payment_day,'%Y-%m-%d').strftime('%d-%m-%Y')
-		# 	old_date = datetime.datetime.strptime(self.old_date,'%Y-%m-%d').strftime('%d-%m-%Y')
-		# 	comment = """ Payment Date is Changed From '{0}' To '{1}' """.format(old_date,payment_date)
-		# 	self.add_comment("Comment",comment)
-		# 	self.old_date = self.payment_day
