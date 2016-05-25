@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 import datetime
 import frappe.defaults
+import json
 from frappe.utils import date_diff
 from frappe.utils import nowdate, getdate,add_months
 from frappe.utils import now_datetime
@@ -55,8 +56,6 @@ class CustomerAgreement(Document):
 		self.payment_date_comment()
 		self.get_agreement_closed_date()
 		self.changed_merchandise_status()
-		#self.update_due_date_in_payments_records_according_to_payment_day()
-
 
 	# For Naming	
 
@@ -115,19 +114,6 @@ class CustomerAgreement(Document):
 			nl.monthly_rental_amount = d['monthly_rental_amount']
 			nl.due_date = d['due_date']
 			nl.payment_id = d['payment_id']
-
-	#	update_due_date_in_payments_records_according_to_payment_day	
-
-	def update_due_date_in_payments_records_according_to_payment_day(self):
-		if len(self.payments_record) > 0:
-			current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-			for row in self.payments_record:
-				if row.due_date:
-					row.update({
-							'due_date':self.get_next_due_date(current_date,row.idx-1)
-					})
-					row.save(ignore_permissions = True)
-	
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
@@ -212,3 +198,7 @@ def get_product(doctype, txt, searchfield, start, page_len, filters):
 							and merchandise_status = "Used" or merchandise_status = "New" 
 							and (item_name like '{txt}'
 											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
+
+
+
+
