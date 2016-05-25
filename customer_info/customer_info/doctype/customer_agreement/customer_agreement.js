@@ -56,21 +56,11 @@ frappe.ui.form.on("Customer Agreement",{
                 refresh_field('s90d_sac_price')
             }
         }
-        /*if(cur_frm.doc.document_type == "Updated"){
-            cur_frm.set_df_property("agreement_period","read_only",0)
-            cur_frm.set_df_property("agreement_status","read_only",1)
-            refresh_field("agreement_period","agreement_status")
-        }*/
-        if(cur_frm.doc.document_type == "New" && cur_frm.doc.__islocal){
+        if(cur_frm.doc.document_type == "New" && cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_status","hidden",1)
         }
-        if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
+        if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("without_update_agreement_status","hidden",1)
-            /*cur_frm.set_df_property("agreement_status","hidden",0)*/
-        }
-        if(cur_frm.doc.document_type == "Updated" && !cur_frm.doc.__islocal){
-            cur_frm.set_df_property("without_update_agreement_status","hidden",1)
-            cur_frm.set_df_property("agreement_status","hidden",0)
         }
         if(cur_frm.doc.document_type == "New" && cur_frm.doc.agreement_status == "Updated"){
             cur_frm.set_df_property("without_update_agreement_status","hidden",1)

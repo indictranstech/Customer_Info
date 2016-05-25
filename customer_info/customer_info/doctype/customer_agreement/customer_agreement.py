@@ -83,7 +83,7 @@ class CustomerAgreement(Document):
 										where parent_name like "{0}" """.format(self.parent_name),as_list=1)
 			
 			parent = frappe.get_doc("Customer Agreement", self.agreement_no)
-			if parent and parent.agreement_status != "Updated" and parent.merchandise_status != "Used":
+			if parent and parent.agreement_status != "Updated":
 				parent.update({
 					"agreement_status": "Updated",
 					"merchandise_status": "Used"
