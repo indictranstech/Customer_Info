@@ -55,7 +55,7 @@ class CustomerAgreement(Document):
 		self.payment_date_comment()
 		self.get_agreement_closed_date()
 		self.changed_merchandise_status()
-		self.update_due_date_in_payments_records_according_to_payment_day()
+		#self.update_due_date_in_payments_records_according_to_payment_day()
 
 
 	# For Naming	
