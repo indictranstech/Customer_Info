@@ -133,9 +133,7 @@ frappe.ui.form.on("Customer Agreement",{
         }
     },
     agreement_status:function(frm){
-        console.log("in agreement_status 123")
         if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Updated" && !cur_frm.doc.__islocal){
-            console.log("in agreement_status")
             cur_frm.doc.agreement_status_changed_date = frappe.datetime.nowdate()
             refresh_field("agreement_status_changed_date")
         }
