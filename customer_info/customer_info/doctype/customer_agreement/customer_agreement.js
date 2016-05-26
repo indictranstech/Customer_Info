@@ -6,9 +6,19 @@ cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
 		if(cur_frm.doc.payment_day && cur_frm.doc.__islocal){
+            console.log("in payment_day")
 			cur_frm.doc.old_date = cur_frm.doc.payment_day
 			refresh_field("old_date")
 		}
+        if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal){
+            date_of_next_month_according_to_payment_day()
+            for(i=0;i<cur_frm.doc.payments_record.length;i++){
+                if(cur_frm.doc.payments_record[i]['due_date']){
+                    cur_frm.doc.payments_record[i]['due_date'] = get_update_due_date(cur_frm.doc.due_date_of_next_month,i)
+                    refresh_field("payments_record")
+                }
+            }
+        }
         /*if(cur_frm.doc.payment_day){
             var a = parseInt(cur_frm.doc.payment_day)
             cur_frm.set_value("today_plus_payment_day",frappe.datetime.add_days(frappe.datetime.nowdate(),a))
@@ -56,15 +66,15 @@ frappe.ui.form.on("Customer Agreement",{
                 refresh_field('s90d_sac_price')
             }
         }
-        if(cur_frm.doc.document_type == "New" && cur_frm.doc.agreement_status != "Updated"){
-            cur_frm.set_df_property("agreement_status","hidden",1)
+        if(cur_frm.doc.agreement_status != "Updated"){
+            cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended"])
         }
-        if(cur_frm.doc.document_type == "Updated"){
-            cur_frm.set_df_property("without_update_agreement_status","hidden",1)
+        if(cur_frm.doc.agreement_status == "Updated"){
+            cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended","Updated"])
         }
-        if(cur_frm.doc.document_type == "New" && cur_frm.doc.agreement_status == "Updated"){
-            cur_frm.set_df_property("without_update_agreement_status","hidden",1)
-            cur_frm.set_df_property("agreement_status","hidden",0)   
+        if(cur_frm.doc.__islocal){
+            cur_frm.doc.agreement_status = "Open"
+            refresh_field("agreement_status")
         }
     },
     validate:function(frm){
@@ -74,10 +84,6 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
             date_of_next_month_according_to_payment_day()
-        }
-        if(cur_frm.doc.document_type == "New" && cur_frm.doc.__islocal){    
-            cur_frm.doc.agreement_status = cur_frm.doc.without_update_agreement_status
-            refresh_field("agreement_status")
         }
         if(cur_frm.doc.agreement_status && cur_frm.doc.__islocal){
             cur_frm.doc.old_agreement_status = cur_frm.doc.agreement_status
@@ -106,20 +112,9 @@ frappe.ui.form.on("Customer Agreement",{
         }
     },
     agreement_status:function(frm){
-        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Updated" && !cur_frm.doc.__islocal){
-            cur_frm.doc.agreement_status_changed_date = frappe.datetime.nowdate()
-            refresh_field("agreement_status_changed_date")
-        }
-    },
-    payment_day:function(frm){
-        if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal){
-            date_of_next_month_according_to_payment_day()
-            for(i=0;i<cur_frm.doc.payments_record.length;i++){
-                if(cur_frm.doc.payments_record[i]['due_date']){
-                    cur_frm.doc.payments_record[i]['due_date'] = get_update_due_date(cur_frm.doc.due_date_of_next_month,i)
-                    refresh_field("payments_record")
-                }
-            }
+        if(cur_frm.doc.agreement_status == "Closed" && !cur_frm.doc.__islocal){
+            cur_frm.doc.agreement_close_date = frappe.datetime.nowdate()
+            refresh_field("agreement_close_date")
         }
     }
 
@@ -160,9 +155,6 @@ date_of_next_month_according_to_payment_day = function(frm){
         refresh_field("due_date_of_next_month")    
     }
 }
-
-
-
 
 
 //update_due_date_in_payments_records_according_to_payment_day
