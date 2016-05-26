@@ -17,6 +17,7 @@ from frappe.model.mapper import get_mapped_doc
 class CustomerAgreement(Document):	 
 	def validate(self):
 		self.naming()
+		self.comment_for_agreement_status_change()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.add_payments_record()
 
@@ -85,10 +86,11 @@ class CustomerAgreement(Document):
 			if parent and parent.agreement_status != "Updated":
 				parent.update({
 					"agreement_status": "Updated",
-					"merchandise_status": "Used"
+					"merchandise_status": "Used",
+					"old_agreement_status":parent.agreement_status
 				})
 				parent.save(ignore_permissions = True)
-				
+
 			if len(parent_name) > 1:			
 				old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
 				counter = int(old_name_list[-1]) + 1
@@ -129,17 +131,15 @@ class CustomerAgreement(Document):
 	
 	# get_agreement_closed_date
 	def get_agreement_closed_date(self):
-		if self.agreement_status_changed_date:
-			self.old_agreement_status = self.agreement_status
+		if self.agreement_close_date and self.agreement_status == "Closed":
 			self.get_active_agreement_month()
-	
 
 	# get_active_agreement_month
 	def get_active_agreement_month(self):
 		active_month = 0
-		if self.date and self.agreement_status_changed_date:	
+		if self.date and self.agreement_close_date:	
 			d1 = map(int,str(self.date).split("-"))
-			d2 = map(int,str(self.agreement_status_changed_date).split("-"))
+			d2 = map(int,str(self.agreement_close_date).split("-"))
 			active_month = (datetime(d2[0],d2[1],d2[2]).year - datetime(d1[0],d1[1],d1[2]).year)*12 + (datetime(d2[0],d2[1],d2[2]).month - datetime(d1[0],d1[1],d1[2]).month)
     		self.number_of_active_agreement_months = active_month
 
@@ -154,6 +154,14 @@ class CustomerAgreement(Document):
 			})
 			item.save(ignore_permissions = True)
 			self.old_merchandise_status = self.merchandise_status
+
+	# add comment on changing of agreement status		
+	def comment_for_agreement_status_change(self):
+		if self.agreement_status != self.old_agreement_status:
+			comment = """ Agreement Status Changed From '{0}' To '{1}' """.format(self.old_agreement_status,self.agreement_status)
+			self.add_comment("Comment",comment)
+			self.old_agreement_status = self.agreement_status
+
 
 @frappe.whitelist()
 def get_primary_address(customer):
@@ -184,7 +192,7 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.due_date_of_next_month = ""
 	target_doc.payments_record = []
 	target_doc.payment_day = ""
-	target_doc.agreement_status = "Updated"
+	target_doc.agreement_status = "Open"
 
 	return target_doc
 
