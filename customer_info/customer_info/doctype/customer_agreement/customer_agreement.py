@@ -68,9 +68,10 @@ class CustomerAgreement(Document):
 		if self.document_type == "New" and self.flag == 0:
 			old_name = frappe.db.sql("""select name from 
 										`tabCustomer Agreement` 
-										where document_type = "New" """,as_list=1)
+										where document_type = "New" order by replace(name,"BK-","")*1 """,as_list=1)
 			if len(old_name) > 0:
 				new_name_list = old_name[-1][0].split("-")
+				print new_name_list[-1]
 				count = int(new_name_list[-1]) + 1
 			self.name = "BK-0" + str(count)
 			self.parent_name = self.name
@@ -200,10 +201,10 @@ def make_update_agreement(source_name, target_doc=None):
 # filter Product
 @frappe.whitelist()
 def get_product(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select item_name, merchandise_status from `tabItem` 
+	return frappe.db.sql("""select item_name,merchandise_status from `tabItem` 
 							where item_name not in (select product from `tabCustomer Agreement` 
 												where agreement_status = "Open") 
-							and merchandise_status = "Used" or merchandise_status = "New" 
+							and (merchandise_status = "Used" or merchandise_status = "New" )
 							and (item_name like '{txt}'
 											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
 
