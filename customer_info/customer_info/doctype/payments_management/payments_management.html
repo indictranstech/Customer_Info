@@ -4,13 +4,32 @@
 		max-height: 300px;
 	}
 </style>
+
+
+
 <div  class="row">
-    <div class="col-xs-6">Remaining Amount</div>
-    <div class="col-xs-6 amount"></div>
-</div>    
+    <div class="col-xs-4 text-right">Amount Paid By Customer</div>
+    <div class="col-xs-1 text-left initial_amount"></div>
+    <div class="col-xs-4 text-right">Remaining Amount After Payment</div>
+    <div class="col-xs-3 text-left amount"></div>
+</div>
+<br>
+<table class="table table-bordered table-condensed" id="header-fixed">
+    <thead>
+      <tr>
+        <td align="center" style="width:25%;"><b>Payments</b></td>
+        <td align="center" style="width:24%;"><b>Monthly Rental Amount</b></td>
+        <td align="center" style="width:24%;"><b>Due Date</b></td>
+        <td align="center" style="width:27%;"><b>Payment Date</b></td>
+      </tr>
+    </thead>
+</table>    
+
+
+
 <div class="add-items">
   	<table class="table table-bordered table-condensed" id="header-fixed">
-	   	<thead>
+	   	<!-- <thead>
 	      <tr>
 	        <td align="center"><b>Payments</b></td>	
 	        <td align="center"><b>Monthly Rental Amount</b></td>
@@ -18,22 +37,22 @@
 	        <td align="center"><b>Payment Date</b></td>
             <td align="center"></td>
 	      </tr>
-	    </thead>
+	    </thead> -->
+        
         {% if (post[0].length) { %}
-    		{% for(var i=0, l=post[0].length; i < l; i++) { %}
-                <tbody>
+            {% for(var i=0, l=post[0].length; i < l; i++) { %}
                     <tr id="demo">
-                        <td align="center" id="no_of_payments">{{ post[0][i].no_of_payments}}</td>
-                        <td align="center" id="monthly_rental_amount">{{ post[0][i].monthly_rental_amount}}</td>
-                        <td align="center" id="due_date" value="{%= post[0][i].due_date%}">{{ post[0][i].due_date}}</td>
-                        <td align="center" id="payment_date">{{ post[0][i].payment_date}}</td>
-                        <td align="left" id="check_id">
+                        <td align="center" id="no_of_payments" style="width:25%;">{{ post[0][i].no_of_payments}}</td>
+                        <td align="center" id="monthly_rental_amount" style="width:25%;">{{ post[0][i].monthly_rental_amount}}</td>
+                        <td align="center" id="due_date" value="{%= post[0][i].due_date%}" style="width:25%;">{{ post[0][i].due_date}}</td>
+                        <td align="center" id="payment_date" style="width:20%;">{{ post[0][i].payment_date}}</td>
+                        <td align="left" id="check_id" style="width:5%;">
                             
                             {% if ((frappe.datetime.str_to_obj(payment_date) > frappe.datetime.str_to_obj(post[0][i].due_date)) && !post[0][i].check_box) { %}
                                 <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" checked></input>
                             
                             {% } else if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
-                                <input type="checkbox" class="select" data-from="from_child_table" value="{%= post[0][i].payment_id %}" checked disabled="disabled"></input>
+                                <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled"></input>
                             
                             {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
                                 <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" checked ></input>    
