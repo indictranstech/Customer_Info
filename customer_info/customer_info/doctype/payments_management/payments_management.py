@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+from datetime import datetime
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 
@@ -16,7 +17,10 @@ def get_customer_agreement(customer):
 	return {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,product,number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
-										payments_left,balance,late_fees,total_due
+										payments_left,balance,late_fees,total_due,
+										CASE WHEN DATEDIFF(suspension_date,now()) > 0 THEN DATE_FORMAT(suspension_date,'%d-%m-%Y') 
+										ELSE "Suspension" 
+										END AS suspension_date
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1,debug=1)
 	}	
@@ -26,7 +30,7 @@ def get_customer_agreement(customer):
 def get_payments_record(customer_agreement):
 	return {
 	"payments_record" : frappe.db.sql("""select no_of_payments,monthly_rental_amount,
-										due_date,payment_date,payment_id,check_box,check_box_of_submit from `tabPayments Record` 
+										due_date,payment_date,payment_id,check_box,check_box_of_submit,pre_select from `tabPayments Record` 
 										where parent = '{0}' 
 										order by due_date """.format(customer_agreement),as_dict=1)
 	}
@@ -89,6 +93,18 @@ def add_receivables_in_customer(customer,receivables):
 		"receivable":receivables
 		})
 	customer.save(ignore_permissions = True)
+	return "True"
+
+
+@frappe.whitelist()
+def update_suspenison_date_in_agreement(customer_agreement,date):
+	date = datetime.strptime(date, '%d-%m-%Y')
+	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
+	customer_agreement.update({
+		"suspension_date":date
+		})
+	customer_agreement.save(ignore_permissions = True)
+
 	 
 
 # call From Customer master OnClick Button Payment management 

@@ -54,16 +54,16 @@ frappe.ui.form.on("Customer Agreement",{
 		}
 	},
     onload:function(frm){
-        if(!cur_frm.doc.today_plus_90_days){
-            cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
-            refresh_field("today_plus_90_days")
-        }
         if(cur_frm.doc.today_plus_90_days){
             var today_date = frappe.datetime.nowdate()
             var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
+            console.log(date_diff,"date_diff")
             if(date_diff == 0){
-                cur_frm.doc.s90d_sac_price = 0
-                refresh_field('s90d_sac_price')
+                cur_frm.set_value('s90d_sac_price',0)
+                cur_frm.set_value('today_plus_90_days','')
+                /*cur_frm.doc.s90d_sac_price = 0
+                cur_frm.doc.today_plus_90_days = ""
+                refresh_field(['today_plus_90_days','s90d_sac_price'])*/
             }
         }
         if(cur_frm.doc.agreement_status != "Updated"){
@@ -76,11 +76,19 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.agreement_status = "Open"
             refresh_field("agreement_status")
         }
+        if(cur_frm.doc.product && !cur_frm.doc.__islocal){
+            cur_frm.set_df_property("product","read_only",1)
+        }
+        if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
+            cur_frm.set_df_property("agreement_period","read_only",0)
+        }
     },
     validate:function(frm){
         if(cur_frm.doc.__islocal){
             cur_frm.doc.date = frappe.datetime.nowdate()
             refresh_field("date")
+            cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
+            refresh_field("today_plus_90_days")
         }
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
             date_of_next_month_according_to_payment_day()
@@ -100,6 +108,12 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.suspended_until){
             cur_frm.doc.suspended_from = frappe.datetime.nowdate()
             refresh_field("suspended_from")
+        }
+        if(cur_frm.doc.product){
+            cur_frm.set_df_property("product","read_only",1)
+        }
+        if(cur_frm.doc.document_type == "Updated"){
+            cur_frm.set_df_property("agreement_period","read_only",1)
         }
     },
     refresh:function(frm){

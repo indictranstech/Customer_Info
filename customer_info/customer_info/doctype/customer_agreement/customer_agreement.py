@@ -116,7 +116,10 @@ class CustomerAgreement(Document):
 			nl.no_of_payments = d['no_of_payments']
 			nl.monthly_rental_amount = d['monthly_rental_amount']
 			nl.due_date = d['due_date']
-			nl.payment_id = d['payment_id']
+			nl.payment_id = d['payment_id']	
+
+			
+
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
