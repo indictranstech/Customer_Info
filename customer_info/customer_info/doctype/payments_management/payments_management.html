@@ -5,13 +5,13 @@
 	}
 </style>
 
-<!-- <div  class="row">
-    <div class="col-xs-4 text-right">Amount Paid By Customer</div>
-    <div class="col-xs-1 text-left initial_amount"></div>
-    <div class="col-xs-4 text-right">Remaining Amount After Payment</div>
-    <div class="col-xs-3 text-left amount"></div>
+<div  class="row">
+    <div class="col-xs-4 text-right">Total Charges</div>
+    <div class="col-xs-1 text-left total_charges"></div>
+    <div class="col-xs-4 text-right">Due Payments</div>
+    <div class="col-xs-3 text-left due_payments"></div>
 </div>
-<br> -->
+<br>
 <table class="table table-bordered table-condensed" id="header-fixed">
     <thead>
       <tr>
@@ -54,9 +54,6 @@
                             
                             {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
                                 <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" checked ></input>    
-                                
-                            {% } else if (post[0][i].pre_select) { %}
-                                <input type="checkbox" class="select" data-from="pre_select" value="{%= post[0][i].payment_id %}" checked ></input> 
 
                             {% } else { %}
                                 <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}"></input>

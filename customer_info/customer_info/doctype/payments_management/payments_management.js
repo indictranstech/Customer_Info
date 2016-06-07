@@ -14,58 +14,62 @@ frappe.ui.form.on("Payments Management", {
   			</tr>\
 		</table>");
 		if(cur_frm.doc.customer){
+			
 			render_agreements()
 			calculate_total_charges()
 		}
 	},
-	/*amount_paid_by_customer:function(frm){
-		if(cur_frm.doc.amount_paid_by_customer){
-			cur_frm.doc.remaining_amount = cur_frm.doc.amount_paid_by_customer
-			refresh_field('remaining_amount')
-		}
-	},*/
 	customer:function(){
 		if(cur_frm.doc.customer){
 			render_agreements()
 			calculate_total_charges()
 		}
 	},
-	/*get_entries: function() {
-		render_agreements()
-		calculate_total_charges()
-	},*/
 	submit:function(){
-		/*console.log(list_of_row_to_update_on_submit,"list_of_row_to_update_on_submit")*/
 		if(cur_frm.doc.customer){	
 			var me = this;
 			this.dialog = new frappe.ui.Dialog({
 	            title: "Payments Detalis",
 	                fields: [
 	                   	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Amount Paid By Customer"},
+	                   	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
 	                   	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add To Receivable"},
+	                   	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
 	                   	{"fieldtype": "Column Break" , "fieldname": "column"},
 	                   	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
-	                   	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Change Returned"}
 	                   	],
 	                   	primary_action_label: "OK",
 	                   	primary_action: function(){
 	                   		console.log(this,me,"in primary_action")
 	                        update_payments_records()
 	                        me.dialog.hide()
-	                        msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
 	                    }
 	       	});
 	       	this.fd = this.dialog.fields_dict;
-	       	this.dialog.show();
 	       	$(this.fd.amount_paid_by_customer.input).change(function(){
-	       		var val_of_balance = parseFloat(cur_dialog.fields_dict.amount_paid_by_customer.$input.val()) - cur_frm.doc.receivables
+	       		var val_of_balance = parseFloat(cur_dialog.fields_dict.amount_paid_by_customer.$input.val()) - cur_frm.doc.total_charges
 	       		console.log(val_of_balance,"val_of_balance")
 	       		cur_dialog.fields_dict.balance.set_input(val_of_balance)
 	       	})
-
+	       	$('button[data-fieldname="add_in_receivables"]').css("display","none");
+	       	$('button[data-fieldname="return_to_customer"]').css("display","none");
+	       	this.dialog.show();
+	       	me.dialog.fields_dict.process_payment.$input.click(function() {
+	       		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
+	       		console.log(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 )
+	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 ){
+	       			console.log("in if")
+	       			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
+	       			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
+	       			msgprint(__("There Is {0} eur in balance Put It Into Receivables OR Give Change",[cur_dialog.fields_dict.balance.$input.val()]))
+	       		}
+	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) < 0 ){
+	       			msgprint("Error Message Balance Is Negative")
+	       		}
+	       	})
 	       	me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 				value = me.dialog.get_values();
-				console.log(value.balance)
+				/*console.log(value.balance)*/
 				frappe.call({
 		            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
 		            async:false,
@@ -77,6 +81,7 @@ frappe.ui.form.on("Payments Management", {
 		              if(r.message){
 		            		cur_frm.doc.receivables = value.balance
 		            		refresh_field("receivables")
+		            		msgprint("Receivables Added In Customer Record")
 		            	}
 		        	}
 			    });	
@@ -94,25 +99,17 @@ update_payments_records = function(){
 		async:false,    
         method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_child_table_of_customer_agreement_on_submit",
        	args: {
-       		/*"list_of_row_to_update_on_submit":list_of_row_to_update_on_submit,*/
         	"payment_date":cur_frm.doc.payment_date,
         	"customer":cur_frm.doc.customer
         },
        	callback: function(r){
        		console.log(r.message)
-        	/*msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))*/
-        	msgprint("Receivables Added To Customer")
-        	/*cur_frm.doc.receivables = cur_frm.doc.remaining_amount
-        	refresh_field('receivables')*/
-        	/*if(r.message == "SuccesFully Update"){
-        		list_of_row_to_update_on_submit = []
-        	}*/
+       		cur_frm.doc.total_charges = cur_frm.doc.amount_of_due_payments - cur_frm.doc.receivables
+        	refresh_field("total_charges")
+        	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
     	}
     });
 }
-
-
-
 
 
 render_agreements = function(){
@@ -225,7 +222,7 @@ get_datepicker = function(id,item){
                    	primary_action_label: "OK",
                    	primary_action: function(){
                    		var dialog = this.dialog;
-                        chang_name_of_buttom(id,this.fd,item,dialog)
+                        change_name_of_buttom(id,this.fd,item,dialog)
                     }
 		       	});
 		       	this.fd = this.dialog.fields_dict;
@@ -235,7 +232,7 @@ get_datepicker = function(id,item){
 		       	this.dialog.show();
 }
 
-chang_name_of_buttom = function(id,fd,item,dialog){
+change_name_of_buttom = function(id,fd,item,dialog){
 	id = "#" + id
 	date = fd.date_picker.$input.val()
 	if(date){
@@ -269,9 +266,10 @@ calculate_total_charges = function(frm){
             callback: function(r){
             if(r.message){
               	console.log(r.message)
-              	cur_frm.doc.amount_of_due_payments = r.message
-	           	cur_frm.doc.total_charges = r.message - cur_frm.doc.receivables
-	           	refresh_field(['amount_of_due_payments','total_charges'])
+              	cur_frm.doc.amount_of_due_payments = r.message['sum']
+              	cur_frm.doc.receivables = r.message['receivable']
+	           	cur_frm.doc.total_charges = r.message['sum'] - cur_frm.doc.receivables
+	           	refresh_field(['amount_of_due_payments','total_charges','receivables'])
             }
             else{
             	cur_frm.doc.total_charges = 0.0
@@ -280,32 +278,6 @@ calculate_total_charges = function(frm){
         }
     });
 }
-
-
-/*add_receivables_in_customer = function(frm){
-	frappe.call({
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
-            async:false,
-            args: {
-              "customer": cur_frm.doc.customer,
-              "receivables":cur_frm.doc.receivables
-            },
-            callback: function(r){
-              if(r.message){
-            }
-        }
-    });	
-}*/
-
-
-
-/*	{"fieldtype": "Button", "label": __("Get"), "fieldname": "get"},
-							]
-					});
-
-					dialog.fields_dict.get.$input.click(function() {
-						value = dialog.get_values();*/
-
 
 Payments_Details = Class.extend({
 	init:function(item){
@@ -319,14 +291,12 @@ Payments_Details = Class.extend({
 		this.dialog = new frappe.ui.Dialog({
             title: "Payments Detalis",
                 fields: [
-                	/*{"fieldtype": "float" , "fieldname": "amount" , "label": "Amount Paid By Customer"},*/
                    	{"fieldtype": "HTML" , "fieldname": "payments_record" , "label": "Relative Items"},
                    	],
                    	primary_action_label: "OK",
                    	primary_action: function(){
                    		console.log(this,me,"in primary_action")
                         me.make_list_of_payments_checked()
-                        /*me.hide_dialog()*/
                     }
        	});
        	this.payments_record_list = []
@@ -356,36 +326,18 @@ Payments_Details = Class.extend({
 	            	   	console.log(me.row_to_update,"in render r message")
 	            	   	for(i=0;i < me.payments_record_list[0].length; i++){
 	            	   		if(me.payments_record_list[0][i]['check_box'] == 0){
-	            	   			me.payments_record_list[0][i]['pre_select'] = 1
+	            	   			me.payments_record_list[0][i]['check_box'] = 1
+	            	   			/*me.payments_record_list[0][i]['pre_select'] = 1*/
 	            	   			break;
 	            	   		}
 	            	   	}
-	            	   	/*html = "<div  class='row'>\
-								    <div class='col-xs-3'>Remaining Amount</div>\
-								    <div class='col-xs-3 amount'></div>\
-								    <div class='col-xs-3'></div>\
-								</div><br>\
-	            	   			<table class='table table-bordered table-condensed' id='header-fixed'>\
-							   	<thead>\
-							      <tr>\
-							        <td align='center' style='width:25%;'><b>Payments</b></td>\
-							        <td align='center' style='width:24%;'><b>Monthly Rental Amount</b></td>\
-						            <td align='center' style='width:24%;'><b>Due Date</b></td>\
-							        <td align='center' style='width:27%;'><b>Payment Date</b></td>\
-							      </tr>\
-							    </thead>"
-
-	            	   	$(me.fd.payments_record.$wrapper).append(html)
-	            	   	$(me.fd.payments_record.$wrapper).append(frappe.render_template("payments_management",{"post":me.payments_record_list,
-	            	   									"payment_date":cur_frm.doc.payment_date
-	            	   									}));*/
-						
+	            	   	console.log(me.payments_record_list,"after pre_select")
 	            	   	html = $(frappe.render_template("payments_management",{
 	            	   				"post":me.payments_record_list,
 	            	   				"payment_date":cur_frm.doc.payment_date
 	            	   			})).appendTo(me.fd.payments_record.wrapper);
 	            		me.dialog.show();
-	            		/*me.increase_decrease_remaining_amount()*/
+	            		me.increase_decrease_total_charges_and_due_payment();
 	            	}  
 	        	}
 	        });
@@ -393,150 +345,97 @@ Payments_Details = Class.extend({
 	},
 	make_list_of_payments_checked:function(){
 		this.row_to_update = []
+		this.row_to_check = []
 		this.row_to_uncheck = []
 		var me = this;
         $.each($(this.fd.payments_record.wrapper).find('.select:checked[data-from=""]'), function(name, item){
                 me.row_to_update.push($(item).val());
         });
-		$.each($(this.fd.payments_record.wrapper).find('.new-entry'), function(name, item){
+        $.each($(this.fd.payments_record.wrapper).find('.new-entry'), function(name, item){
+    		if($(this).is(':checked')){
+    			me.row_to_check.push($(item).val())
+    		}
     		if($(this).is(':not(:checked)')){
     			me.row_to_uncheck.push($(item).val())
     		}
         });
-        me.re_calculate_total_charges()
         console.log(me.row_to_update,"row_to_update")
         console.log(me.row_to_uncheck,"row_to_uncheck")
-        console.log(me.checked_row_from_child_table,"checked_row_from_child_table")
-
-		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.checked_row_from_child_table.length > 0){
+        console.log(me.row_to_check,"row_to_check")
+		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
 			var me = this
-			me.checked_row_from_child_table = me.checked_row_from_child_table.filter(function(val) {
+			// for filter duplicate from array
+			/*array1 = array1.filter(function(val) {
+  				return array2.indexOf(val) == -1;
+			});*/
+
+			/*me.checked_row_from_child_table = me.checked_row_from_child_table.filter(function(val) {
   				return me.row_to_uncheck.indexOf(val) == -1;
 			});
-			console.log(me.checked_row_from_child_table,"after filter")
-		/*if(me.check_amount() == "true" || me.row_to_uncheck.length > 0){*/
-	   		/*me.update_payments_records_on_submit = {
-        	'parent':me.item['id'],
-        	'list_of_payment_id':me.row_to_update
-        	}
-        	list_of_row_to_update_on_submit.push(me.update_payments_records_on_submit)
-	        console.log(me.update_payments_records_on_submit,"update_payments_records_on_submit")
-	        console.log(list_of_row_to_update_on_submit,"list_of_row_to_update_on_submit")*/
+			console.log(me.checked_row_from_child_table,"after filter")*/
 	   		frappe.call({    
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
 		        async: false,
 	           	args: {
 	           		"row_to_update":me.row_to_update,
 	           		"row_to_uncheck":me.row_to_uncheck,
-	           		"checked_row_from_child_table":me.checked_row_from_child_table,
+	           		"row_to_check":me.row_to_check,
 	           		"parent":this.item['id'],
 	           		"payment_date":cur_frm.doc.payment_date
 	            },
 	           	callback: function(res){
 	        		render_agreements()
-	            	/*cur_frm.doc.remaining_amount = parseFloat($(cur_dialog.body).find('div.amount').text())
-	            	cur_frm.doc.receivables = cur_frm.doc.remaining_amount
-	            	refresh_field(["remaining_amount","receivables"])*/
+	            	me.update_total_charges_and_due_payments()
 	        		me.hide_dialog()
-	            	/*if(res && res.message){				
-	            	}*/
 	        	}
 	        });
-	    }    
+	    }
 	},
-	re_calculate_total_charges:function(){
+	increase_decrease_total_charges_and_due_payment:function(){
 		var me = this
-		this.checked_row_from_child_table = []
-        $.each($(this.fd.payments_record.wrapper).find('input[data-from="pre_select"]'), function(name, item){
-    		if($(this).is(':checked')){
-    			me.checked_row_from_child_table.push($(item).val())
-    			$(this).attr('data-from','from_child_table')
-    		}
-        });
-        console.log(me.checked_row_from_child_table,"me.checked_row_from_child_table")
-        var factor = this.payments_record_list[0][1].monthly_rental_amount;
-        var total_amount_of_payments_made = parseFloat(factor)*(me.checked_row_from_child_table.length)
-        console.log(total_amount_of_payments_made,"total_amount_of_payments_made")
-        remaining_due = cur_frm.doc.amount_of_due_payments - total_amount_of_payments_made
-        console.log(typeof(remaining_due)," type of remaining_due")
-        console.log(remaining_due,"remaining_due")
-        cur_frm.doc.amount_of_due_payments = remaining_due
-        cur_frm.doc.total_charges = remaining_due - cur_frm.doc.receivables
-        refresh_field(['amount_of_due_payments','total_charges'])
-	},
-	increase_decrease_remaining_amount:function(){
-		var me = this
-		this.checked_row_from_child_table = []
-        $.each($(this.fd.payments_record.wrapper).find('input[data-from="from_child_table"]'), function(name, item){
-    		if($(this).is(':checked')){
-    			me.checked_row_from_child_table.push($(item).val())
-    		}
-        });
-        /*$('#myDate').change(function() {
-        	console.log($('#myDate').val())
-        })*/
-
-        /*console.log($(this.fd.payments_record.wrapper).find('#monthly_rental_amount').text(),"monthly_rental_amount")*/
-        console.log(me.checked_row_from_child_table,"checked_row_from_child_table")
-        var factor = this.payments_record_list[0][1].monthly_rental_amount;
-		var minus = parseFloat(factor)*me.checked_row_from_child_table.length
-		console.log(typeof(minus),"aaaaaaaaaaaaaaaaa")
-		me.initial_amount = me.initial_amount - minus;
-		$(this.fd.payments_record.wrapper).find('div.amount').append(me.initial_amount.toFixed(2))
-		$(this.fd.payments_record.wrapper).find('div.initial_amount').append(cur_frm.doc.remaining_amount)
+        var factor = this.payments_record_list[0][1].monthly_rental_amount;		
+		$(this.fd.payments_record.wrapper).find('div.due_payments').append((cur_frm.doc.amount_of_due_payments).toFixed(2))
+		$(this.fd.payments_record.wrapper).find('div.total_charges').append((cur_frm.doc.total_charges).toFixed(2))
 		$('input[data-from=""]').change(function() {  
-		    var selectedval = ($(this).val());
 		    if ($(this).is(':checked')){
-				var decrease = me.initial_amount - parseFloat(factor).toFixed(2)
-				if(me.initial_amount >= decrease && decrease > 0){
-					me.initial_amount = decrease
-					$(cur_dialog.body).find('div.amount').empty()
-					$(cur_dialog.body).find('div.amount').append(me.initial_amount.toFixed(2))
-					/*$('input[data-from=""]').removeClass("un-paid")
-					$('input[data-from=""]').addClass("paid")*/
-				}
-				else{
-					$(this).attr('checked', false);
-					msgprint(__("Remaining Amount Less Than Monthly Rental Amount"))
-				}
+				var add_in_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) + parseFloat(factor)
+				var add_in_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) + parseFloat(factor)
+				$(cur_dialog.body).find('div.due_payments').empty()
+				$(cur_dialog.body).find('div.due_payments').append(add_in_due_payments.toFixed(2))
+				$(cur_dialog.body).find('div.total_charges').empty()
+				$(cur_dialog.body).find('div.total_charges').append(add_in_total_charges.toFixed(2))
     		} 
     		else {
-				var increase = me.initial_amount + parseFloat(parseFloat(factor).toFixed(2))
-				if(me.initial_amount < increase){
-					me.initial_amount = increase
-					$(cur_dialog.body).find('div.amount').empty()
-					$(cur_dialog.body).find('div.amount').append(me.initial_amount.toFixed(2))
-					/*$('input[data-from=""]').removeClass("paid")
-					$('input[data-from=""]').addClass("un-paid")*/
-				}
+				var subtract_from_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) - parseFloat(factor)
+				var subtract_from_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) - parseFloat(factor)
+				console.log(subtract_from_total_charges.toFixed(2),"subtract_from_total_charges")
+				$(cur_dialog.body).find('div.due_payments').empty()
+				$(cur_dialog.body).find('div.due_payments').append(subtract_from_due_payments.toFixed(2))
+				$(cur_dialog.body).find('div.total_charges').empty()
+				$(cur_dialog.body).find('div.total_charges').append(subtract_from_total_charges.toFixed(2))
     		}
 		});
 		$('input[data-from="from_child_table"]').change(function() {  
-		    var selectedval = ($(this).val());
 		    if ($(this).is(':checked')){
-				var decrease = me.initial_amount - parseFloat(factor).toFixed(2)
-				if(me.initial_amount >= decrease && decrease > 0){
-					me.initial_amount = decrease
-					$(cur_dialog.body).find('div.amount').empty()
-					$(cur_dialog.body).find('div.amount').append(me.initial_amount.toFixed(2))
-					/*$('input[data-from=""]').removeClass("un-paid")
-					$('input[data-from=""]').addClass("paid")*/
-				}
-				else{
-					$(this).attr('checked', false);
-					msgprint(__("Remaining Amount Less Than Monthly Rental Amount"))
-				}
+				var add_in_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) + parseFloat(factor)
+				var add_in_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) + parseFloat(factor)
+				$(cur_dialog.body).find('div.due_payments').empty()
+				$(cur_dialog.body).find('div.due_payments').append(add_in_due_payments.toFixed(2))
+				$(cur_dialog.body).find('div.total_charges').empty()
+				$(cur_dialog.body).find('div.total_charges').append(add_in_total_charges.toFixed(2))
     		} 
     		else {
-				var increase = me.initial_amount + parseFloat(parseFloat(factor).toFixed(2))
-				if(me.initial_amount < increase){
-					me.initial_amount = increase
-					$(cur_dialog.body).find('div.amount').empty()
-					$(cur_dialog.body).find('div.amount').append(me.initial_amount.toFixed(2))
-					/*$('input[data-from=""]').removeClass("paid")
-					$('input[data-from=""]').addClass("un-paid")*/
-				}
+				var subtract_from_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) - parseFloat(factor)
+				var subtract_from_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) - parseFloat(factor)
+				$(cur_dialog.body).find('div.due_payments').empty()
+				$(cur_dialog.body).find('div.due_payments').append(subtract_from_due_payments.toFixed(2))
+				$(cur_dialog.body).find('div.total_charges').empty()
+				$(cur_dialog.body).find('div.total_charges').append(subtract_from_total_charges.toFixed(2))
     		}
 		});
+	},
+	update_total_charges_and_due_payments : function(frm){
+		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()))
+		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()))
 	}	
 })

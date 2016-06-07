@@ -32,11 +32,6 @@ def get_data():
 					"type": "doctype",
 					"name": "Ratio",
 					"description": _("Details Of Ratio"),
-				},
-				{
-					"type": "doctype",
-					"name": "Payments Management",
-					"description": _("Record Of Payments"),
 				}
 			]
 		}
