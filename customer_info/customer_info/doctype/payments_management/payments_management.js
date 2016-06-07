@@ -108,7 +108,7 @@ update_payments_records = function(){
         	refresh_field("total_charges")
         	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
     	}
-    });
+    })
 }
 
 
