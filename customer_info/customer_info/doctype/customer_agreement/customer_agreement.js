@@ -90,7 +90,7 @@ frappe.ui.form.on("Customer Agreement",{
         }
     },
     validate:function(frm){
-        if(cur_frm.doc.__islocal){
+        if(cur_frm.doc.__islocal && cur_frm.doc.document_type == "New"){
             cur_frm.doc.date = frappe.datetime.nowdate()
             refresh_field("date")
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
