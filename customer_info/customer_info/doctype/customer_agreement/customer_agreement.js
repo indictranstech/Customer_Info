@@ -82,6 +82,12 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
             cur_frm.set_df_property("agreement_period","read_only",0)
         }
+        if(cur_frm.doc.agreement_status == "Updated"){
+            cur_frm.set_df_property("agreement_update_date","hidden",0)
+        }
+        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+            cur_frm.set_df_property("agreement_update_date","hidden",1)    
+        }
     },
     validate:function(frm){
         if(cur_frm.doc.__islocal){
@@ -105,15 +111,19 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
         }
-        if(cur_frm.doc.suspended_until){
+        /*if(cur_frm.doc.suspended_until){
             cur_frm.doc.suspended_from = frappe.datetime.nowdate()
             refresh_field("suspended_from")
-        }
+        }*/
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
         }
         if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("agreement_period","read_only",1)
+            cur_frm.set_df_property("agreement_update_date","hidden",0)
+        }
+        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+            cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
     },
     refresh:function(frm){
@@ -129,6 +139,14 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status == "Closed" && !cur_frm.doc.__islocal){
             cur_frm.doc.agreement_close_date = frappe.datetime.nowdate()
             refresh_field("agreement_close_date")
+        }
+        if(cur_frm.doc.agreement_status == "Updated"){
+            cur_frm.doc.agreement_update_date = frappe.datetime.nowdate()
+            refresh_field("agreement_update_date")
+            cur_frm.set_df_property("agreement_update_date","hidden",0)
+        }
+        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+            cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
     }
 
