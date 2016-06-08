@@ -1,4 +1,5 @@
 cur_frm.add_fetch('product', 's90d_sac_price', 's90d_sac_price');
+cur_frm.add_fetch('product', 's90d_sac_price', 'duplicate_s90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
 cur_frm.add_fetch('product', 'period', 'agreement_period');
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
@@ -81,7 +82,9 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.__islocal && cur_frm.doc.document_type == "New"){
             cur_frm.doc.date = frappe.datetime.nowdate()
             refresh_field("date")
+            
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
+            cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));
             refresh_field("today_plus_90_days")
         }
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
@@ -122,7 +125,20 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_df_property("agreement_no","hidden",0)
             refresh_field("agreement_no")
         }
-        if(cur_frm.doc.today_plus_90_days){
+        if(cur_frm.doc.duplicate_today_plus_90_days){
+            console.log("in if cond")
+            var today_date = frappe.datetime.nowdate()
+            var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.duplicate_today_plus_90_days)
+            console.log(date_diff,"date_diff")
+            console.log((date_diff >= 0),"if")
+            if(date_diff >= 0){
+                console.log("in date_diff")
+                cur_frm.set_value('duplicate_s90d_sac_price',0)
+                cur_frm.set_value('duplicate_today_plus_90_days','')
+                cur_frm.save();
+            }
+        }
+        /*if(cur_frm.doc.today_plus_90_days){
             console.log("in if cond")
             var today_date = frappe.datetime.nowdate()
             var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
@@ -134,7 +150,7 @@ frappe.ui.form.on("Customer Agreement",{
                 cur_frm.set_value('today_plus_90_days','')
                 cur_frm.save();
             }
-        }
+        }*/
     },
     agreement_status:function(frm){
         if(cur_frm.doc.agreement_status == "Closed" && !cur_frm.doc.__islocal){
