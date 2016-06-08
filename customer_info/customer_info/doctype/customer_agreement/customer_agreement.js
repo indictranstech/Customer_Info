@@ -54,18 +54,6 @@ frappe.ui.form.on("Customer Agreement",{
 		}
 	},
     onload:function(frm){
-        if(cur_frm.doc.today_plus_90_days){
-            var today_date = frappe.datetime.nowdate()
-            var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
-            console.log(date_diff,"date_diff")
-            if(date_diff == 0){
-                cur_frm.set_value('s90d_sac_price',0)
-                cur_frm.set_value('today_plus_90_days','')
-                /*cur_frm.doc.s90d_sac_price = 0
-                cur_frm.doc.today_plus_90_days = ""
-                refresh_field(['today_plus_90_days','s90d_sac_price'])*/
-            }
-        }
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended"])
         }
@@ -133,6 +121,19 @@ frappe.ui.form.on("Customer Agreement",{
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
             refresh_field("agreement_no")
+        }
+        if(cur_frm.doc.today_plus_90_days){
+            console.log("in if cond")
+            var today_date = frappe.datetime.nowdate()
+            var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
+            console.log(date_diff,"date_diff")
+            console.log((date_diff >= 0),"if")
+            if(date_diff >= 0){
+                console.log("in date_diff")
+                cur_frm.set_value('s90d_sac_price',0)
+                cur_frm.set_value('today_plus_90_days','')
+                cur_frm.save();
+            }
         }
     },
     agreement_status:function(frm){
