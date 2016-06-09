@@ -177,6 +177,8 @@ def get_primary_address(customer):
 
 @frappe.whitelist()
 def make_update_agreement(source_name, target_doc=None):
+	print source_name
+	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
 	target_doc = get_mapped_doc("Customer Agreement", source_name,
 		{
 			"Customer Agreement": {
@@ -197,6 +199,7 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.payments_record = []
 	target_doc.payment_day = ""
 	target_doc.agreement_status = "Open"
+	target_doc.duplicate_today_plus_90_days = customer_agreement.today_plus_90_days
 
 	return target_doc
 
