@@ -14,15 +14,19 @@ frappe.ui.form.on("Payments Management", {
   			</tr>\
 		</table>");
 		if(cur_frm.doc.customer){
-			
 			render_agreements()
-			calculate_total_charges()
+			update_payments_child_table();
+			calculate_total_charges();
+			/*calculate_total_charges()*/
 		}
 	},
 	customer:function(){
 		if(cur_frm.doc.customer){
-			render_agreements()
-			calculate_total_charges()
+			remove_all_old_check()
+			render_agreements();
+			update_payments_child_table();
+			calculate_total_charges();
+			/*calculate_total_charges()*/
 		}
 	},
 	submit:function(){
@@ -31,12 +35,13 @@ frappe.ui.form.on("Payments Management", {
 			this.dialog = new frappe.ui.Dialog({
 	            title: "Payments Detalis",
 	                fields: [
-	                   	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Amount Paid By Customer"},
+	                   	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Amount Paid By Customer","default":"0.0"},
 	                   	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
 	                   	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add To Receivable"},
 	                   	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
 	                   	{"fieldtype": "Column Break" , "fieldname": "column"},
-	                   	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
+	                   	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance","default":"0.0"},
+	                   	{"fieldtype": "HTML" , "fieldname": "msg"},
 	                   	],
 	                   	primary_action_label: "OK",
 	                   	primary_action: function(){
@@ -49,10 +54,14 @@ frappe.ui.form.on("Payments Management", {
 	       	$(this.fd.amount_paid_by_customer.input).change(function(){
 	       		var val_of_balance = parseFloat(cur_dialog.fields_dict.amount_paid_by_customer.$input.val()) - cur_frm.doc.total_charges
 	       		console.log(val_of_balance,"val_of_balance")
-	       		cur_dialog.fields_dict.balance.set_input(val_of_balance)
+	       		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
+	       		me.dialog.fields_dict.msg.$wrapper.empty()
+	       		$('button[data-fieldname="add_in_receivables"]').css("display","none");
+	       		$('button[data-fieldname="return_to_customer"]').css("display","none");
 	       	})
 	       	$('button[data-fieldname="add_in_receivables"]').css("display","none");
 	       	$('button[data-fieldname="return_to_customer"]').css("display","none");
+
 	       	this.dialog.show();
 	       	me.dialog.fields_dict.process_payment.$input.click(function() {
 	       		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
@@ -61,15 +70,19 @@ frappe.ui.form.on("Payments Management", {
 	       			console.log("in if")
 	       			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
 	       			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
-	       			msgprint(__("There Is {0} eur in balance Put It Into Receivables OR Give Change",[cur_dialog.fields_dict.balance.$input.val()]))
+	       			html = "<div class='row' style='margin-left: 7px;'>There Is "+cur_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
+	       			me.dialog.fields_dict.msg.$wrapper.empty()
+	       			me.dialog.fields_dict.msg.$wrapper.append(html)
 	       		}
 	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) < 0 ){
-	       			msgprint("Error Message Balance Is Negative")
+	       			html = "<div class='row' style='margin-left: 7px;'>Error Message Balance Is Negative</div>"
+	       			me.dialog.fields_dict.msg.$wrapper.empty()
+	       			me.dialog.fields_dict.msg.$wrapper.append(html)
+	       			/*msgprint("Error Message Balance Is Negative")*/
 	       		}
 	       	})
 	       	me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 				value = me.dialog.get_values();
-				/*console.log(value.balance)*/
 				frappe.call({
 		            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
 		            async:false,
@@ -86,9 +99,49 @@ frappe.ui.form.on("Payments Management", {
 		        	}
 			    });	
 			})
+			me.dialog.fields_dict.return_to_customer.$input.click(function() {
+				frappe.call({
+		            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
+		            async:false,
+		            args: {
+		              "customer": cur_frm.doc.customer,
+		              "receivables":0
+		            },
+		            callback: function(r){
+		              if(r.message){
+		            		cur_frm.doc.receivables = "string"
+		            		refresh_field("receivables")
+		            		msgprint("Return To Customer")
+		            	}
+		        	}
+			    });
+			})
 		}
 		else{
 			msgprint("Select Customer First")
+		}
+	},
+	add_comment:function(frm){
+		if(cur_frm.doc.comment){
+			frappe.call({
+            method: "frappe.desk.form.utils.add_comment",
+            args: {
+                doc:{
+                    doctype: "Communication",
+                    comment_type: "Comment",
+                    reference_doctype: "Customer",
+                    subject: cur_frm.doc.comment,
+                    content: cur_frm.doc.comment,
+                    reference_name: cur_frm.doc.customer,
+                    comment: cur_frm.doc.comment,
+                    communication_type:'Comment'
+                }
+            },
+            callback: function(r) {
+            	msgprint("Comment Added Successfully");
+            	cur_frm.set_value("comment","")
+            }
+	        });
 		}
 	}
 })
@@ -104,8 +157,8 @@ update_payments_records = function(){
         },
        	callback: function(r){
        		console.log(r.message)
-       		cur_frm.doc.total_charges = cur_frm.doc.amount_of_due_payments - cur_frm.doc.receivables
-        	refresh_field("total_charges")
+       		/*cur_frm.doc.total_charges = cur_frm.doc.amount_of_due_payments - cur_frm.doc.receivables
+        	refresh_field("total_charges")*/
         	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
     	}
     })
@@ -215,21 +268,32 @@ make_grid= function(data1,columns,options){
 get_datepicker = function(id,item){
 	var me  = this;
 	this.dialog = new frappe.ui.Dialog({
-            		title: "Pick A Date",
+            		title: "Pick a date",
                 	fields: [
                    		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
+                   		{"fieldtype": "Button" , "fieldname": "reset" , "label": "Reset"},
                    	],
-                   	primary_action_label: "OK",
+                   	primary_action_label: "Set",
                    	primary_action: function(){
                    		var dialog = this.dialog;
                         change_name_of_buttom(id,this.fd,item,dialog)
                     }
 		       	});
 		       	this.fd = this.dialog.fields_dict;
-		       	this.dialog.$wrapper.find('.modal-dialog').css("width", "300px");
+		       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
 		       	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
-		       	this.dialog.$wrapper.find('.hidden-xs').css("display","none");
+		       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+		       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("margin-top","-217px");
+		       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("padding","5px");
+		       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("margin-left","171px");
 		       	this.dialog.show();
+		       	me.dialog.fields_dict.reset.$input.click(function() {
+		       		var date = frappe.datetime.nowdate()
+		       		id = "#" + id
+		       		$(id).attr('value','Suspenison');
+					update_suspenison_date_in_agreement(item,date)
+					dialog.hide();
+		       	})
 }
 
 change_name_of_buttom = function(id,fd,item,dialog){
@@ -257,8 +321,36 @@ update_suspenison_date_in_agreement = function(item,date){
     });
 }
 
+update_payments_child_table = function(frm){
+	frappe.call({
+			async:false,
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_child_table",
+            args: {
+              "customer": cur_frm.doc.customer
+            },
+            callback: function(r){
+        		
+        	}
+    });
+}
+
+remove_all_old_check =function(frm){
+	frappe.call({
+			async:false,
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_old_check",
+            args: {
+              "customer": cur_frm.doc.customer
+            },
+            callback: function(r){
+        		
+        	}
+    });	
+}
+
+
 calculate_total_charges = function(frm){
 	frappe.call({
+			async:false,
             method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_total_charges",
             args: {
               "customer": cur_frm.doc.customer
@@ -324,18 +416,53 @@ Payments_Details = Class.extend({
 	            	   	});
 	            	   	console.log(me.payments_record_list,"payments_record_listtttttttttt")
 	            	   	console.log(me.row_to_update,"in render r message")
+            	   		var date = new Date();
+						var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+						var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+						var lastDay_pluse_one = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+						/*date = date.replace(/-/g, '/');*/
 	            	   	for(i=0;i < me.payments_record_list[0].length; i++){
-	            	   		if(me.payments_record_list[0][i]['check_box'] == 0){
+	            	   		var date_diff_first = frappe.datetime.get_diff(me.payments_record_list[0][i]['due_date'],firstDay)
+	            	   		var date_diff_last = frappe.datetime.get_diff(lastDay,me.payments_record_list[0][i]['due_date'])
+	            	   		/*console.log(date_diff_first,"date_diff_first")
+	            	   		console.log(date_diff_last,"date_diff_last")
+	            	   		console.log(me.payments_record_list[0][i]['due_date'],"due_date")
+	            	   		console.log(due_date_dateformat,"due_date_dateformat")
+	            	   		due_date = parseInt(String(me.payments_record_list[0][i]['due_date']).slice(-2))*/
+	            	   		due_date_dateformat = new Date(me.payments_record_list[0][i]['due_date'])
+	            	   		due_date_dateformat.setHours(00)
+	            	   		due_date_dateformat.setSeconds(00)
+	            	   		due_date_dateformat.setMinutes(00)
+	            	   		/*console.log(firstDay,"firstDay")
+	            	   		console.log(lastDay,"lastDay")*/
+	            	   		/*if(me.payments_record_list[0][i]['check_box'] == 0 && (due_date_dateformat <= lastDay && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0){*/
+	            	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= lastDay && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
+	            	   			console.log("in if first")
+	            	   			console.log(due_date_dateformat,"due_date after slice")
 	            	   			me.payments_record_list[0][i]['check_box'] = 1
-	            	   			/*me.payments_record_list[0][i]['pre_select'] = 1*/
-	            	   			break;
+	            	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
 	            	   		}
+	            	   		/*if(me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0){
+	            	   			console.log("in second if")
+	            	   			console.log(due_date_dateformat,"due_date after slice")
+	            	   			me.payments_record_list[0][i]['check_box'] = 1
+	            	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
+	            	   		}*/
+	            	   		else{
+	            	   			me.payments_record_list[0][i]['pre_select'] = "No"
+	            	   			console.log(due_date_dateformat,"due_dates")
+	            	   		}
+	            	   		/*if(me.payments_record_list[0][i]['check_box'] == 0 && (due_date > date_diff_first && due_date <= date_diff_last)){
+	            	   			me.payments_record_list[0][i]['check_box'] = 1
+	            	   		}*/
 	            	   	}
 	            	   	console.log(me.payments_record_list,"after pre_select")
 	            	   	html = $(frappe.render_template("payments_management",{
 	            	   				"post":me.payments_record_list,
 	            	   				"payment_date":cur_frm.doc.payment_date
 	            	   			})).appendTo(me.fd.payments_record.wrapper);
+	            		
 	            		me.dialog.show();
 	            		me.increase_decrease_total_charges_and_due_payment();
 	            	}  
@@ -347,9 +474,16 @@ Payments_Details = Class.extend({
 		this.row_to_update = []
 		this.row_to_check = []
 		this.row_to_uncheck = []
+		this.row_to_pre_select_uncheck = []
 		var me = this;
         $.each($(this.fd.payments_record.wrapper).find('.select:checked[data-from=""]'), function(name, item){
                 me.row_to_update.push($(item).val());
+        });
+        console.log($(this.fd.payments_record.wrapper).find('[pre-select="Yes"]'),"pre-select row")
+        $.each($(this.fd.payments_record.wrapper).find('[pre-select="Yes"]'), function(name, item){
+            if($(this).is(':not(:checked)')){
+                me.row_to_pre_select_uncheck.push($(item).val());
+    		}
         });
         $.each($(this.fd.payments_record.wrapper).find('.new-entry'), function(name, item){
     		if($(this).is(':checked')){
@@ -359,6 +493,7 @@ Payments_Details = Class.extend({
     			me.row_to_uncheck.push($(item).val())
     		}
         });
+        console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
         console.log(me.row_to_update,"row_to_update")
         console.log(me.row_to_uncheck,"row_to_uncheck")
         console.log(me.row_to_check,"row_to_check")
@@ -380,6 +515,7 @@ Payments_Details = Class.extend({
 	           		"row_to_update":me.row_to_update,
 	           		"row_to_uncheck":me.row_to_uncheck,
 	           		"row_to_check":me.row_to_check,
+	           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
 	           		"parent":this.item['id'],
 	           		"payment_date":cur_frm.doc.payment_date
 	            },
@@ -435,6 +571,7 @@ Payments_Details = Class.extend({
 		});
 	},
 	update_total_charges_and_due_payments : function(frm){
+		var me = this;
 		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()))
 		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()))
 	}	
