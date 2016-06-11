@@ -50,7 +50,7 @@ class CustomerAgreement(Document):
 			self.payments_left = len(self.payments_record) - len(received_payments)
 			self.balance = self.payments_left * self.monthly_rental_payment
 			self.payments_made = "{0} Out Of {1}".format(len(received_payments),self.agreement_period)
-			self.number_of_payments = int(self.agreement_period) - len(received_payments)
+			self.number_of_payments = len(received_payments)
 			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
 
 	def on_update(self):

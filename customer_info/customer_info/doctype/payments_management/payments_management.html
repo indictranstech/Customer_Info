@@ -46,17 +46,14 @@
                         <td align="center" id="payment_date" style="width:20%;">{{ post[0][i].payment_date}}</td>
                         <td align="left" id="check_id" style="width:5%;">
                             
-                            {% if ((frappe.datetime.str_to_obj(payment_date) > frappe.datetime.str_to_obj(post[0][i].due_date)) && !post[0][i].check_box) { %}
-                                <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" checked></input>
-                            
-                            {% } else if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
-                                <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled"></input>
+                            {% if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
+                                <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled" pre-select="{{ post[0][i].pre_select }}"></input>
                             
                             {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
-                                <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" checked ></input>    
+                                <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" checked ></input>    
 
                             {% } else { %}
-                                <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}"></input>
+                                <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}"></input>
                             
                             {% } %}   
                         </td>
@@ -67,6 +64,19 @@
   	</table>
 </div>
 
+
+
+<!-- {% if ((frappe.datetime.str_to_obj(payment_date) > frappe.datetime.str_to_obj(post[0][i].due_date)) && !post[0][i].check_box) { %}
+                                <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" checked></input>
+                            
+                            {% } else if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
+                                <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled" pre-select="{{ post[0][i].pre_select }}"></input>
+                            
+                            {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
+                                <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" checked ></input>    
+
+                            {% } else { %}
+                                <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}"></input> -->
 
 
 
