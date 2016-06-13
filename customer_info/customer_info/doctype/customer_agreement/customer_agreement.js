@@ -88,9 +88,6 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("date",frappe.datetime.nowdate())
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
             cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));
-        }
-        if(cur_frm.doc.__islocal && cur_frm.doc.document_type == "Updated"){
-            cur_frm.set_value("date",frappe.datetime.nowdate())
         }    
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
             date_of_next_month_according_to_payment_day()
@@ -116,7 +113,6 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("agreement_period","read_only",1)
-            cur_frm.set_df_property("agreement_update_date","hidden",0)
         }
         if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
@@ -162,9 +158,7 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.agreement_close_date = frappe.datetime.nowdate()
             refresh_field("agreement_close_date")
         }
-        if(cur_frm.doc.agreement_status == "Updated"){
-            cur_frm.doc.agreement_update_date = frappe.datetime.nowdate()
-            refresh_field("agreement_update_date")
+        if(cur_frm.doc.agreement_status == "Updated" && cur_frm.doc.agreement_update_date){
             cur_frm.set_df_property("agreement_update_date","hidden",0)
         }
         if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
@@ -198,15 +192,21 @@ date_of_next_month_according_to_payment_day = function(frm){
         var c = a - b
         cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
         refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
+        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
     }
     if(a < b){
         var c = b - a
         cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
         refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
+        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
     }
     if(a == b){
         cur_frm.doc.due_date_of_next_month = newDate
-        refresh_field("due_date_of_next_month")    
+        refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
+        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
     }
 }
 

@@ -21,6 +21,9 @@ class CustomerAgreement(Document):
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.add_payments_record()
 
+	def after_insert(self):
+		self.comment_for_agreement_creation()		
+
 	def onload(self):
 		payment_received = 0
 		no_of_late_days = 0
@@ -59,7 +62,6 @@ class CustomerAgreement(Document):
 		self.changed_merchandise_status()
 
 	# For Naming	
-
 	def naming(self):	
 		new_name_list = []
 		old_name_list = []
@@ -76,7 +78,6 @@ class CustomerAgreement(Document):
 			self.name = "BK-0" + str(count)
 			self.parent_name = self.name
 			self.flag = 1
-			
 
 		elif self.document_type == "Updated" and self.flag == 0:
 			parent_name = frappe.db.sql("""select name from 
@@ -88,16 +89,33 @@ class CustomerAgreement(Document):
 				parent.update({
 					"agreement_status": "Updated",
 					"merchandise_status": "Used",
-					"old_agreement_status":parent.agreement_status
+					"old_agreement_status":parent.agreement_status,
+					"agreement_update_date":datetime.now()
 				})
 				parent.save(ignore_permissions = True)
 
-			if len(parent_name) > 1:			
+			# if len(parent_name) > 1:			
+			# 	old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
+			# 	counter = int(old_name_list[-1]) + 1
+			if len(parent_name) == 1 and len(parent_name[0][0].split('-')) == 2:
+				print "my cond 00000"
+				counter = 1
+
+			elif len(parent_name) > 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 2):			
+				print "in my cond 11111111111111111111111"
 				old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
 				counter = int(old_name_list[-1]) + 1
+
+			elif len(parent_name) >= 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 3):			
+				old_counter = int(parent_name[-1][0].split('-')[-1])
+				counter = old_counter + 1	
+
 			self.name = self.parent_name + "-" + str(counter)
 			self.flag = 1
 		self.agreement_no = self.name
+
+
+
 
 	# add row in child table	
 	def add_payments_record(self):
@@ -166,6 +184,10 @@ class CustomerAgreement(Document):
 			self.add_comment("Comment",comment)
 			self.old_agreement_status = self.agreement_status
 
+	def comment_for_agreement_creation(self):
+		comment = """The agreement {0} is started on the {1}  """.format(self.name,datetime.now().date())
+		self.add_comment("Comment",comment)		
+
 
 @frappe.whitelist()
 def get_primary_address(customer):
@@ -188,7 +210,6 @@ def make_update_agreement(source_name, target_doc=None):
 
 	target_doc.document_type = "Updated"	
 	target_doc.product = ""
-	target_doc.date = ""
 	target_doc.agreement_status_changed_date = ""
 	target_doc.suspended_until = ""
 	target_doc.suspended_from = ""
