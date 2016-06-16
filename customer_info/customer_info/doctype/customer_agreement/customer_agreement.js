@@ -2,6 +2,7 @@ cur_frm.add_fetch('product', 's90d_sac_price', 's90d_sac_price');
 cur_frm.add_fetch('product', 's90d_sac_price', 'duplicate_s90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
 cur_frm.add_fetch('product', 'period', 'agreement_period');
+cur_frm.add_fetch('product', 'product_category', 'product_category');
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
 
 frappe.ui.form.on("Customer Agreement",{
@@ -13,12 +14,20 @@ frappe.ui.form.on("Customer Agreement",{
 		}
         if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal){
             date_of_next_month_according_to_payment_day()
-            for(i=0;i<cur_frm.doc.payments_record.length;i++){
+            /*for(i=0;i<cur_frm.doc.payments_record.length;i++){
                 if(cur_frm.doc.payments_record[i]['due_date']){
                     cur_frm.doc.payments_record[i]['due_date'] = get_update_due_date(cur_frm.doc.due_date_of_next_month,i)
                     refresh_field("payments_record")
                 }
-            }
+            }*/
+            frappe.call({
+                method: "change_due_dates_in_child_table",
+                doc: frm.doc,
+                callback: function(r){
+                    console.log(r.message)
+                    /*cur_frm.save()*/
+                }   
+            });
         }
         /*if(cur_frm.doc.payment_day){
             var a = parseInt(cur_frm.doc.payment_day)
@@ -57,9 +66,11 @@ frappe.ui.form.on("Customer Agreement",{
     onload:function(frm){
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended"])
+            cur_frm.set_df_property("agreement_update_date","hidden",1)
         }
         if(cur_frm.doc.agreement_status == "Updated"){
             cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended","Updated"])
+            cur_frm.set_df_property("agreement_update_date","hidden",0)
         }
         if(cur_frm.doc.__islocal){
             cur_frm.doc.agreement_status = "Open"
@@ -71,12 +82,15 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
             cur_frm.set_df_property("agreement_period","read_only",0)
         }
-        if(cur_frm.doc.agreement_status == "Updated"){
+        /*if(cur_frm.doc.agreement_status == "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",0)
-        }
-        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+        }*/
+        /*if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
-        }
+        }*/
+        /*if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+            cur_frm.set_df_property("agreement_update_date","hidden",1)    
+        }*/
     },
     today_plus_90_days:function(frm){
         if(cur_frm.doc.today_plus_90_days){
@@ -114,8 +128,11 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.document_type == "Updated"){
             cur_frm.set_df_property("agreement_period","read_only",1)
         }
-        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+        if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
+        }
+        if(cur_frm.doc.product_category && cur_frm.doc.product){
+            cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }
     },
     refresh:function(frm){
@@ -161,9 +178,12 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status == "Updated" && cur_frm.doc.agreement_update_date){
             cur_frm.set_df_property("agreement_update_date","hidden",0)
         }
-        if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+        if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
+        /*if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
+            cur_frm.set_df_property("agreement_update_date","hidden",1)    
+        }*/
     }
 
 })
@@ -192,21 +212,21 @@ date_of_next_month_according_to_payment_day = function(frm){
         var c = a - b
         cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
         refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
-        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
+        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
     if(a < b){
         var c = b - a
         cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
         refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
-        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
+        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
     if(a == b){
         cur_frm.doc.due_date_of_next_month = newDate
         refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())
-        cur_frm.set_value("next_due_date",(cur_frm.doc.due_date_of_next_month).toLocaleDateString())    
+        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
 }
 
@@ -214,5 +234,6 @@ date_of_next_month_according_to_payment_day = function(frm){
 //update_due_date_in_payments_records_according_to_payment_day
 get_update_due_date = function(due_date_of_next_month,i){
     var CurrentDate = new Date(due_date_of_next_month);
+    console.log(((new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i))) instanceof Date),"dates")
     return new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i));
 }
