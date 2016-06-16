@@ -8,9 +8,10 @@ import datetime
 import frappe.defaults
 import json
 from frappe.utils import date_diff
+from frappe.utils import flt, get_datetime, get_time, getdate
 from frappe.utils import nowdate, getdate,add_months
 from frappe.utils import now_datetime
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
@@ -26,6 +27,11 @@ class CustomerAgreement(Document):
 
 	def onload(self):
 		payment_received = 0
+		payment_made = []
+		late_payments = []
+		amount_of_payment_left = []
+		add_bonus_of_one_eur = []
+		add_bonus_of_two_eur = []
 		no_of_late_days = 0
 		received_payments = []
 		if self.payments_record:
@@ -34,6 +40,7 @@ class CustomerAgreement(Document):
 					received_payments.append(row.monthly_rental_amount)
 				if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
 					no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+					late_payments.append(row.monthly_rental_amount)
 		if self.payments_record:
 			for row in self.payments_record:		
 				if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
@@ -46,15 +53,51 @@ class CustomerAgreement(Document):
 					break
 		received_payments = map(float,received_payments)
 
+		now_date = datetime.now().date()
+		firstDay_next_month = date(now_date.year, now_date.month+1, 1)
+		print type(firstDay_next_month)	
+		print firstDay_next_month,"firstDay_next_month"
+
+		if self.payments_record:
+			for row in self.payments_record:
+				print type(row.due_date),"due_date"
+				if row.check_box_of_submit == 0 and row.check_box == 1:
+					payment_made.append(row.monthly_rental_amount)
+					# datetime.strptime(row.due_date,'%b%d%Y').strftime('%m/%d/%Y')
+				if (getdate(row.due_date) >= firstDay_next_month) and row.check_box == 0:
+				 	amount_of_payment_left.append(row.monthly_rental_amount)
+				if row.payment_date and getdate(row.payment_date) == getdate(row.due_date):
+					add_bonus_of_one_eur.append(row.idx)
+				if row.payment_date and getdate(row.payment_date) < getdate(row.due_date):
+					add_bonus_of_two_eur.append(row.idx)		 	  	
+
+
+
+		payment_made = map(float,payment_made)
+		print sum(payment_made),"sum of payments_made"
+
+		amount_of_payment_left = map(float,amount_of_payment_left)
+		print sum(amount_of_payment_left),"amount_of_payment_left"
+
+		late_payments = map(float,late_payments)
+		print sum(late_payments),"late_payments"
+
+		bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+		print bonus,"bonus"
+
 		for i in received_payments:
 			payment_received += i
 
 		if self.payments_record and self.date:
 			self.payments_left = len(self.payments_record) - len(received_payments)
 			self.balance = self.payments_left * self.monthly_rental_payment
-			self.payments_made = "{0} Out Of {1}".format(len(received_payments),self.agreement_period)
+			self.payments_made = sum(payment_made)
+			self.late_payments = sum(late_payments)
+			self.amount_of_payment_left = sum(amount_of_payment_left)
+			# self.payments_made = "{0} Out Of {1}".format(len(received_payments),self.agreement_period)
 			self.number_of_payments = len(received_payments)
 			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
+			self.bonus = bonus
 
 	def on_update(self):
 		self.payment_date_comment()
@@ -116,7 +159,6 @@ class CustomerAgreement(Document):
 
 
 
-
 	# add row in child table	
 	def add_payments_record(self):
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -136,13 +178,26 @@ class CustomerAgreement(Document):
 			nl.due_date = d['due_date']
 			nl.payment_id = d['payment_id']	
 
-			
-
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
 		add_month_to_date = add_months(date,i)
-		return str(add_month_to_date)[0:10]					
+		return add_month_to_date.date()
+		# return str(add_month_to_date)[0:10]					
+
+
+	# get date after i month on changeing payment day	
+	def change_due_dates_in_child_table(self):
+	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+	    for row in self.payments_record:
+	    	# print row.due_date,"row.due_date"
+	    	print type(row.due_date),"1"
+	    	row.update({
+	    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
+	    		})
+	    	print type(row.due_date),"2"
+	    	# row.due_date = getdate(get_next_month_date(due_date_of_next_month,row.idx-1))
+	    	# row.save(ignore_permissions=True)	
 
 	# Comment For Changing Payment Day
 	def payment_date_comment(self):
@@ -210,6 +265,8 @@ def make_update_agreement(source_name, target_doc=None):
 
 	target_doc.document_type = "Updated"	
 	target_doc.product = ""
+	target_doc.product_category = ""
+	target_doc.concade_product_name_and_category = ""
 	target_doc.agreement_status_changed_date = ""
 	target_doc.suspended_until = ""
 	target_doc.suspended_from = ""
@@ -230,7 +287,7 @@ def make_update_agreement(source_name, target_doc=None):
 def get_product(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql("""select item_name,merchandise_status from `tabItem` 
 							where item_name not in (select product from `tabCustomer Agreement` 
-												where agreement_status = "Open") 
+													where agreement_status = "Open") 
 							and (merchandise_status = "Used" or merchandise_status = "New" )
 							and (item_name like '{txt}'
 											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
