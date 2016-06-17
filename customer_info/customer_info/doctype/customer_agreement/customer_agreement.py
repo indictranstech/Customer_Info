@@ -36,7 +36,7 @@ class CustomerAgreement(Document):
 		received_payments = []
 		if self.payments_record:
 			for row in self.payments_record:
-				if row.check_box == 1:
+				if row.check_box == 1 and row.check_box_of_submit == 0:
 					received_payments.append(row.monthly_rental_amount)
 				if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
 					no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
@@ -51,7 +51,7 @@ class CustomerAgreement(Document):
 					self.current_due_date = row.due_date
 					self.next_due_date = row.due_date	
 					break
-		received_payments = map(float,received_payments)
+		
 
 		now_date = datetime.now().date()
 		firstDay_next_month = date(now_date.year, now_date.month+1, 1)
@@ -61,7 +61,7 @@ class CustomerAgreement(Document):
 		if self.payments_record:
 			for row in self.payments_record:
 				print type(row.due_date),"due_date"
-				if row.check_box_of_submit == 0 and row.check_box == 1:
+				if row.check_box_of_submit == 1:
 					payment_made.append(row.monthly_rental_amount)
 					# datetime.strptime(row.due_date,'%b%d%Y').strftime('%m/%d/%Y')
 				if (getdate(row.due_date) >= firstDay_next_month) and row.check_box == 0:
@@ -72,6 +72,8 @@ class CustomerAgreement(Document):
 					add_bonus_of_two_eur.append(row.idx)		 	  	
 
 
+
+		received_payments = map(float,received_payments)				
 
 		payment_made = map(float,payment_made)
 		print sum(payment_made),"sum of payments_made"
@@ -85,8 +87,8 @@ class CustomerAgreement(Document):
 		bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 		print bonus,"bonus"
 
-		for i in received_payments:
-			payment_received += i
+		# for i in received_payments:
+		# 	payment_received += i
 
 		if self.payments_record and self.date:
 			self.payments_left = len(self.payments_record) - len(received_payments)
@@ -94,7 +96,6 @@ class CustomerAgreement(Document):
 			self.payments_made = sum(payment_made)
 			self.late_payments = sum(late_payments)
 			self.amount_of_payment_left = sum(amount_of_payment_left)
-			# self.payments_made = "{0} Out Of {1}".format(len(received_payments),self.agreement_period)
 			self.number_of_payments = len(received_payments)
 			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
 			self.bonus = bonus

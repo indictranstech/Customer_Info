@@ -22,22 +22,22 @@ frappe.ui.form.on("Payments Management", {
   			</tr>\
 		</table>");
 		if(cur_frm.doc.customer){
+			render_agreements()
 			update_payments_child_table();
 			calculate_total_charges();
 			get_bonus();
 			get_address_of_customer()
-			render_agreements()
 		}
 	},
 	customer:function(){
 		if(cur_frm.doc.customer){
+			render_agreements();
 			remove_all_old_check()
 			update_payments_child_table();
 			calculate_total_charges();
 			get_bonus();
 			get_other_field_value_from_customer();
 			get_address_of_customer();			
-			render_agreements();
 		}
 	},
 	submit:function(){
@@ -64,10 +64,11 @@ frappe.ui.form.on("Payments Management", {
 	       	this.fd = this.dialog.fields_dict;
 
 	       	$(this.fd.amount_paid_by_customer.input).change(function(){
-	       		var val_of_balance = parseFloat(cur_dialog.fields_dict.amount_paid_by_customer.$input.val()) - cur_frm.doc.total_charges
+	       		var val_of_balance = parseFloat(cur_dialog.fields_dict.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges) + flt(cur_frm.doc.receivables)
 	       		console.log(val_of_balance,"val_of_balance")
 	       		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 	       		me.dialog.fields_dict.msg.$wrapper.empty()
+	       		$(me.dialog.body).parent().find('.btn-primary').hide()
 	       		$('button[data-fieldname="add_in_receivables"]').css("display","none");
 	       		$('button[data-fieldname="return_to_customer"]').css("display","none");
 	       	})
@@ -76,13 +77,18 @@ frappe.ui.form.on("Payments Management", {
 	       	$('button[data-fieldname="return_to_customer"]').css("display","none");
 
 	       	this.dialog.show();
-	       	this.dialog.set_value("balance","-"+cur_frm.doc.receivables)
+	       	$(this.dialog.body).parent().find('.btn-primary').hide()
+	       	console.log(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables),"clacuaiton")
+	       	this.dialog.set_value("balance",(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables)))
+
+
 
 	       	me.dialog.fields_dict.process_payment.$input.click(function() {
 	       		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
 	       		console.log(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 )
 	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 ){
 	       			console.log("in if")
+	       			$(me.dialog.body).parent().find('.btn-primary').show()
 	       			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
 	       			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
 	       			html = "<div class='row' style='margin-left: 7px;'>There Is "+cur_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
@@ -91,6 +97,7 @@ frappe.ui.form.on("Payments Management", {
 	       		}
 	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) < 0 ){
 	       			html = "<div class='row' style='margin-left: 7px;'>Error Message Balance Is Negative</div>"
+	       			$(me.dialog.body).parent().find('.btn-primary').hide()
 	       			me.dialog.fields_dict.msg.$wrapper.empty()
 	       			me.dialog.fields_dict.msg.$wrapper.append(html)
 	       			/*msgprint("Error Message Balance Is Negative")*/
@@ -181,7 +188,6 @@ frappe.ui.form.on("Payments Management", {
 
 get_bonus = function(){
 	console.log("in get_bonus")
-	cur_frm.set_value("full_address","")
 	frappe.call({
         method: "customer_info.customer_info.doctype.payments_management.payments_management.get_bonus",
         args: {
@@ -282,42 +288,54 @@ get_summary_records = function(item,fd,dialog){
 		},
 		callback:function(r){
 			console.log(r.message,"get_summary_records")
+			console.log(r.message.length)
+			html = "<table class='table' id='tr-table'><thead><tr class='row'>\
+					<td align='pull-right'><b>Field Name</b></td>\
+					<td align='pull-left'><b>Value</b></td>\
+					</tr></thead>"
 			if(r.message['cond'] == 1){
-				html = "<div class='row'>90d SAC price -"+r.message['90d_SAC_price']+" </div>"	
-				html += "<div class='row'>Expires - "+r.message['Expires']+"</div>"
-				if(r.message['Payments_made']){
-					html += "<div class='row'>Payments Made - "+r.message['Payments_made']+"</div>"
-				}
-				if(r.message['Late_fees']){
-					html += "<div class='row'>Late fees - "+r.message['Late_fees']+"</div>"	
-				}
-				if(r.message['90_day_pay_Off']){
-					html += "<div class='row'>90 day pay Off - "+r.message['90_day_pay_Off']+"</div>"	
-				}
-				if(r.message['Number_of_payments_left']){
-					html += "<div class='row'>Number of payments left - "+r.message['Number_of_payments_left']+"</div>"	
-				}
+				html +=	"<tbody class='tr-tbody'>"						
+				html +=	"<tr class='row'>\
+						    <td>90d SAC price</td><td>"+r.message['90d_SAC_price']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Expires</td><td>"+r.message['Expires']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Payments Made</td><td>"+r.message['Payments_made']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Late fees</td><td>"+r.message['Late_fees']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>90 day pay Off</td><td>"+r.message['90_day_pay_Off']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Number of payments left</td><td>"+r.message['Number_of_payments_left']+"</td>\
+						</tr>"
+				html += "</tr></tbody></table>"
 				$(fd.summary.$wrapper).empty()
 		       	$(fd.summary.$wrapper).append(html)
 		       	dialog.show();
 			}	
 			if(r.message['cond'] == 2){
-				html = "<div class='row'>Recevables - "+r.message['Recevables']+" </div>"	
-				if(r.message['Amount_of_payments_left']){
-					html += "<div class='row'>Amount of payments left - "+r.message['Amount_of_payments_left']+"</div>"
-				}	
-				if(r.message['Discounted_payment_amount']){
-					html += "<div class='row'>Discounted payment amount - "+r.message['Discounted_payment_amount']+"</div>"
-				}
-				if(r.message['Late_payments']){
-					html += "<div class='row'>Late payments - "+r.message['Late_payments']+"</div>"	
-				}
-				if(r.message['Late_fees']){
-					html += "<div class='row'>Late fees - "+r.message['Late_fees']+"</div>"	
-				}
-				if(r.message['Total_payoff_amount']){
-					html += "<div class='row'>Total payoff amount - "+r.message['Total_payoff_amount']+"</div>"	
-				}
+				html +=	"<tbody class='tr-tbody'>"						
+				html +=	"<tr class='row'>\
+						    <td>Amount of payments left</td><td>"+r.message['Amount_of_payments_left']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Discounted payment amount</td><td>"+r.message['Discounted_payment_amount']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Late payments</td><td>"+r.message['Late_payments']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Late fees</td><td>"+r.message['Late_fees']+"</td>\
+						</tr>\
+						<tr class='row'>\
+						    <td>Total payoff amount</td><td>"+r.message['Total_payoff_amount']+"</td>\
+						</tr>"
+				html += "</tr></tbody></table>"
 				$(fd.summary.$wrapper).empty()
 		       	$(fd.summary.$wrapper).append(html)
 		       	dialog.show();
@@ -337,8 +355,10 @@ update_payments_records = function(){
         },
        	callback: function(r){
        		console.log(r.message)
-       		/*cur_frm.doc.total_charges = cur_frm.doc.amount_of_due_payments - cur_frm.doc.receivables
-        	refresh_field("total_charges")*/
+       		cur_frm.set_value("total_charges","0")
+       		cur_frm.set_value("amount_of_due_payments","0")
+       		cur_frm.set_value("receivables","0")
+        	render_agreements()
         	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
     	}
     })
@@ -395,7 +415,7 @@ render_agreements = function(){
   	frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
             type: "GET",
-            async: false,
+            /*async: false,*/
             args: {
               "customer": cur_frm.doc.customer
             },
