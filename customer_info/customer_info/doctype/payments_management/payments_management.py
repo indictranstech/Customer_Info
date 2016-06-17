@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+from frappe.utils import date_diff
 import datetime
 from frappe.utils import flt, get_datetime, get_time, getdate
 from datetime import datetime,date
@@ -17,7 +18,8 @@ class PaymentsManagement(Document):
 @frappe.whitelist()
 def get_customer_agreement(customer):
 	return {
-	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,concade_product_name_and_category,number_of_payments,
+	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
+										concade_product_name_and_category,number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
 										payments_left,balance,late_fees,total_due,payments_made,
 										CASE WHEN DATEDIFF(suspension_date,now()) > 0 THEN DATE_FORMAT(suspension_date,'%d-%m-%Y') 
@@ -104,12 +106,80 @@ def get_bonus(customer):
 
 @frappe.whitelist()
 def update_payments_child_table_of_customer_agreement_on_submit(payment_date,customer):
-	return frappe.db.sql("""update `tabPayments Record` 
-							set check_box_of_submit = 1,
-							payment_date = '{0}' where check_box = 1
-							and parent in (select name from `tabCustomer Agreement`
-							where customer = '{1}' and agreement_status = 'Open')""".format(payment_date,customer))
+	frappe.db.sql("""update `tabPayments Record` 
+								set check_box_of_submit = 1,
+						payment_date = '{0}' where check_box = 1
+						and parent in (select name from `tabCustomer Agreement`
+						where customer = '{1}' and agreement_status = 'Open')""".format(payment_date,customer))
+	
+	agreements = frappe.db.sql("""select name from `tabCustomer Agreement` where customer = '{0}'
+							and agreement_status = "Open" """.format(customer),as_list=1)
 
+	for agreement in [agreement[0] for agreement in agreements]:
+		print agreement,"agreementttttttttttttttttttttt"
+		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+		print customer_agreement,"get_docccccccccccccccccccccccccc"
+		set_values_in_agreement(customer_agreement)
+		# customer_agreement.save(ignore_permissions=True)
+
+def set_values_in_agreement(customer_agreement):
+	now_date = datetime.now().date()
+	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
+	payment_made = []
+	late_payments = []
+	amount_of_payment_left = []
+	add_bonus_of_one_eur = []
+	add_bonus_of_two_eur = []
+	no_of_late_days = 0
+	received_payments = []
+	if customer_agreement.payments_record:
+		for row in customer_agreement.payments_record:
+			if row.check_box == 1 and row.check_box_of_submit == 0:
+				received_payments.append(row.monthly_rental_amount)
+			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
+				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+				late_payments.append(row.monthly_rental_amount)
+			if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
+				customer_agreement.current_date = row.due_date
+				customer_agreement.next_due_date = customer_agreement.get_next_due_date(customer_agreement.current_due_date,1)
+				break
+			elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
+				customer_agreement.current_due_date = row.due_date
+				customer_agreement.next_due_date = row.due_date	
+				break	
+			if row.check_box_of_submit == 1:
+				payment_made.append(row.monthly_rental_amount)
+			if (getdate(row.due_date) >= firstDay_next_month) and row.check_box == 0:
+			 	amount_of_payment_left.append(row.monthly_rental_amount)
+			if row.payment_date and getdate(row.payment_date) == getdate(row.due_date):
+				add_bonus_of_one_eur.append(row.idx)
+			if row.payment_date and getdate(row.payment_date) < getdate(row.due_date):
+				add_bonus_of_two_eur.append(row.idx)		 	  
+
+	received_payments = map(float,received_payments)				
+
+	payment_made = map(float,payment_made)
+	print sum(payment_made),"sum of payments_made"
+
+	amount_of_payment_left = map(float,amount_of_payment_left)
+	print sum(amount_of_payment_left),"amount_of_payment_left"
+
+	late_payments = map(float,late_payments)
+	print sum(late_payments),"late_payments"
+
+	bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+	print bonus,"bonus"
+
+	if customer_agreement.payments_record and customer_agreement.date:
+		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments)
+		customer_agreement.balance = customer_agreement.payments_left * customer_agreement.monthly_rental_payment
+		customer_agreement.payments_made = sum(payment_made)
+		customer_agreement.late_payments = sum(late_payments)
+		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
+		customer_agreement.number_of_payments = len(received_payments)
+		customer_agreement.late_fees = no_of_late_days * customer_agreement.monthly_rental_payment * 0.02
+		customer_agreement.bonus = bonus
+	customer_agreement.save(ignore_permissions=True)	
 
 @frappe.whitelist()
 def remove_all_old_check(customer):
@@ -171,16 +241,8 @@ def get_summary_records(agreement,receivable):
 	late_fees = "{0:.2f}".format(agreement.late_fees)
 	if agreement.today_plus_90_days >= datetime.now().date():
 		print "in if"
-		# print type(receivable),"receivable"
-		# print type(agreement.late_fees),"late_fees"
-		# print agreement.s90d_sac_price,type(agreement.s90d_sac_price),"agreement.s90d_sac_price"
-		# print agreement.payments_made,type(agreement.payments_made),"agreement.payments_made"
-		# print float(receivable),"receivable"
-		# print agreement.late_fees,"agreement.late_fees"
 		b = agreement.s90d_sac_price - float(agreement.payments_made) - float(receivable) + float(late_fees)
-		# print b,"bbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaa"
 		day_pay_Off = "{0:.2f}".format(b)
-		# print day_pay_Off,"day_pay_Off"
 		return {"cond":1,
 				"90d_SAC_price":agreement.s90d_sac_price,
 				"Expires":agreement.today_plus_90_days,
