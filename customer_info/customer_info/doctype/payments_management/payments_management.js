@@ -4,7 +4,7 @@ cur_frm.add_fetch('customer', 'last_name', 'last_name');
 cur_frm.add_fetch('customer', 'company_phone_1', 'company_phone_1');
 cur_frm.add_fetch('customer', 'company_phone_2', 'company_phone_2');
 cur_frm.add_fetch('customer', 'prersonal_code', 'prersonal_code');
-cur_frm.add_fetch('customer', 'notes_on_customer_payments', 'notes_on_customer_payments');
+cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
 cur_frm.add_fetch('customer','bonus','bonus')
 
 var list_of_row_to_update_on_submit = [];
@@ -48,7 +48,7 @@ frappe.ui.form.on("Payments Management", {
 	                fields: [
 	                   	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Amount Paid By Customer","default":"0.0"},
 	                   	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
-	                   	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add To Receivable"},
+	                   	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add to receivables"},
 	                   	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
 	                   	{"fieldtype": "Column Break" , "fieldname": "column"},
 	                   	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
@@ -79,16 +79,14 @@ frappe.ui.form.on("Payments Management", {
 	       	this.dialog.show();
 	       	$(this.dialog.body).parent().find('.btn-primary').hide()
 	       	console.log(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables),"clacuaiton")
-	       	this.dialog.set_value("balance",(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables)))
-
-
+	       	this.dialog.set_value("balance",(flt(cur_frm.doc.receivables) - flt(cur_frm.doc.total_charges)).toFixed(2))
 
 	       	me.dialog.fields_dict.process_payment.$input.click(function() {
 	       		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
 	       		console.log(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 )
 	       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 ){
 	       			console.log("in if")
-	       			$(me.dialog.body).parent().find('.btn-primary').show()
+	       			/*$(me.dialog.body).parent().find('.btn-primary').show()*/
 	       			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
 	       			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
 	       			html = "<div class='row' style='margin-left: 7px;'>There Is "+cur_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
@@ -118,6 +116,7 @@ frappe.ui.form.on("Payments Management", {
 		            		cur_frm.doc.receivables = value.balance
 		            		refresh_field("receivables")
 		            		msgprint("Receivables Added In Customer Record")
+		            		$(me.dialog.body).parent().find('.btn-primary').show()
 		            	}
 		        	}
 			    });	
@@ -136,6 +135,7 @@ frappe.ui.form.on("Payments Management", {
 		            		cur_frm.doc.receivables = "string"
 		            		refresh_field("receivables")
 		            		msgprint("Return To Customer")
+		            		$(me.dialog.body).parent().find('.btn-primary').show()
 		            	}
 		        	}
 			    });
@@ -151,7 +151,8 @@ frappe.ui.form.on("Payments Management", {
 	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_notes_in_customer",
 	            args: {
 	            	"customer":cur_frm.doc.customer,
-	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments
+	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments,
+	            	"summary_of_notes":cur_frm.doc.summary_of_notes
 	            },
 	            callback: function(r) {
 	            	cur_frm.set_value("notes_on_customer_payments","")
@@ -231,7 +232,7 @@ get_other_field_value_from_customer = function(){
 			async:false,
 		   	args: {
 		    	doctype: "Customer",
-		       	fields: ["first_name","last_name","company_phone_1","company_phone_2","prersonal_code","notes_on_customer_payments","bonus"],
+		       	fields: ["first_name","last_name","company_phone_1","company_phone_2","prersonal_code","summary_of_notes","bonus"],
 		       	filters: { "name" : cur_frm.doc.customer
 		        	},
 				},
@@ -243,7 +244,7 @@ get_other_field_value_from_customer = function(){
 					cur_frm.set_value("company_phone_1",res.message[0]['company_phone_1'])
 					cur_frm.set_value("company_phone_2",res.message[0]['company_phone_2'])
 					cur_frm.set_value("prersonal_code",res.message[0]['prersonal_code'])
-					cur_frm.set_value("notes_on_customer_payments",res.message[0]['notes_on_customer_payments'])
+					cur_frm.set_value("summary_of_notes",res.message[0]['summary_of_notes'])
 					cur_frm.set_value("bonus",res.message[0]['bonus'])
 				}
 			}
@@ -296,7 +297,7 @@ get_summary_records = function(item,fd,dialog){
 			if(r.message['cond'] == 1){
 				html +=	"<tbody class='tr-tbody'>"						
 				html +=	"<tr class='row'>\
-						    <td>90d SAC price</td><td>"+r.message['90d_SAC_price']+"</td>\
+						    <td>90d SAC price</td><td>"+r.message['s90d_SAC_price']+"</td>\
 						</tr>\
 						<tr class='row'>\
 						    <td>Expires</td><td>"+r.message['Expires']+"</td>\
@@ -308,7 +309,7 @@ get_summary_records = function(item,fd,dialog){
 						    <td>Late fees</td><td>"+r.message['Late_fees']+"</td>\
 						</tr>\
 						<tr class='row'>\
-						    <td>90 day pay Off</td><td>"+r.message['90_day_pay_Off']+"</td>\
+						    <td>90 day pay Off</td><td>"+r.message['s90_day_pay_Off']+"</td>\
 						</tr>\
 						<tr class='row'>\
 						    <td>Number of payments left</td><td>"+r.message['Number_of_payments_left']+"</td>\
@@ -431,6 +432,8 @@ render_agreements = function(){
 
 make_grid= function(data1,columns,options){
 	var data = [];
+	var me = this;
+	var index = 0;
 	for (var i = 0; i<data1.list_of_agreement.length; i++) {
           	data[i] = {
           	id : data1.list_of_agreement[i][0],	
@@ -461,8 +464,9 @@ make_grid= function(data1,columns,options){
         var item = dataView.getItem(args.row);
         console.log(dataView,"dataView")
         if($(e.target).hasClass("detail")) {
-            var me = this;            
-        	new Payments_Details(item)
+            index = parseInt(index) + 1;
+            console.log(index, "in clcikc_____________")            
+        	new Payments_Details(item, index)
         }
         if($(e.target).hasClass("suspenison")) {
         	console.log("in mybutton",$(e.target).attr('id'))
@@ -586,9 +590,11 @@ calculate_total_charges = function(frm){
 }
 
 Payments_Details = Class.extend({
-	init:function(item){
+	init:function(item, index){
 		this.item = item;
+		this.index = index;
 		this.init_for_render_dialog();
+		console.log(this.index, "in clcikc87687678678687_____________")       
 	},
 	init_for_render_dialog:function(){
 		console.log(this.item)
@@ -615,16 +621,18 @@ Payments_Details = Class.extend({
 	},
 	render_payment_management:function(){
 		var me = this;
+		var counter = 0
 		if(this.item['id']){
 			frappe.call({    
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.get_payments_record",
 		        async: false,
 	           	args: {
-	           		"customer_agreement":this.item['id']
+	           		"customer_agreement":this.item['id'],
+	           		"receivable":cur_frm.doc.receivables
 	            },
 	           	callback: function(res){
 	            	if(res && res.message){
-	            		console.log(res.message)
+	            		console.log(res.message['summary_records'],"in get_payments_record console")
 	            		$.each(res.message, function(i, d) {
 	            	   		me.payments_record_list.push(d)
 	            	   	});
@@ -675,6 +683,8 @@ Payments_Details = Class.extend({
 	            	   	html = $(frappe.render_template("payments_management",{
 	            	   				"post":me.payments_record_list,
 	            	   				"payment_date":cur_frm.doc.payment_date
+	            	   				/*"summary":res.message['summary_records'],
+	            	   				"index":me.index*/
 	            	   			})).appendTo(me.fd.payments_record.wrapper);
 	            		
 	            		me.dialog.show();
@@ -732,6 +742,18 @@ Payments_Details = Class.extend({
 	           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
 	           		"parent":this.item['id'],
 	           		"payment_date":cur_frm.doc.payment_date
+	            },
+	           	callback: function(res){
+	        		/*render_agreements()
+	            	me.update_total_charges_and_due_payments()
+	        		me.hide_dialog()*/
+	        	}
+	        });
+	        frappe.call({    
+		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
+		        async: false,
+	           	args: {
+	           		"customer_agreement":this.item['id']
 	            },
 	           	callback: function(res){
 	        		render_agreements()

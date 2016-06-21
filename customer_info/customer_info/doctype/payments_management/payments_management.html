@@ -1,8 +1,8 @@
 <style type="text/css">
-	.add-items {
-		overflow-y: scroll;
-		max-height: 300px;
-	}
+    .add-items {
+        overflow-y: scroll;
+        max-height: 300px;
+    }
 </style>
 
 <div  class="row">
@@ -26,16 +26,16 @@
 
 
 <div class="add-items">
-  	<table class="table table-bordered table-condensed" id="header-fixed">
-	   	<!-- <thead>
-	      <tr>
-	        <td align="center"><b>Payments</b></td>	
-	        <td align="center"><b>Monthly Rental Amount</b></td>
+    <table class="table table-bordered table-condensed" id="header-fixed">
+        <!-- <thead>
+          <tr>
+            <td align="center"><b>Payments</b></td> 
+            <td align="center"><b>Monthly Rental Amount</b></td>
             <td align="center"><b>Due Date</b></td>
-	        <td align="center"><b>Payment Date</b></td>
+            <td align="center"><b>Payment Date</b></td>
             <td align="center"></td>
-	      </tr>
-	    </thead> -->
+          </tr>
+        </thead> -->
         
         {% if (post[0].length) { %}
             {% for(var i=0, l=post[0].length; i < l; i++) { %}
@@ -61,7 +61,7 @@
                 </tbody>
             {% } %}
         {% } %} 
-  	</table>
+    </table>
 </div>
 
 

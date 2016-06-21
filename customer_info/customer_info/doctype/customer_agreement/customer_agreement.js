@@ -101,7 +101,7 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.__islocal && cur_frm.doc.document_type == "New"){
             cur_frm.set_value("date",frappe.datetime.nowdate())
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
-            cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));
+            cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));    
         }    
         if(cur_frm.doc.payment_day && cur_frm.doc.date){
             date_of_next_month_according_to_payment_day()
@@ -134,6 +134,23 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.product_category && cur_frm.doc.product){
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }
+        if(cur_frm.doc.__islocal){
+            frappe.call({
+                async:false,
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Customer Agreement",
+                    fieldname: "name",
+                    filters: { customer: cur_frm.doc.customer },
+                },
+                callback: function(res){
+                    if (res && res.message){
+                        console.log(res.message,"message of get_valuesssssssssssss")
+                        cur_frm.set_value("bonus",20)
+                    }
+                }   
+            });
+        }         
     },
     refresh:function(frm){
         if(!cur_frm.doc.__islocal){

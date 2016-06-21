@@ -23,83 +23,8 @@ class CustomerAgreement(Document):
 			self.add_payments_record()
 
 	def after_insert(self):
-		self.comment_for_agreement_creation()		
-
-	def onload(self):
-		payment_received = 0
-		payment_made = []
-		late_payments = []
-		amount_of_payment_left = []
-		add_bonus_of_one_eur = []
-		add_bonus_of_two_eur = []
-		no_of_late_days = 0
-		received_payments = []
-		if self.payments_record:
-			for row in self.payments_record:
-				if row.check_box == 1 and row.check_box_of_submit == 0:
-					received_payments.append(row.monthly_rental_amount)
-				if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
-					no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
-					late_payments.append(row.monthly_rental_amount)
-		if self.payments_record:
-			for row in self.payments_record:		
-				if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
-					self.current_date = row.due_date
-					self.next_due_date = self.get_next_due_date(self.current_due_date,1)
-					break
-				elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
-					self.current_due_date = row.due_date
-					self.next_due_date = row.due_date	
-					break
-		
-
-		now_date = datetime.now().date()
-		firstDay_next_month = date(now_date.year, now_date.month+1, 1)
-		print type(firstDay_next_month)	
-		print firstDay_next_month,"firstDay_next_month"
-
-		if self.payments_record:
-			for row in self.payments_record:
-				print type(row.due_date),"due_date"
-				if row.check_box_of_submit == 1:
-					payment_made.append(row.monthly_rental_amount)
-					# datetime.strptime(row.due_date,'%b%d%Y').strftime('%m/%d/%Y')
-				if (getdate(row.due_date) >= firstDay_next_month) and row.check_box == 0:
-				 	amount_of_payment_left.append(row.monthly_rental_amount)
-				if row.payment_date and getdate(row.payment_date) == getdate(row.due_date):
-					add_bonus_of_one_eur.append(row.idx)
-				if row.payment_date and getdate(row.payment_date) < getdate(row.due_date):
-					add_bonus_of_two_eur.append(row.idx)		 	  	
-
-
-
-		received_payments = map(float,received_payments)				
-
-		payment_made = map(float,payment_made)
-		print sum(payment_made),"sum of payments_made"
-
-		amount_of_payment_left = map(float,amount_of_payment_left)
-		print sum(amount_of_payment_left),"amount_of_payment_left"
-
-		late_payments = map(float,late_payments)
-		print sum(late_payments),"late_payments"
-
-		bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-		print bonus,"bonus"
-
-		# for i in received_payments:
-		# 	payment_received += i
-
-		if self.payments_record and self.date:
-			self.payments_left = len(self.payments_record) - len(received_payments)
-			self.balance = self.payments_left * self.monthly_rental_payment
-			self.payments_made = sum(payment_made)
-			self.late_payments = sum(late_payments)
-			self.amount_of_payment_left = sum(amount_of_payment_left)
-			self.number_of_payments = len(received_payments)
-			self.late_fees = no_of_late_days * self.monthly_rental_payment * 0.02
-			self.bonus = bonus
-
+		self.comment_for_agreement_creation()
+			
 	def on_update(self):
 		self.payment_date_comment()
 		self.get_agreement_closed_date()
@@ -278,6 +203,7 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.payments_record = []
 	target_doc.payment_day = ""
 	target_doc.agreement_status = "Open"
+	target_doc.bonus = 0
 	target_doc.duplicate_today_plus_90_days = customer_agreement.today_plus_90_days
 
 	return target_doc
