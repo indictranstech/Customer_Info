@@ -90,6 +90,12 @@ doc_events = {
 # ---------------
 
 # scheduler_events = {
+# 	"hourly": [
+# 		"customer_info.doctype.customer_agreement.customer_agreement.set_values"
+# 	]
+# }
+
+# scheduler_events = {
 # 	"all": [
 # 		"customer_info.tasks.all"
 # 	],
