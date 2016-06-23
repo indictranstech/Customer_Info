@@ -1,0 +1,58 @@
+<div id="menu{{ index }}" class="tab-pane fade summary">
+    {% if (summary.cond == 1) { %}
+        <table class="table table-bordered table-condensed" id="header-fixed">
+            <thead>
+                <tr class="row">
+                    <td align="pull-right"><b>Field Name</b></td>
+                    <td align="pull-left"><b>Value</b></td>
+                </tr>
+            </thead>
+            <tbody class="tr-tbody">
+                <tr class="row">
+                    <td>90d SAC price</td><td>{{ summary.s90d_SAC_price }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Expires</td><td>{{ summary.Expires }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Payments Made</td><td>{{ summary.Payments_made }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Late fees</td><td>{{ summary.Late_fees }}</td>
+                </tr>
+                <tr class="row">
+                    <td>90 day pay Off</td><td>{{ summary.s90_day_pay_Off }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Number of payments left</td><td>{{ summary.Number_of_payments_left }}</td>
+                </tr>
+            </tbody>
+        </table>
+    {% } else { %}
+        <table class="table table-bordered table-condensed" id="header-fixed">
+            <thead>
+                <tr class="row">
+                    <td align="pull-right"><b>Field Name</b></td>
+                    <td align="pull-left"><b>Value</b></td>
+                </tr>
+            </thead>
+            <tbody class="tr-tbody">
+                <tr class="row">
+                    <td>Amount of payments left</td><td>{{ summary.Amount_of_payments_left }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Discounted payment amount</td><td>{{ summary.Discounted_payment_amount }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Late payments</td><td>{{ summary.Late_payments }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Late fees</td><td>{{ summary.Late_fees }}</td>
+                </tr>
+                <tr class="row">
+                    <td>Total payoff amount</td><td>{{ summary.Total_payoff_amount }}</td>
+                </tr>
+            </tbody>
+        </table>
+    {% } %}
+</div>
