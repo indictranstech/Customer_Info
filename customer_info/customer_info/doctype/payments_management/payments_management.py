@@ -152,6 +152,7 @@ def set_values_in_agreement_on_submit(customer_agreement):
 
 @frappe.whitelist()
 def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_uncheck=None):
+	print frm_bonus, "bonus",'bonus'
 	row_to_uncheck = json.loads(row_to_uncheck)
 	print row_to_uncheck,"row_to_uncheck"
 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
@@ -251,8 +252,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_unchec
 		# previsous_bonus = customer.bonus
 	customer_agreement.save(ignore_permissions=True)
 	total_bonus = float(frm_bonus) + bonus - subtract_bonus
-	print  total_bonus,"total_bonus"
-	return total_bonus
+	print  total_bonus,"total_bonus",type(total_bonus),"type of total_bonus"
+	return str(total_bonus)
 
 
 @frappe.whitelist()
@@ -351,7 +352,7 @@ def calculate_total_charges(customer):
 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 							where customer = '{0}' and agreement_status = "Open" """.format(customer),as_list=1)
 	
-	receivable = frappe.db.get_value("Customer",{"name":customer},"receivable")
+	receivable = frappe.db.get_value("Customer",{"name":customer},"receivables")
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		print customer_agreement.name

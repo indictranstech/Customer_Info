@@ -128,6 +128,7 @@ calculate_total_charges = function(frm){
               	console.log((r.message['sum'] - cur_frm.doc.receivables),"my r.message")
               	console.log([r.message['sum'] > 0, r.message['sum'] > 0 ? r.message['sum']:0.00 ],"in calculate_total_charges")
               	cur_frm.doc.amount_of_due_payments = r.message['sum'] > 0 ? r.message['sum']:"0";
+	           	cur_frm.doc.receivables = r.message['receivables'] > 0 ? r.message['sum']:"0";
 	           	if((r.message['sum'] - cur_frm.doc.receivables) == 0){
 	           		cur_frm.doc.total_charges = "0"
 	           	}
@@ -364,12 +365,12 @@ process_payment = Class.extend({
 		this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
 		this.fd.bonus.df.read_only=1;
 		this.fd.bonus.refresh();
-		this.init_for_trigger_of_field()
+		this.init_for_trigger_of_amount_paid_by_customer()
 		this.click_on_process_payment()
 		this.click_on_add_in_receivables()
 		this.click_on_return_to_customer()
 	},
-	init_for_trigger_of_field:function(){
+	init_for_trigger_of_amount_paid_by_customer:function(){
 		var me = this;
 		$(me.fd.amount_paid_by_customer.input).change(function(){
 			me.init_for_commom_calculation()
@@ -650,6 +651,7 @@ Payments_Details = Class.extend({
         console.log(me.row_to_update,"row_to_update")
         console.log(me.row_to_uncheck,"row_to_uncheck")
         console.log(me.row_to_check,"row_to_check")
+	    console.log(cur_frm.doc.bonus,"bonus")    
 		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
 			var me = this
 	   		frappe.call({    
@@ -669,7 +671,7 @@ Payments_Details = Class.extend({
 	        		me.hide_dialog()*/
 	        	}
 	        });
-	        frappe.call({    
+	        frappe.call({
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
 		        async: false,
 	           	args: {
@@ -677,11 +679,11 @@ Payments_Details = Class.extend({
 	            	"frm_bonus":cur_frm.doc.bonus,
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
-	           	callback: function(res){
-	           		console.log(res.message,"message of bonus")
+	           	callback: function(r){
+	           		console.log(r.message,"message of bonus")
+	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
-	        		cur_frm.set_value("bonus",res.message)
 	        		msgprint("Changes Added")
 	        		/*me.hide_dialog()*/
 	        	}
