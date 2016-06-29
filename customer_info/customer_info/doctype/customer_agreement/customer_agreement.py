@@ -37,9 +37,9 @@ class CustomerAgreement(Document):
 		counter = 1
 		count = 10001		
 		if self.document_type == "New" and self.flag == 0:
-			old_name = frappe.db.sql("""select name from 
-										`tabCustomer Agreement` 
-										where document_type = "New" order by replace(name,"BK-","")*1 """,as_list=1)
+			old_name = frappe.db.sql("""select name from `tabCustomer Agreement` 
+										where document_type = "New" 
+										order by replace(name,"BK-","")*1 """,as_list=1)
 			if len(old_name) > 0:
 				new_name_list = old_name[-1][0].split("-")
 				print new_name_list[-1]
@@ -49,9 +49,9 @@ class CustomerAgreement(Document):
 			self.flag = 1
 
 		elif self.document_type == "Updated" and self.flag == 0:
-			parent_name = frappe.db.sql("""select name from 
-										`tabCustomer Agreement` 
-										where parent_name like "{0}" """.format(self.parent_name),as_list=1)
+			parent_name = frappe.db.sql("""select name from `tabCustomer Agreement` 
+										where parent_name like "{0}" 
+										order by replace(name,"{0}","")*1 desc""".format(self.parent_name),as_list=1)
 			
 			parent = frappe.get_doc("Customer Agreement", self.agreement_no)
 			if parent and parent.agreement_status != "Updated":
@@ -72,9 +72,11 @@ class CustomerAgreement(Document):
 
 			elif len(parent_name) > 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 2):			
 				print "in my cond 11111111111111111111111"
+				print parent_name,"parent_name"
 				old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
+				print old_name_list,"old_name_list"
 				counter = int(old_name_list[-1]) + 1
-
+				print counter,"counter"
 			elif len(parent_name) >= 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 3):			
 				old_counter = int(parent_name[-1][0].split('-')[-1])
 				counter = old_counter + 1	
@@ -217,8 +219,21 @@ def get_product(doctype, txt, searchfield, start, page_len, filters):
 													where agreement_status = "Open") 
 							and (merchandise_status = "Used" or merchandise_status = "New" )
 							and (item_name like '{txt}'
-											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1,debug=1)
+											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
 
 
-
+@frappe.whitelist()
+def set_bonus_in_customer(customer,bonus):
+	customer = frappe.get_doc("Customer",customer)
+	previuos_bonus = customer.bonus
+	print type(previuos_bonus),"previuos_bonus"
+	print type(bonus),"bonus"
+	total_bonus = previuos_bonus + float(bonus)
+	customer.update({
+		"bonus":total_bonus
+		})
+	if float(bonus) > 0:
+		comment = """ {0} EUR Bonus Added """.format(bonus)
+		customer.add_comment("Comment",comment)
+	customer.save(ignore_permissions=True)
 

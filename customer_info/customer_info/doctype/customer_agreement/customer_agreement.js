@@ -150,6 +150,16 @@ frappe.ui.form.on("Customer Agreement",{
                     }
                 }   
             });
+            frappe.call({
+                async:false,
+                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
+                args: {
+                    "customer": cur_frm.doc.customer,
+                    "bonus":cur_frm.doc.bonus
+                },
+                callback: function(res){
+                }   
+            });
         }         
     },
     refresh:function(frm){

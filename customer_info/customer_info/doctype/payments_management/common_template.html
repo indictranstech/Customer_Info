@@ -1,0 +1,27 @@
+<style type="text/css">
+    .add-items {
+        overflow-y: scroll;
+        max-height: 300px;
+    }
+</style>
+
+<div class="container-of-nav-tab">
+    <ul class="nav nav-tabs" data-tabs="tabs">
+        <li class="active payment-li"><a data-toggle="tab" href="#home{{ index }}" >Payments Details</a></li>
+        <li class="summary-li"><a data-toggle="tab" href="#menu{{ index }}">Summary Details</a></li>
+    </ul>
+
+    <div class="tab-content">
+
+    {%= frappe.render_template("payments_management",{
+                                            "post":post,
+                                            "payment_date":payment_date,
+                                            "index":index
+                                        }) %}
+
+    {%= frappe.render_template("summary_record",{
+                                            "summary":summary,
+                                            "index":index
+                                        }) %}
+    </div>
+</div>
