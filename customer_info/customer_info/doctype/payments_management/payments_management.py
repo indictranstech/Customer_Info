@@ -305,21 +305,13 @@ def update_payments_child_table(customer):
 				row.save(ignore_permissions=True)
 		customer_agreement.save(ignore_permissions = True)
 
-
-
-
-
 @frappe.whitelist()
 def get_summary_records(agreement,receivable):
 	agreement = frappe.get_doc("Customer Agreement",agreement)
-	print type(agreement.today_plus_90_days),"type"
-	print agreement.today_plus_90_days,"today_plus_90_days"
 	late_fees = "{0:.2f}".format(agreement.late_fees)
-	payments_made = "{0:.2f}".format(float(agreement.payments_made) + float(receivable))
+	payments_made = "{0:.2f}".format(agreement.payments_made + float(receivable))
 	if agreement.today_plus_90_days >= datetime.now().date():
-		print "in if"
-		b = agreement.s90d_sac_price - float(agreement.payments_made) - float(receivable) + float(late_fees)
-		day_pay_Off = "{0:.2f}".format(b)
+		day_pay_Off = "{0:.2f}".format(agreement.s90d_sac_price - agreement.payments_made - float(receivable) + float(late_fees))
 		return {"cond":1,
 				"s90d_SAC_price":"{0} EUR".format(agreement.s90d_sac_price),
 				"Expires":agreement.today_plus_90_days,
@@ -328,20 +320,22 @@ def get_summary_records(agreement,receivable):
 				"s90_day_pay_Off":"{0} EUR".format(float(day_pay_Off)),
 				"Number_of_payments_left":agreement.payments_left
 				}
+
 	elif agreement.today_plus_90_days < datetime.now().date():
-		Total_payoff_amount = (agreement.early_buy_discount_percentage * float(agreement.balance)) + agreement.late_payments + float(late_fees) - float(receivable)
+		discount = (agreement.balance / 100) * float(agreement.early_buy_discount_percentage)
+		Total_payoff_amount = (agreement.early_buy_discount_percentage * agreement.balance) + agreement.late_payments + float(late_fees) - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		return {"cond":2,
 				"Receivables":"{0} EUR".format(receivable),
 				"Amount_of_payments_left":"{0} EUR".format(agreement.balance),
-				"Discounted_payment_amount":"{0} EUR".format(agreement.early_buy_discount_percentage * float(agreement.balance)),
+				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(agreement.balance - float(discount))),
 				"Late_payments":"{0} EUR".format(agreement.late_payments),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
-				"Total_payoff_amount":"{0} EUR".format(float(Total_payoff_amount))
+				"Total_payoff_amount":"{0} EUR".format(float(Total_payoff_amount)),
+				"discount":"{0} EUR".format("{0:.2f}".format(discount)),
+				"discount_percentage":"{0}% discount".format(agreement.early_buy_discount_percentage)
 				}	
 			 			
-
-
 @frappe.whitelist()
 def calculate_total_charges(customer):
 	print "in calculate_total_charges"
