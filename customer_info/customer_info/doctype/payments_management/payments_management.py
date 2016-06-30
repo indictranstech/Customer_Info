@@ -148,6 +148,8 @@ def set_values_in_agreement_on_submit(customer_agreement):
 		customer_agreement.payments_made = sum(payment_made)
 		customer_agreement.number_of_payments = 0
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
+		customer_agreement.total_due = 0
 	customer_agreement.save(ignore_permissions=True)	
 
 @frappe.whitelist()
@@ -242,12 +244,13 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_unchec
 	if customer_agreement.payments_record and customer_agreement.date:
 
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
-		customer_agreement.balance = customer_agreement.payments_left * customer_agreement.monthly_rental_payment
+		# customer_agreement.balance = customer_agreement.payments_left * customer_agreement.monthly_rental_payment
 		customer_agreement.late_payments = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
 		customer_agreement.number_of_payments = len(received_payments)
 		customer_agreement.late_fees = no_of_late_days * customer_agreement.monthly_rental_payment * 0.02
 		customer_agreement.bonus = customer_agreement.bonus + bonus
+		customer_agreement.total_due = len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02)
 		# customer = frappe.get_doc("Customer",customer_agreement.customer)
 		# previsous_bonus = customer.bonus
 	customer_agreement.save(ignore_permissions=True)
@@ -259,11 +262,14 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_unchec
 @frappe.whitelist()
 def remove_all_old_check(customer):
 	print "in side remove_all_old_check"
-	return frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "" 
+	frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "" 
 							where check_box_of_submit = 0 
 							and parent in (select name from `tabCustomer Agreement`
 							where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
+	frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0 
+					where customer = '{0}' 
+					and agreement_status = "Open" """.format(customer),debug=1)
 
 
 @frappe.whitelist()
@@ -322,13 +328,14 @@ def get_summary_records(agreement,receivable):
 				}
 
 	elif agreement.today_plus_90_days < datetime.now().date():
-		discount = (agreement.balance / 100) * float(agreement.early_buy_discount_percentage)
-		Total_payoff_amount = (agreement.early_buy_discount_percentage * agreement.balance) + agreement.late_payments + float(late_fees) - float(receivable)
+		balance = float(agreement.payments_left) * agreement.monthly_rental_payment
+		discount = (balance / 100) * float(agreement.early_buy_discount_percentage)
+		Total_payoff_amount = (balance - float(discount)) + float(agreement.late_payments) + agreement.late_fees - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		return {"cond":2,
 				"Receivables":"{0} EUR".format(receivable),
-				"Amount_of_payments_left":"{0} EUR".format(agreement.balance),
-				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(agreement.balance - float(discount))),
+				"Amount_of_payments_left":"{0} EUR".format(balance),
+				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount))),
 				"Late_payments":"{0} EUR".format(agreement.late_payments),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
 				"Total_payoff_amount":"{0} EUR".format(float(Total_payoff_amount)),

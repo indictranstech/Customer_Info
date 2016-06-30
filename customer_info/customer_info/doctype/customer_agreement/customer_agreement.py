@@ -24,7 +24,7 @@ class CustomerAgreement(Document):
 
 	def after_insert(self):
 		self.comment_for_agreement_creation()
-			
+
 	def on_update(self):
 		self.payment_date_comment()
 		self.get_agreement_closed_date()
@@ -171,6 +171,8 @@ class CustomerAgreement(Document):
 		comment = """The agreement {0} is started on the {1}  """.format(self.name,datetime.now().date())
 		self.add_comment("Comment",comment)		
 
+			
+
 
 @frappe.whitelist()
 def get_primary_address(customer):
@@ -192,6 +194,15 @@ def make_update_agreement(source_name, target_doc=None):
 		}, target_doc)
 
 	target_doc.document_type = "Updated"	
+	target_doc.payments_left = ""
+	target_doc.balance = 0
+	target_doc.payments_made = 0
+	target_doc.amonut_of_payment_left = ""
+	target_doc.late_payments = 0
+	target_doc.total_due = 0
+	target_doc.late_fees = 0
+	target_doc.number_of_payments = 0
+	target_doc.bonus = 0
 	target_doc.product = ""
 	target_doc.product_category = ""
 	target_doc.concade_product_name_and_category = ""
@@ -205,7 +216,6 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.payments_record = []
 	target_doc.payment_day = ""
 	target_doc.agreement_status = "Open"
-	target_doc.bonus = 0
 	target_doc.duplicate_today_plus_90_days = customer_agreement.today_plus_90_days
 
 	return target_doc
