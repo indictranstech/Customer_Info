@@ -135,6 +135,7 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }
         if(cur_frm.doc.__islocal){
+            cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
             frappe.call({
                 async:false,
                 method: "frappe.client.get_value",

@@ -736,8 +736,8 @@ Payments_Details = Class.extend({
 	},
 	update_total_charges_and_due_payments : function(frm){
 		var me = this;
-		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()))
-		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()))
+		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) > 0 ? parseFloat($(cur_dialog.body).find('div.total_charges').text()):"0")
+		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) > 0 ? parseFloat($(cur_dialog.body).find('div.due_payments').text()):"0")
 	}	
 })
 

@@ -38,7 +38,13 @@
             </thead>
             <tbody class="tr-tbody">
                 <tr class="row">
+                    <td>Receivables</td><td>{{ summary.Receivables }}</td>
+                </tr>
+                <tr class="row">
                     <td>Amount of payments left</td><td>{{ summary.Amount_of_payments_left }}</td>
+                </tr>
+                <tr class="row">
+                    <td>{{ summary.discount_percentage }}</td><td>{{ summary.discount }}</td>
                 </tr>
                 <tr class="row">
                     <td>Discounted payment amount</td><td>{{ summary.Discounted_payment_amount }}</td>
@@ -51,9 +57,6 @@
                 </tr>
                 <tr class="row">
                     <td>Total payoff amount</td><td>{{ summary.Total_payoff_amount }}</td>
-                </tr>
-                <tr class="row">
-                    <td>{{ summary.discount_percentage }}</td><td>{{ summary.discount }}</td>
                 </tr>
             </tbody>
         </table>
