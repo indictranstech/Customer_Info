@@ -360,11 +360,17 @@ process_payment = Class.extend({
 	    $('button[data-fieldname="return_to_customer"]').css("display","none");
 		this.dialog.show();
        	$(this.dialog.body).parent().find('.btn-primary').hide()
-       	console.log(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables),"clacuaiton")
-       	this.dialog.set_value("balance",(flt(cur_frm.doc.receivables) - flt(cur_frm.doc.total_charges)).toFixed(2))
-		this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
+		/*this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
 		this.fd.bonus.df.read_only=1;
-		this.fd.bonus.refresh();
+		this.fd.bonus.refresh();*/
+       	console.log(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables),"clacuaiton")
+       	this.dialog.set_value("balance",(flt(me.fd.amount_paid_by_customer.$input.val()) 
+										- flt(cur_frm.doc.total_charges) 
+										+ flt(cur_frm.doc.receivables) 
+										- flt(me.fd.bank_card.$input.val())
+										- flt(me.fd.bank_transfer.$input.val())
+										- flt(me.fd.bonus.$input.val())
+										- flt(me.fd.discount.$input.val())).toFixed(2))
 		this.init_for_trigger_of_amount_paid_by_customer()
 		this.click_on_process_payment()
 		this.click_on_add_in_receivables()
@@ -385,7 +391,12 @@ process_payment = Class.extend({
 			me.init_for_commom_calculation()
 		})
 		$(me.fd.bonus.input).change(function(){
-			me.init_for_commom_calculation()
+			if(flt($(me.fd.bonus.input).val()) <= cur_frm.doc.bonus){
+				me.init_for_commom_calculation()
+			}
+			else{
+				msgprint (__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.bonus]));
+			}
 		})	
 	},
 	init_for_commom_calculation:function(){
@@ -417,7 +428,7 @@ process_payment = Class.extend({
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        		}
        		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) < 0 ){
-       			html = "<div class='row' style='margin-left: 7px;'>Error Message Balance Is Negative</div>"
+       			html = "<div class='row' style='margin-left: 7px;color: red;'>Error Message Balance Is Negative</div>"
        			$(me.dialog.body).parent().find('.btn-primary').hide()
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
