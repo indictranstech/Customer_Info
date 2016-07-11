@@ -1,4 +1,3 @@
-cur_frm.add_fetch('customer', 'receivables', 'receivables');
 cur_frm.add_fetch('customer', 'first_name', 'first_name');
 cur_frm.add_fetch('customer', 'last_name', 'last_name');
 cur_frm.add_fetch('customer', 'company_phone_1', 'company_phone_1');
@@ -24,16 +23,16 @@ frappe.ui.form.on("Payments Management", {
 		</table>");
 		if(cur_frm.doc.customer){
 			render_agreements();
-			update_payments_child_table();
+			update_payments_record_by_due_date();
 			calculate_total_charges();
 			get_address_of_customer()
 		}
 	},
 	customer:function(){
 		if(cur_frm.doc.customer){
-			remove_all_old_check();
+			remove_all_not_submitted();
 			render_agreements();
-			update_payments_child_table();
+			update_payments_record_by_due_date();
 			calculate_total_charges();
 			get_address_of_customer();			
 		}
@@ -47,6 +46,14 @@ frappe.ui.form.on("Payments Management", {
 			msgprint("Select Customer First")
 		}
 	},
+	call_commitment:function(frm){
+		if(cur_frm.doc.customer){
+			new call_commit()	
+	    }
+	    else{
+			msgprint("Select Customer First")
+		}    
+	},
 	add_notes:function(frm){
 		if(cur_frm.doc.notes_on_customer_payments){
 			frappe.call({
@@ -57,6 +64,9 @@ frappe.ui.form.on("Payments Management", {
 	            	"summary_of_notes":cur_frm.doc.summary_of_notes
 	            },
 	            callback: function(r) {
+	            	if(r.message){
+	            		cur_frm.set_value("summary_of_notes",r.message)
+	            	}
 	            	cur_frm.set_value("notes_on_customer_payments","")
 	            	msgprint("Comment Added Successfully");
 	            }
@@ -88,10 +98,10 @@ get_address_of_customer = function(){
     });
 }
 
-update_payments_child_table = function(frm){
+update_payments_record_by_due_date = function(frm){
 	frappe.call({
 			async:false,
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_child_table",
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_record_by_due_date",
             args: {
               "customer": cur_frm.doc.customer
             },
@@ -101,10 +111,10 @@ update_payments_child_table = function(frm){
     });
 }
 
-remove_all_old_check =function(frm){
+remove_all_not_submitted =function(frm){
 	frappe.call({
 			async:false,
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_old_check",
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_not_submitted",
             args: {
               "customer": cur_frm.doc.customer
             },
@@ -125,16 +135,15 @@ calculate_total_charges = function(frm){
             callback: function(r){
             if(r.message){
               	console.log(r.message)
-              	console.log((r.message['sum'] - cur_frm.doc.receivables),"my r.message")
-              	console.log([r.message['sum'] > 0, r.message['sum'] > 0 ? r.message['sum']:0.00 ],"in calculate_total_charges")
-              	cur_frm.doc.amount_of_due_payments = r.message['sum'] > 0 ? r.message['sum']:"0";
-	           	cur_frm.doc.receivables = r.message['receivables'] > 0 ? r.message['sum']:"0";
-	           	if((r.message['sum'] - cur_frm.doc.receivables) == 0){
+              	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
+	           	cur_frm.doc.receivables = r.message['receivables'] > 0 ? r.message['receivables']:"0";
+	           	cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables'])
+	           	/*if((r.message['amount_of_due_payments'] - cur_frm.doc.receivables) == 0){
 	           		cur_frm.doc.total_charges = "0"
 	           	}
 	           	else{
-	           		cur_frm.doc.total_charges = (r.message['sum'] - cur_frm.doc.receivables)
-	           	}
+	           		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - cur_frm.doc.receivables)
+	           	}*/
 	           	cur_frm.refresh_fields()
             }
             else{
@@ -160,7 +169,7 @@ render_agreements = function(){
 				return "<input type='button' value = "+dataContext['suspenison']+" id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		    
 			}
 			else{
-				return "<input type='button' value = 'Suspenison' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		
+				return "<input type='button' value = 'Call/Commitment' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";		
 			}
 	}
 
@@ -180,7 +189,7 @@ render_agreements = function(){
 	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 50},
 	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50},
 	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail},
-	    {id: "suspenison", name: "Postpone", field: "suspenison",formatter: buttonFormat_suspension}
+	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension}
   	];
   	var options = {
     	enableCellNavigation: true,
@@ -252,70 +261,344 @@ make_grid= function(data1,columns,options){
 }
 
 
-manage_suspenison = Class.extend({
-	init:function(id,item){
-		this.item = item;
-		this.id = id;
-		this.get_datepicker()
+
+call_commit = Class.extend({
+	init:function(){
+		this.get_contact_result()
 	},
-	get_datepicker:function(){
+	get_contact_result:function(){
 		var me  = this;
 		this.dialog = new frappe.ui.Dialog({
-	            		title: "Pick a date",
-	                	fields: [
-	                   		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
-	                   		{"fieldtype": "Button" , "fieldname": "reset" , "label": "Reset"},
-	                   	],
-	                   	primary_action_label: "Set",
-	                   	primary_action: function(){
-	                        me.change_name_of_buttom()
-	                    }
-		       		});
+            		title: "Contact result",
+                	fields: [
+                   		{"fieldtype": "Button" , "fieldname": "reset" , "label": "Reset"},
+                   		{"fieldtype": "Select" , "fieldname": "contact_result" , "label": "Contact Result","options":["","WBI","Sent SMS/Email"]},
+                   		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
+                   		{"fieldtype": "Currency" , "fieldname": "amount" , "label": "Amount"}
+                   	],
+                   	primary_action_label: "Save",
+                   	primary_action: function(){
+                        me.change_name_of_buttons()
+                    }
+	       		});
        	this.fd = this.dialog.fields_dict;
        	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
-       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("margin-top","-217px");
-       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("padding","5px");
-       	this.dialog.$wrapper.find('button[data-fieldname="reset"]').css("margin-left","171px");
-       	this.dialog.show();	
+       	this.dialog.show();
+       	this.get_customer_agreement();
+		this.before_select_contact_result()
+		this.select_contact_result()
 		this.click_on_reset()
+	},
+	get_customer_agreement:function(){
+		this.agreements = [];
+		var me = this;
+		frappe.call({    
+			method: "frappe.client.get_list",
+		   	args: {
+		    	doctype: "Customer Agreement",
+		       	fields: ["name","call_commitment"],
+		       	filters: { "agreement_status" : "Open","customer":cur_frm.doc.customer},
+			},
+			callback: function(r){
+				if(r && r.message){
+					console.log(r.message,"result result")
+					for(i=0;i<r.message.length;i++){
+						me.agreements.push({"name":r.message[i]['name'],
+											"call_commitment":r.message[i]['call_commitment']})
+					}
+					console.log(me.agreements,"me.agreements 123123")
+					me.get_fields_values();	
+				}
+			}
+		});
+	},
+	get_fields_values:function(){
+		var me = this;
+		this.common_agreement_of_call_commit = [] 
+		console.log(me,"me in side get_fields_values")
+		console.log(me.agreements,"nameeeeeeeeeeeeeeeeee")
+		for(i=0;i < me.agreements.length;i++){
+			if(me.agreements[i]['call_commitment'] == "All"){
+				console.log(me.agreements[i]['call_commitment'])
+				me.common_agreement_of_call_commit.push(me.agreements[i]['name'])
+				console.log(me.agreements[i]['name'])
+			}
+		}
+		frappe.call({    
+			method: "frappe.client.get_list",
+		   	args: {
+		    	doctype: "Customer Agreement",
+		       	fields: ["contact_result","suspension_date","amount_of_contact_result","call_commitment"],
+		       	filters: { "name" : me.common_agreement_of_call_commit[0],
+		        			"customer":cur_frm.doc.customer,
+		        			"agreement_status":"Open"
+		        	},
+			},
+			callback: function(r){
+				console.log(r.message,"r.message of call_commit")
+				if(r && r.message[0]['contact_result'] == "WBI" 
+					&& r.message[0]['amount_of_contact_result'] 
+					&& r.message[0]["call_commitment"] == "All"){
+					console.log(r.message,"contact_result contact_result")
+					$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+					$(me.dialog.body).find("[data-fieldname ='amount']").show();
+					me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
+					me.dialog.fields_dict.date_picker.set_input(r.message[0]['suspension_date'])
+					me.dialog.fields_dict.amount.set_input(r.message[0]['amount_of_contact_result'])
+				}
+				else if(r && r.message[0]['contact_result'] == "Sent SMS/Email" && r.message[0]["call_commitment"] == "All"){
+					console.log(r.message,"contact_result contact_result")
+					me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
+				}
+			}
+		});
+	},
+	before_select_contact_result:function(){
+		var me = this;
+		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+		$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+	},
+	select_contact_result:function(){
+		var me = this;
+		$(me.fd.contact_result.input).change(function(){
+			if(me.fd.contact_result.$input.val() == "WBI"){
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
+			}
+			else{
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
+			}
+		})
+	},
+	click_on_reset:function(){
+		var me = this;
+		me.dialog.fields_dict.contact_result.set_input("")
+		me.dialog.fields_dict.date_picker.set_input("")
+		me.dialog.fields_dict.amount.set_input("")
+		me.dialog.fields_dict.reset.$input.click(function() {
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.set_or_reset_call_commitment",
+	            args: {
+	            	"customer":cur_frm.doc.customer
+	            },
+	            callback: function(r) {
+	            	me.dialog.hide();
+	            	render_agreements();
+	            	msgprint("All Call/Commitment Reset");
+	            }
+	        });
+		})
+	},
+	change_name_of_buttons:function(){
+		var me = this;
+		console.log(me,"me in side change_name_of_buttons")
+		date = me.fd.date_picker.$input.val()
+		if(date){
+			me.update_call_commitment_data_in_agreement(date)
+			me.dialog.hide();
+		}
+		else if (me.fd.contact_result.$input.val() == "Sent SMS/Email"){
+			date = ""
+			me.update_call_commitment_data_in_agreement(date)
+			me.dialog.hide();
+		}
+	},
+	update_call_commitment_data_in_agreement:function(date){
+		var me  = this;
+		console.log(me,"me in side of update_call_commitment_data_in_agreement")
+		if(date == ""){	
+			console.log("in first frappe.call")
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
+	            args: {
+	              "customer_agreement": me.agreements,
+	              "date": "",
+	              "contact_result": me.fd.contact_result.$input.val(),
+	              "amount": 0,
+	              "all_or_individual":"all"		
+	            },
+	            callback: function(r){
+	        		render_agreements();
+	        		msgprint("All Call/Commitment Save");
+	        	}
+		    });
+		}
+		else{
+			console.log("in second frappe.call")
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
+	            args: {
+	              "customer_agreement": me.agreements,
+	              "date": date,
+	              "contact_result": me.fd.contact_result.$input.val(),
+	              "amount": me.fd.amount.$input.val(),
+	              "all_or_individual":"all"		
+	            },
+	            callback: function(r){
+	        		render_agreements();
+	        		msgprint("All Call/Commitment Save");
+	        	}
+		    });	
+		}    
+	}
+})
+
+
+manage_suspenison = Class.extend({
+	init:function(id,item){
+		this.item = item;
+		this.id = id;
+		this.get_contact_result()
+	},
+	get_contact_result:function(){
+		var me  = this;
+		this.dialog = new frappe.ui.Dialog({
+            		title: "Contact result",
+                	fields: [
+                   		{"fieldtype": "Button" , "fieldname": "reset" , "label": "Reset"},
+                   		{"fieldtype": "Select" , "fieldname": "contact_result" , "label": "Contact Result","options":["","WBI","Sent SMS/Email"]},
+                   		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
+                   		{"fieldtype": "Currency" , "fieldname": "amount" , "label": "Amount"}
+                   	],
+                   	primary_action_label: "Save",
+                   	primary_action: function(){
+                        me.change_name_of_button()
+                    }
+	       		});
+       	this.fd = this.dialog.fields_dict;
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
+       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	this.dialog.show();
+       	this.get_fields_values();	
+		this.before_select_contact_result()
+		this.select_contact_result()
+		this.click_on_reset()
+	},
+	get_fields_values:function(){
+		var me = this;
+		frappe.call({    
+			method: "frappe.client.get_list",
+		   	args: {
+		    	doctype: "Customer Agreement",
+		       	fields: ["contact_result","suspension_date","amount_of_contact_result","call_commitment"],
+		       	filters: { "name" : me.item['id']
+		        	},
+			},
+			callback: function(r){
+				console.log(r.message)
+				console.log(r && r.message[0]['contact_result'] == "WBI")
+				if(r && r.message[0]['contact_result'] == "WBI"){
+					console.log(r.message,"contact_result contact_result")
+					$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+					$(me.dialog.body).find("[data-fieldname ='amount']").show();
+					me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
+					me.dialog.fields_dict.date_picker.set_input(r.message[0]['suspension_date'])
+					me.dialog.fields_dict.amount.set_input(r.message[0]['amount_of_contact_result'])
+				}
+				else if(r && r.message[0]['contact_result'] == "Sent SMS/Email" && r.message[0]["call_commitment"] == "Individual"){
+					console.log(r.message,"contact_result contact_result")
+					me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
+				}
+			}
+		});
+	},
+	before_select_contact_result:function(){
+		var me = this;
+		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+		$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+	},
+	select_contact_result:function(){
+		var me = this;
+		$(me.fd.contact_result.input).change(function(){
+			if(me.fd.contact_result.$input.val() == "WBI"){
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
+			}
+			else{
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
+			}
+		})
 	},
 	click_on_reset:function(){
 		var me = this;
 		me.dialog.fields_dict.reset.$input.click(function() {
+			me.dialog.fields_dict.contact_result.set_input("")
+			me.dialog.fields_dict.date_picker.set_input("")
+			me.dialog.fields_dict.amount.set_input("")
        		var date = frappe.datetime.nowdate()
        		id = "#" + me.id
-       		$(id).attr('value','Postpone');
-			me.update_suspenison_date_in_agreement(date)
+       		$(id).attr('value','Call/Commitment');
+			$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+			$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+			/*me.update_call_commitment_data_in_agreement(date)*/
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.set_or_reset_call_commitment",
+	            args: {
+	            	"customer":cur_frm.doc.customer,
+	            	"agreement_name":me.item['id']
+	            },
+	            callback: function(r) {
+	            	me.dialog.hide();
+	            	/*render_agreements();
+	            	msgprint("All Call/Commitment Reset");*/
+	            }
+	        });
 			me.dialog.hide();
-		})
+		});
 	},
-	update_suspenison_date_in_agreement:function(date){
-		var me  = this;
-		console.log(me,"me in side of update_suspenison_date_in_agreement")
-		frappe.call({
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_suspenison_date_in_agreement",
-            args: {
-              "customer_agreement": me.item['id'],
-              "date":date
-            },
-            callback: function(r){
-        	}
-	    });
-	},
-	change_name_of_buttom:function(){
+	change_name_of_button:function(){
 		var me = this;
-		console.log(me,"me in side change_name_of_buttom")
+		console.log(me,"me in side change_name_of_button")
 		id = "#" + this.id
 		date = me.fd.date_picker.$input.val()
 		if(date){
 			$(id).attr('value', date);
-			me.update_suspenison_date_in_agreement(date)
+			me.update_call_commitment_data_in_agreement(date)
 			me.dialog.hide();
 		}
-		else{
-			msgprint("Please Select Date")
+		else if (me.fd.contact_result.$input.val() == "Sent SMS/Email"){
+			date = ""
+			$(id).attr('value', "SMS/Email");
+			me.update_call_commitment_data_in_agreement(date)
+			me.dialog.hide();
+		}
+	},
+	update_call_commitment_data_in_agreement:function(date){
+		var me  = this;
+		console.log(me,"me in side of update_call_commitment_data_in_agreement")
+		if(date == ""){	
+			console.log("in first frappe.call")
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
+	            args: {
+	              "customer_agreement": me.item['id'],
+	              "date": "",
+	              "contact_result": me.fd.contact_result.$input.val(),
+	              "amount": 0,
+	              "all_or_individual":"individual"		
+	            },
+	            callback: function(r){
+	        	}
+		    });
+		}
+		else{	
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
+	            args: {
+	              "customer_agreement": me.item['id'],
+	              "date": date,
+	              "contact_result": me.fd.contact_result.$input.val(),
+	              "amount": me.fd.amount.$input.val(),
+	              "all_or_individual":"individual"
+	            },
+	            callback: function(r){
+	        	}
+		    });
 		}
 	}
 })
@@ -330,23 +613,27 @@ process_payment = Class.extend({
 		this.dialog = new frappe.ui.Dialog({
 	        title: "Payments Detalis",
 	            fields: [
+	               	{"fieldtype": "Data" , "fieldname": "rental_payment" , "label": "Rental Payment","default":"0.0","reqd":"true"},
 	               	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Cash","default":"0.0","reqd":"true"},
 	               	{"fieldtype": "Data" , "fieldname": "bank_card" , "label": "Bank card","default":"0.0","reqd":"true"},
-	               	{"fieldtype": "Data" , "fieldname": "discount" , "label": "Discount","default":"0.0","reqd":"true"},
-	               	{"fieldtype": "Column Break" , "fieldname": "column"},
-	               	{"fieldtype": "Data" , "fieldname": "bonus" , "label": "Bonus","default":"0.0"},
 	               	{"fieldtype": "Data" , "fieldname": "bank_transfer" , "label": "Bank transfer","default":"0.0","reqd":"true"},
+	               	{"fieldtype": "Column Break" , "fieldname": "column"},
+	               	{"fieldtype": "Data" , "fieldname": "late_fees" , "label": "Late Fees","default":"0.0","reqd":"true"},
+	               	{"fieldtype": "Data" , "fieldname": "bonus" , "label": "Bonus","default":"0.0"},
+	               	{"fieldtype": "Data" , "fieldname": "discount" , "label": "Discount","default":"0.0","reqd":"true"},
 	               	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
 	               	{"fieldtype": "Section Break" , "fieldname": "section"},
 	               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
 	               	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add to receivables"},
+	               	{"fieldtype": "Column Break" , "fieldname": "column"},
 	               	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
 	               	{"fieldtype": "Column Break" , "fieldname": "column"},	
-	               	{"fieldtype": "HTML" , "fieldname": "msg"},
+	               	{"fieldtype": "HTML" , "fieldname": "msg"}
 	               	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
 	               		console.log(this,me,"in primary_action")
+	                    me.click_on_make_entry()
 	                    me.update_payments_records()
 	                    me.dialog.hide()
 	                }
@@ -363,18 +650,48 @@ process_payment = Class.extend({
 		/*this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
 		this.fd.bonus.df.read_only=1;
 		this.fd.bonus.refresh();*/
-       	console.log(flt(cur_frm.doc.total_charges)  - flt(cur_frm.doc.receivables),"clacuaiton")
        	this.dialog.set_value("balance",(flt(me.fd.amount_paid_by_customer.$input.val()) 
 										- flt(cur_frm.doc.total_charges) 
 										+ flt(cur_frm.doc.receivables) 
-										- flt(me.fd.bank_card.$input.val())
-										- flt(me.fd.bank_transfer.$input.val())
-										- flt(me.fd.bonus.$input.val())
-										- flt(me.fd.discount.$input.val())).toFixed(2))
+										+ flt(me.fd.bank_card.$input.val())
+										+ flt(me.fd.bank_transfer.$input.val())
+										+ flt(me.fd.bonus.$input.val())
+										+ flt(me.fd.discount.$input.val())).toFixed(2))
+       	this.fd.balance.df.read_only=1
+       	this.fd.balance.refresh();
+       	this.fd.rental_payment.df.hidden=1
+       	this.fd.rental_payment.refresh();
+       	this.fd.late_fees.df.hidden=1
+       	this.fd.late_fees.refresh();
+		this.get_value_of_rental_payment_and_late_fees();
 		this.init_for_trigger_of_amount_paid_by_customer()
 		this.click_on_process_payment()
 		this.click_on_add_in_receivables()
 		this.click_on_return_to_customer()
+	},
+	get_value_of_rental_payment_and_late_fees:function(){
+		var me = this;
+		var total_due = 0
+		var late_fees = 0
+		frappe.call({
+            method: "frappe.client.get_list",
+		   	args: {
+		    	doctype: "Customer Agreement",
+		       	fields: ["late_fees","total_due"],
+		       	filters: { "customer" : cur_frm.doc.customer,"agreement_status":"Open"
+		        },
+			},
+            callback: function(r){
+            	console.log(r.message,"get_value_of_rental_payment_and_late_fees")
+        		for(i=0;i<r.message.length;i++){
+        			total_due += r.message[i]['total_due']
+					late_fees += r.message[i]['late_fees']        			
+        		}
+        		console.log(late_fees,total_due,"result of total_due and ")
+        		me.dialog.set_value("rental_payment",total_due - late_fees)
+        		me.dialog.set_value("late_fees",late_fees)
+        	}
+	    });	
 	},
 	init_for_trigger_of_amount_paid_by_customer:function(){
 		var me = this;
@@ -403,10 +720,10 @@ process_payment = Class.extend({
 		var me = this;
 		var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges) 
 																			  + flt(cur_frm.doc.receivables) 
-																			  - flt(cur_dialog.fields_dict.bank_card.$input.val())
-																			  - flt(cur_dialog.fields_dict.bank_transfer.$input.val())
-																			  - flt(cur_dialog.fields_dict.bonus.$input.val())
-																			  - flt(cur_dialog.fields_dict.discount.$input.val())
+																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
+																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
+																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
+																			  + flt(cur_dialog.fields_dict.discount.$input.val())
 		console.log(val_of_balance,"val_of_balance")
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.dialog.fields_dict.msg.$wrapper.empty()
@@ -419,16 +736,17 @@ process_payment = Class.extend({
 		me.dialog.fields_dict.process_payment.$input.click(function() {
        		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
        		console.log(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 )
-       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 ){
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) > 0 ){
        			console.log("in if")
        			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
        			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
-       			html = "<div class='row' style='margin-left: 7px;'>There Is "+cur_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
+       			html = "<div class='row' style='margin-left: -88px;'>There Is "+me.dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        		}
-       		if(parseFloat(cur_dialog.fields_dict.balance.$input.val()) < 0 ){
-       			html = "<div class='row' style='margin-left: 7px;color: red;'>Error Message Balance Is Negative</div>"
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 ){
+       			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
        			$(me.dialog.body).parent().find('.btn-primary').hide()
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
@@ -469,7 +787,7 @@ process_payment = Class.extend({
 	            },
 	            callback: function(r){
 	              if(r.message){
-	            		cur_frm.doc.receivables = "string"
+	            		cur_frm.doc.receivables = "0"
 	            		refresh_field("receivables")
 	            		msgprint("Return To Customer")
 	            		$(me.dialog.body).parent().find('.btn-primary').show()
@@ -478,10 +796,35 @@ process_payment = Class.extend({
 		    });
 		})
 	},
+	click_on_make_entry:function(){
+		var me =this;
+		value = me.dialog.get_values();
+		frappe.call({
+            method: "customer_info.customer_info.doctype.payments_management.payments_management.make_payment_history",
+            async:false,
+            args: {
+              "cash":value.amount_paid_by_customer,
+              "bank_card":value.bank_card,
+              "bank_transfer":value.bank_transfer,
+              "bonus":value.bonus,
+              "discount":value.discount,
+              "balance":value.balance,
+              "payment_date":cur_frm.doc.payment_date,
+              "customer":cur_frm.doc.customer,
+              "receivables":flt(cur_frm.doc.receivables),
+              "rental_payment":value.rental_payment,
+              "late_fees":value.late_fees,
+            },
+            callback: function(r){
+             	
+        	}
+	    });
+	},
 	update_payments_records:function(){
+		var me = this;
 		frappe.call({
 			async:false,    
-	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_child_table_of_customer_agreement_on_submit",
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_on_submit",
 	       	args: {
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"customer":cur_frm.doc.customer,
@@ -491,9 +834,10 @@ process_payment = Class.extend({
 	       		console.log(r.message)
 	       		cur_frm.set_value("total_charges","0")
 	       		cur_frm.set_value("amount_of_due_payments","0")
-	       		cur_frm.set_value("receivables","0")
+	       		/*cur_frm.set_value("receivables","0")*/
 	        	render_agreements()
-	        	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement"))
+	        	/*me.click_on_make_entry*/
+	        	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement\n Entry Made For this Payment"))
 	    	}
 	    })
 	}	
@@ -515,6 +859,7 @@ Payments_Details = Class.extend({
             title: "Payments And Summary Detalis",
                 fields: [
                    	{"fieldtype": "HTML" , "fieldname": "payments_record" , "label": "Relative Items"},
+                   	{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "90 day pay Off"},
                    	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": " Pay Off Agreement"}
                    	],
                    	primary_action_label: "Add",
@@ -535,6 +880,7 @@ Payments_Details = Class.extend({
 		var me = this;
 		var counter = 0
 		$('button[data-fieldname="pay_off_agreement"]').css("display","none");
+		$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
 		if(this.item['id']){
 			this.common_function_for_render_templates("common_template")	
 			me.dialog.show();
@@ -572,9 +918,18 @@ Payments_Details = Class.extend({
 					me.increase_decrease_total_charges_and_due_payment();
 				}
 				else if(r.message && template_name == "summary_record"){
+					console.log(r.message['summary_records']['cond'],"summary-li summary-li")
 					$(me.dialog.body).parent().find('.btn-primary').hide()
 					$(me.dialog.body).find('#home'+ me.index).remove()
 					$(me.dialog.body).find('#menu'+ me.index).remove()
+					if(r.message['summary_records']['cond'] == 1){
+						$('button[data-fieldname="pay_off_agreement"]').removeAttr("style");
+						me.click_on_pay_off_agreement(r.message["summary_records"]);
+					}
+					else if(r.message['summary_records']['cond'] == 2){
+						$('button[data-fieldname="s90_day_pay_Off"]').removeAttr("style");
+						me.click_on_90_day_pay_Off(r.message["summary_records"]);
+					}
 					html = $(frappe.render_template("summary_record",{
         	   				"summary":r.message['summary_records'],
         	   				"index":me.index
@@ -590,12 +945,12 @@ Payments_Details = Class.extend({
 		
 		$(me.dialog.body).find(".payment-li").click(function(){
 			$('button[data-fieldname="pay_off_agreement"]').css("display","none");
+			$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
 			me.common_function_for_render_templates("payments_management")
 		});
 
 		
 		$(me.dialog.body).find(".summary-li").click(function(){
-			$('button[data-fieldname="pay_off_agreement"]').removeAttr("style");
 			me.common_function_for_render_templates("summary_record")
 		});
 	},
@@ -630,6 +985,12 @@ Payments_Details = Class.extend({
 	   		}
 	   		else{
 	   			me.payments_record_list[0][i]['pre_select'] = "No"
+	   		}
+	   		if(me.payments_record_list[0][i]['check_box_of_submit'] == 0 && me.payments_record_list[0][i]['check_box'] == 1 && me.payments_record_list[0][i]['payment_date']){
+	   			me.payments_record_list[0][i]['paid'] = "Yes"	
+	   		}
+	   		else{
+	   			me.payments_record_list[0][i]['paid'] = "No"		
 	   		}
 	   	}
 	   	console.log(me.payments_record_list,"return by check_payment_record_for_pre_select")
@@ -747,9 +1108,94 @@ Payments_Details = Class.extend({
 	},
 	update_total_charges_and_due_payments : function(frm){
 		var me = this;
-		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) > 0 ? parseFloat($(cur_dialog.body).find('div.total_charges').text()):"0")
-		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) > 0 ? parseFloat($(cur_dialog.body).find('div.due_payments').text()):"0")
-	}	
+		var factor = me.payments_record_list[0][1].monthly_rental_amount;
+		var payments_cheked = me.row_to_check.length + me.row_to_update.length
+		console.log(me,"me me me")
+		console.log(me.row_to_check.length + me.row_to_update.length,"length")
+		/*cur_frm.set_value("total_charges",(cur_frm.doc.total_charges - flt(payments_cheked*factor))==0?"0":cur_frm.doc.total_charges - flt(payments_cheked*factor))
+		cur_frm.set_value("amount_of_due_payments",(cur_frm.doc.amount_of_due_payments - flt(payments_cheked*factor))==0?"0":cur_frm.doc.amount_of_due_payments - flt(payments_cheked*factor))*/
+		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.total_charges').text()))
+		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.due_payments').text()))
+	},
+	click_on_pay_off_agreement:function(values){
+		var me = this;
+		this.values = values;
+		me.dialog.fields_dict.pay_off_agreement.$input.click(function() {
+			me.show_inner_dialog()
+		});
+	},
+	click_on_90_day_pay_Off: function(values){
+		var me = this;
+		console.log("in s90_day_pay_Off")
+		this.values = values;
+		me.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
+			me.show_inner_dialog()
+		});
+	},
+	show_inner_dialog:function(){
+		var me = this;
+		this.inner_dialog = new frappe.ui.Dialog({
+	        title: "Payments Detalis",
+	            fields: [
+		               	{"fieldtype": "Data" , "fieldname": "amount_paid_by_customer" , "label": "Cash","default":"0.0","reqd":"true"},
+		               	{"fieldtype": "Data" , "fieldname": "bank_card" , "label": "Bank card","default":"0.0","reqd":"true"},
+		               	{"fieldtype": "Data" , "fieldname": "bank_transfer" , "label": "Bank transfer","default":"0.0","reqd":"true"},
+		               	{"fieldtype": "Column Break" , "fieldname": "column"},
+		               	{"fieldtype": "Data" , "fieldname": "discount" , "label": "Discount","default":"0.0","reqd":"true"},
+		               	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
+		               	{"fieldtype": "Section Break" , "fieldname": "section"},
+		               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"}
+	            	],
+	               	primary_action_label: "OK",
+	               	primary_action: function(){
+	               		console.log(this,me,"in primary_action")
+	                    me.dialog.hide()
+	                }
+	   	});
+	    this.inner_fd = this.inner_dialog.fields_dict;
+	    me.set_value_of_balance(this.inner_dialog);
+	},
+	set_value_of_balance:function(inner_dialog){
+		var me = this;
+		console.log(inner_dialog,"inner_dialog")
+		console.log(me,"me me")
+		$(inner_dialog.body).parent().find('.btn-primary').hide()
+       	if(me.values['cond'] == 2){
+       		total_pay_off_amount = 0 - flt(me.values['Total_payoff_amount'])
+	       	inner_dialog.fields_dict.balance.set_input(total_pay_off_amount)
+			inner_dialog.show();
+			me.click_on_process_payment();
+		}
+		else if(me.values['cond'] == 1){
+	       	inner_dialog.fields_dict.balance.set_input(me.values['s90d_SAC_price'])
+			inner_dialog.show();
+			me.click_on_process_payment();
+		}
+	},
+	click_on_process_payment:function(){
+		var me = this;
+		me.inner_dialog.fields_dict.process_payment.$input.click(function() {
+			console.log(me,"me onClick of process_payment")
+			me.update_agreement_according_today_plus_90days();
+		});
+	},
+	update_agreement_according_today_plus_90days:function(){
+		var me = this;
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_agreement_according_today_plus_90days",
+	       	args: {
+	       		"customer_agreement":me.item['id'],
+	        	"agreement_status":"Closed",
+	        	"condition": me.values['cond']
+	        },
+	       	callback: function(r){
+	       		console.log(r.message)
+	    		msgprint("Changes Added")
+	    		me.inner_dialog.hide();
+	    	}
+	    });	
+	}
+
 })
 
 
@@ -775,8 +1221,8 @@ Payments_Details = Class.extend({
             }
 	        });
 		}
-	}*/
-/*get_other_field_value_from_customer = function(){
+	}
+get_other_field_value_from_customer = function(){
 	if(cur_frm.doc.customer){
 		frappe.call({    
 			method: "frappe.client.get_list",
@@ -801,5 +1247,4 @@ Payments_Details = Class.extend({
 			}
 		});
 	}
-}
-*/
+}*/

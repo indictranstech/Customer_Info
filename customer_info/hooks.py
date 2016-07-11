@@ -89,11 +89,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"hourly": [
-# 		"customer_info.doctype.customer_agreement.customer_agreement.set_values"
-# 	]
-# }
+scheduler_events = {
+	"daily": {
+		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler"
+	}
+}
 
 # scheduler_events = {
 # 	"all": [

@@ -29,13 +29,13 @@
                                 <td align="left" id="check_id" style="width:5%;">
                                     
                                     {% if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
-                                        <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled" pre-select="{{ post[0][i].pre_select }}"></input>
+                                        <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled" pre-select="{{ post[0][i].pre_select }}" paid="{{ post[0][i].paid }}"></input>
                                     
                                     {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
-                                        <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" checked ></input>    
+                                        <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" paid="{{ post[0][i].paid }}" checked ></input>    
 
                                     {% } else { %}
-                                        <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}"></input>
+                                        <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" paid="{{ post[0][i].paid }}"></input>
                                     
                                     {% } %}   
                                 </td>
