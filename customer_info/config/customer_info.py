@@ -34,5 +34,25 @@ def get_data():
 					"description": _("Details Of Ratio"),
 				}
 			]
-		}
+		},
+		{
+			"label": _("Standard Reports"),
+			"icon": "icon-star",
+			"items": [
+				# {
+				# 	"type": "report",
+				# 	"is_query_report": True,
+				# 	"name": "Payment Type",
+				# 	"description": _("Record of Received Payment"),
+				# 	"doctype": "Payments History",
+				# },
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Payments Received",
+					"description": _("Record of Received Payment"),
+					"doctype": "Payments History",
+				}
+			]
+		},
 	]
