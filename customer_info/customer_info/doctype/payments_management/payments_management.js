@@ -13,6 +13,7 @@ frappe.ui.form.on("Payments Management", {
 		frm.disable_save();
 	},
 	onload:function(frm){
+		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")
 		$(cur_frm.fields_dict.payments_grid.wrapper).empty()
 		$(cur_frm.fields_dict.payments_grid.wrapper).append("<table width='100%>\
   		<tr>\
@@ -368,6 +369,8 @@ call_commit = Class.extend({
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
 			}
 			else{
+				me.dialog.fields_dict.date_picker.set_input("")
+				me.dialog.fields_dict.amount.set_input("")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
 			}
@@ -499,7 +502,7 @@ manage_suspenison = Class.extend({
 					me.dialog.fields_dict.date_picker.set_input(r.message[0]['suspension_date'])
 					me.dialog.fields_dict.amount.set_input(r.message[0]['amount_of_contact_result'])
 				}
-				else if(r && r.message[0]['contact_result'] == "Sent SMS/Email" && r.message[0]["call_commitment"] == "Individual"){
+				else if(r && r.message[0]['contact_result'] == "Sent SMS/Email"){
 					console.log(r.message,"contact_result contact_result")
 					me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
 				}
@@ -519,6 +522,8 @@ manage_suspenison = Class.extend({
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
 			}
 			else{
+				me.dialog.fields_dict.date_picker.set_input("")
+				me.dialog.fields_dict.amount.set_input("")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
 			}
@@ -706,12 +711,14 @@ process_payment = Class.extend({
 		})
 		$(me.fd.discount.input).change(function(){
 			me.init_for_commom_calculation()
+			me.setFocusToTextBox()
 		})
 		$(me.fd.bonus.input).change(function(){
 			if(flt($(me.fd.bonus.input).val()) <= cur_frm.doc.bonus){
 				me.init_for_commom_calculation()
 			}
 			else{
+				cur_dialog.fields_dict.bonus.set_input(0.0)		
 				msgprint (__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.bonus]));
 			}
 		})	
@@ -730,12 +737,17 @@ process_payment = Class.extend({
 		$(me.dialog.body).parent().find('.btn-primary').hide()
 		$('button[data-fieldname="add_in_receivables"]').css("display","none");
 		$('button[data-fieldname="return_to_customer"]').css("display","none");
+		$(me.dialog.body).find("[data-fieldname ='process_payment']").show();
+	},
+	setFocusToTextBox:function(){
+	    $("input[data-fieldname='amount_paid_by_customer']").focus();
 	},
 	click_on_process_payment:function(){
-		var me = this;
+		var me = this;	
 		me.dialog.fields_dict.process_payment.$input.click(function() {
        		console.log(cur_dialog.fields_dict.balance.$input.val(),"balanceeeeee123")
        		console.log(parseFloat(cur_dialog.fields_dict.balance.$input.val()) > 0 )
+       		console.log("onclick of process_payment")
        		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) > 0 ){
        			console.log("in if")
        			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
@@ -751,7 +763,14 @@ process_payment = Class.extend({
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        		}
-	    })	
+	    });
+	    /*me.dialog.fields_dict.process_payment.$input.keypress(function(){
+       		console.log("keypress of process_payment")
+	    	$(me.dialog.body).find("[data-fieldname ='process_payment']").show();
+			$(me.dialog.body).find("[data-fieldname ='add_in_receivables']").hide();
+			$(me.dialog.body).find("[data-fieldname ='return_to_customer']").hide();
+	    	$(me.dialog.body).find("[data-fieldname ='msg']").hide();
+	    });	*/
 	},
 	click_on_add_in_receivables:function(){
 		var me = this;
@@ -768,7 +787,7 @@ process_payment = Class.extend({
 	              if(r.message){
 	            		cur_frm.doc.receivables = value.balance
 	            		refresh_field("receivables")
-	            		msgprint("Receivables Added In Customer Record")
+	            		/*msgprint("Receivables Added In Customer Record")*/
 	            		$(me.dialog.body).parent().find('.btn-primary').show()
 	            	}
 	        	}
@@ -789,7 +808,7 @@ process_payment = Class.extend({
 	              if(r.message){
 	            		cur_frm.doc.receivables = "0"
 	            		refresh_field("receivables")
-	            		msgprint("Return To Customer")
+	            		/*msgprint("Return To Customer")*/
 	            		$(me.dialog.body).parent().find('.btn-primary').show()
 	            	}
 	        	}
@@ -837,7 +856,7 @@ process_payment = Class.extend({
 	       		/*cur_frm.set_value("receivables","0")*/
 	        	render_agreements()
 	        	/*me.click_on_make_entry*/
-	        	msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement\n Entry Made For this Payment"))
+	        	/*msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement\n Entry Made For this Payment"))*/
 	    	}
 	    })
 	}	
@@ -1167,16 +1186,32 @@ Payments_Details = Class.extend({
 			me.click_on_process_payment();
 		}
 		else if(me.values['cond'] == 1){
-	       	inner_dialog.fields_dict.balance.set_input(me.values['s90d_SAC_price'])
+			s90_day_pay_Off = 0 - flt(me.values['s90_day_pay_Off'])
+	       	inner_dialog.fields_dict.balance.set_input(s90_day_pay_Off)
 			inner_dialog.show();
+			me.init_for_trigger_of_amount_paid_by_customer();
 			me.click_on_process_payment();
 		}
+	},
+	init_for_trigger_of_amount_paid_by_customer:function(){
+		var me = this;
+		$(me.inner_fd.amount_paid_by_customer.input).change(function(){
+			s90_day_pay_Off = 0 - flt(me.values['s90_day_pay_Off'])
+			var val_of_balance = flt(me.inner_fd.amount_paid_by_customer.$input.val()) + s90_day_pay_Off
+			console.log(val_of_balance,"val_of_balance")
+			cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
+		})	
 	},
 	click_on_process_payment:function(){
 		var me = this;
 		me.inner_dialog.fields_dict.process_payment.$input.click(function() {
 			console.log(me,"me onClick of process_payment")
-			me.update_agreement_according_today_plus_90days();
+			if(flt(cur_dialog.fields_dict.balance.$input.val()) >= 0){
+				me.update_agreement_according_today_plus_90days();
+			}
+			else{
+				console.log("sdfsdffdsfsdfds")
+			}
 		});
 	},
 	update_agreement_according_today_plus_90days:function(){
