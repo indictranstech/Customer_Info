@@ -11,6 +11,7 @@ var index = 0
 frappe.ui.form.on("Payments Management", {
 	refresh: function(frm) {
 		frm.disable_save();
+		$($(".indicator")[0]).hide()
 	},
 	onload:function(frm){
 		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")
@@ -633,14 +634,17 @@ process_payment = Class.extend({
 	               	{"fieldtype": "Column Break" , "fieldname": "column"},
 	               	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
 	               	{"fieldtype": "Column Break" , "fieldname": "column"},	
-	               	{"fieldtype": "HTML" , "fieldname": "msg"}
+	               	{"fieldtype": "HTML" , "fieldname": "msg"},
+	               	{"fieldtype": "Section Break" , "fieldname": "section"},
+	               	{"fieldtype": "Button" , "fieldname": "submit_payment" , "label": "SUBMIT"},
 	               	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
-	               		console.log(this,me,"in primary_action")
+	               		msgprint("for submit click on SUBMIT")
+	               		/*console.log(this,me,"in primary_action 123423123")
 	                    me.click_on_make_entry()
 	                    me.update_payments_records()
-	                    me.dialog.hide()
+	                    me.dialog.hide()*/
 	                }
 	   	});
 	    this.fd = this.dialog.fields_dict;
@@ -648,16 +652,18 @@ process_payment = Class.extend({
 	},
 	show_dialog:function(){
 		var me = this;
+		/*$('button[data-fieldname="process_payment"]').css("margin-top","-506px");
+		$('button[data-fieldname="process_payment"]').css("margin-left","399px");*/
+       	$('button[data-fieldname="submit_payment"]').css("display","none");
 		$('button[data-fieldname="add_in_receivables"]').css("display","none");
 	    $('button[data-fieldname="return_to_customer"]').css("display","none");
 		this.dialog.show();
-       	$(this.dialog.body).parent().find('.btn-primary').hide()
+       	$(this.dialog.body).parent().find('.btn-primary').hide();
 		/*this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
 		this.fd.bonus.df.read_only=1;
 		this.fd.bonus.refresh();*/
        	this.dialog.set_value("balance",(flt(me.fd.amount_paid_by_customer.$input.val()) 
 										- flt(cur_frm.doc.total_charges) 
-										+ flt(cur_frm.doc.receivables) 
 										+ flt(me.fd.bank_card.$input.val())
 										+ flt(me.fd.bank_transfer.$input.val())
 										+ flt(me.fd.bonus.$input.val())
@@ -725,8 +731,7 @@ process_payment = Class.extend({
 	},
 	init_for_commom_calculation:function(){
 		var me = this;
-		var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges) 
-																			  + flt(cur_frm.doc.receivables) 
+		var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
 																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
 																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
@@ -788,7 +793,10 @@ process_payment = Class.extend({
 	            		cur_frm.doc.receivables = value.balance
 	            		refresh_field("receivables")
 	            		/*msgprint("Receivables Added In Customer Record")*/
-	            		$(me.dialog.body).parent().find('.btn-primary').show()
+	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
+	            		$('button[data-fieldname="return_to_customer"]').css("display","none");
+	            		$('button[data-fieldname="submit_payment"]').css("display","");
+	            		me.click_on_submit();
 	            	}
 	        	}
 		    });	
@@ -809,11 +817,23 @@ process_payment = Class.extend({
 	            		cur_frm.doc.receivables = "0"
 	            		refresh_field("receivables")
 	            		/*msgprint("Return To Customer")*/
-	            		$(me.dialog.body).parent().find('.btn-primary').show()
+	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
+	            		$('button[data-fieldname="add_in_receivables"]').css("display","none");
+	            		$('button[data-fieldname="submit_payment"]').css("display","");
+	            		me.click_on_submit();
 	            	}
 	        	}
 		    });
 		})
+	},
+	click_on_submit:function(){
+		var me =this;
+		me.dialog.fields_dict.submit_payment.$input.click(function() {
+			console.log(this,me,"in primary_action 123423123")
+            me.click_on_make_entry();
+            me.update_payments_records();
+            me.dialog.hide();	
+		});
 	},
 	click_on_make_entry:function(){
 		var me =this;
@@ -1075,7 +1095,7 @@ Payments_Details = Class.extend({
 	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
-	        		msgprint("Changes Added")
+	        		/*msgprint("Changes Added")*/
 	        		/*me.hide_dialog()*/
 	        	}
 	        });
@@ -1163,7 +1183,9 @@ Payments_Details = Class.extend({
 		               	{"fieldtype": "Data" , "fieldname": "discount" , "label": "Discount","default":"0.0","reqd":"true"},
 		               	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
 		               	{"fieldtype": "Section Break" , "fieldname": "section"},
-		               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"}
+		               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
+		               	{"fieldtype": "Column Break" , "fieldname": "column"},	
+		               	{"fieldtype": "HTML" , "fieldname": "msg"}
 	            	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
@@ -1180,14 +1202,15 @@ Payments_Details = Class.extend({
 		console.log(me,"me me")
 		$(inner_dialog.body).parent().find('.btn-primary').hide()
        	if(me.values['cond'] == 2){
-       		total_pay_off_amount = 0 - flt(me.values['Total_payoff_amount'])
-	       	inner_dialog.fields_dict.balance.set_input(total_pay_off_amount)
+       		this.val_balance = 0 - flt(me.values['Total_payoff_amount'])
+	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
 			inner_dialog.show();
+			me.init_for_trigger_of_amount_paid_by_customer();
 			me.click_on_process_payment();
 		}
 		else if(me.values['cond'] == 1){
-			s90_day_pay_Off = 0 - flt(me.values['s90_day_pay_Off'])
-	       	inner_dialog.fields_dict.balance.set_input(s90_day_pay_Off)
+			this.val_balance = 0 - flt(me.values['s90_day_pay_Off'])
+	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
 			inner_dialog.show();
 			me.init_for_trigger_of_amount_paid_by_customer();
 			me.click_on_process_payment();
@@ -1195,23 +1218,57 @@ Payments_Details = Class.extend({
 	},
 	init_for_trigger_of_amount_paid_by_customer:function(){
 		var me = this;
-		$(me.inner_fd.amount_paid_by_customer.input).change(function(){
+		/*$(me.inner_fd.amount_paid_by_customer.input).change(function(){
 			s90_day_pay_Off = 0 - flt(me.values['s90_day_pay_Off'])
 			var val_of_balance = flt(me.inner_fd.amount_paid_by_customer.$input.val()) + s90_day_pay_Off
 			console.log(val_of_balance,"val_of_balance")
 			cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
+		})*/	
+		$(me.inner_fd.amount_paid_by_customer.input).change(function(){
+			me.init_for_commom_calculation()
+		})
+		$(me.inner_fd.bank_card.input).change(function(){
+			me.init_for_commom_calculation()
+		})
+		$(me.inner_fd.bank_transfer.input).change(function(){
+			me.init_for_commom_calculation()
+		})
+		$(me.inner_fd.discount.input).change(function(){
+			me.init_for_commom_calculation()
 		})	
+	},
+	init_for_commom_calculation:function(){
+		var me = this;
+		console.log(me,"me inside init_for_commom_calculation")
+		var val_of_balance = flt(me.inner_fd.amount_paid_by_customer.$input.val()) + flt(cur_dialog.fields_dict.bank_card.$input.val())
+																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
+																			  + flt(cur_dialog.fields_dict.discount.$input.val())
+																			  + flt(me.val_balance)
+		console.log(val_of_balance,"val_of_balance")
+		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
+		me.inner_dialog.fields_dict.msg.$wrapper.empty()
+		/*$(me.dialog.body).parent().find('.btn-primary').hide()*/
+		/*$(me.dialog.body).find("[data-fieldname ='process_payment']").show();*/
 	},
 	click_on_process_payment:function(){
 		var me = this;
 		me.inner_dialog.fields_dict.process_payment.$input.click(function() {
 			console.log(me,"me onClick of process_payment")
-			if(flt(cur_dialog.fields_dict.balance.$input.val()) >= 0){
-				me.update_agreement_according_today_plus_90days();
-			}
-			else{
-				console.log("sdfsdffdsfsdfds")
-			}
+			if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) > 0 ){
+       			console.log("in if")
+       			$(me.inner_dialog.body).find("[data-fieldname ='process_payment']").hide();
+       			html = "<div class='row'>There Is "+me.inner_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			me.inner_dialog.fields_dict.msg.$wrapper.empty()
+       			me.inner_dialog.fields_dict.msg.$wrapper.append(html)
+       			me.update_agreement_according_today_plus_90days();
+       		}
+       		if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) < 0 ){
+       			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
+       			/*$(me.dialog.body).parent().find('.btn-primary').hide()*/
+       			me.inner_dialog.fields_dict.msg.$wrapper.empty()
+       			me.inner_dialog.fields_dict.msg.$wrapper.append(html)
+       		}
+
 		});
 	},
 	update_agreement_according_today_plus_90days:function(){
@@ -1225,8 +1282,9 @@ Payments_Details = Class.extend({
 	        },
 	       	callback: function(r){
 	       		console.log(r.message)
-	    		msgprint("Changes Added")
-	    		me.inner_dialog.hide();
+	    		render_agreements();
+	    		/*msgprint("Changes Added")*/
+	    		/*me.inner_dialog.hide();*/
 	    	}
 	    });	
 	}

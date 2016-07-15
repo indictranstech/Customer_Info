@@ -39,13 +39,13 @@ def get_data():
 			"label": _("Standard Reports"),
 			"icon": "icon-star",
 			"items": [
-				# {
-				# 	"type": "report",
-				# 	"is_query_report": True,
-				# 	"name": "Payment Type",
-				# 	"description": _("Record of Received Payment"),
-				# 	"doctype": "Payments History",
-				# },
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "late and future payments",
+					"description": _("Record of late and future Payment"),
+					"doctype": "Customer Agreement",
+				},
 				{
 					"type": "report",
 					"is_query_report": True,

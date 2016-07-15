@@ -50,11 +50,12 @@ def get_data(filters):
 		return result
 
 def get_colums():
-	columns = [("Payment Date") + ":Date:90"] + [("Customer") + ":Link/Customer:150"] + \
+	columns = [("Payment Date") + ":Date:90"] + [("Customer") + ":Data:150"] + \
 	[("Rental Payment") + ":Currency:120"] + [("Late Fees") + ":Currency:120"] + \
 	[("Receivables") + ":Currency:120"] + [("Total Payment Received") + ":Currency:120"] + \
 	[("Bank Transfer") + ":Currency:120"] + \
 	[("Cash") + ":Currency:120"] + [("Bank Card") + ":Currency:120"] + \
 	[("Balance") + ":Currency:120"] + [("Discount") + ":Currency:120"]
 	return columns
+
 

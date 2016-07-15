@@ -8,6 +8,7 @@ import json
 from frappe.utils import date_diff
 import datetime
 from frappe.utils import flt, get_datetime, get_time, getdate
+from frappe.utils import nowdate, getdate,add_months
 from datetime import datetime,date
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
@@ -177,7 +178,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_unchec
 		for row in customer_agreement.payments_record:
 			if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
 				customer_agreement.current_date = row.due_date
-				customer_agreement.next_due_date = customer_agreement.get_next_due_date(customer_agreement.current_due_date,1)
+				customer_agreement.next_due_date = get_next_due_date(customer_agreement.current_due_date,1)
 				break
 			elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
 				customer_agreement.current_due_date = row.due_date
@@ -213,6 +214,12 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,row_to_unchec
 	total_bonus = float(frm_bonus) + bonus - subtract_bonus
 	print  total_bonus,"total_bonus",type(total_bonus),"type of total_bonus"
 	return str(total_bonus)
+
+@frappe.whitelist()
+def get_next_due_date(date,i):
+	add_month_to_date = add_months(date,i)
+	return add_month_to_date
+
 
 
 @frappe.whitelist()
