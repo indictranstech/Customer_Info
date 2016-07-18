@@ -5,6 +5,7 @@ cur_frm.add_fetch('customer', 'company_phone_2', 'company_phone_2');
 cur_frm.add_fetch('customer', 'prersonal_code', 'prersonal_code');
 cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
 cur_frm.add_fetch('customer','bonus','bonus')
+cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
 
 var list_of_row_to_update_on_submit = [];
 var index = 0
@@ -62,7 +63,7 @@ frappe.ui.form.on("Payments Management", {
 	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_notes_in_customer",
 	            args: {
 	            	"customer":cur_frm.doc.customer,
-	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments,
+	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments ? frappe.datetime.nowdate() + " - " + cur_frm.doc.notes_on_customer_payments:" ",
 	            	"summary_of_notes":cur_frm.doc.summary_of_notes
 	            },
 	            callback: function(r) {
@@ -70,7 +71,7 @@ frappe.ui.form.on("Payments Management", {
 	            		cur_frm.set_value("summary_of_notes",r.message)
 	            	}
 	            	cur_frm.set_value("notes_on_customer_payments","")
-	            	msgprint("Comment Added Successfully");
+	            	/*msgprint("Comment Added Successfully");*/
 	            }
 	        });
 		}
@@ -178,20 +179,20 @@ render_agreements = function(){
 
 	var columns = [
 	    /*{id: "serial", name: "#", field: "serial", cssClass: "cell-selection", width: 20, resizable: false, selectable: false, focusable: false },*/
-	    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 80},
-	    {id: "agreement_period", name: "Agreement Period", field: "agreement_period",width: 80},
-	    {id: "product", name: "Product", field: "product",width: 120},
-	    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 70},
-	    {id: "monthly_rental_payment", name: "Rental Payments", field: "monthly_rental_payment",width: 90},
-	    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 90},
-	    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 90},
-	    {id: "payments_left", name: "Payments left", field: "payments_left",width: 70},
-	    {id: "balance", name: "Balance", field: "balance",width: 70},
-	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 50},
-	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 50},
-	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50},
-	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail},
-	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension}
+	    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 80,toolTip: "Agreement No"},
+	    {id: "agreement_period", name: "Agreement Period", field: "agreement_period",width: 80,toolTip: "Agreement Period"},
+	    {id: "product", name: "Product", field: "product",width: 120,toolTip: "Product"},
+	    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 70,toolTip: "# of Payments"},
+	    {id: "monthly_rental_payment", name: "Rental Payments", field: "monthly_rental_payment",width: 90,toolTip: "Rental Payments"},
+	    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 90,toolTip: "Current Due Date"},
+	    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 90,toolTip: "Next Due Date"},
+	    {id: "payments_left", name: "Payments left", field: "payments_left",width: 70,toolTip: "Payments left"},
+	    {id: "balance", name: "Balance", field: "balance",width: 70,toolTip: "Balance"},
+	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 50,toolTip: "Late Fees"},
+	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 50,toolTip: "Total Dues"},
+	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50,toolTip: "Payments Made"},
+	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail,toolTip: "Detail"},
+	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension,toolTip: "Call/Commitment"}
   	];
   	var options = {
     	enableCellNavigation: true,
@@ -391,7 +392,7 @@ call_commit = Class.extend({
 	            callback: function(r) {
 	            	me.dialog.hide();
 	            	render_agreements();
-	            	msgprint("All Call/Commitment Reset");
+	            	/*msgprint("All Call/Commitment Reset");*/
 	            }
 	        });
 		})
@@ -426,7 +427,7 @@ call_commit = Class.extend({
 	            },
 	            callback: function(r){
 	        		render_agreements();
-	        		msgprint("All Call/Commitment Save");
+	        		/*msgprint("All Call/Commitment Save");*/
 	        	}
 		    });
 		}
@@ -443,7 +444,7 @@ call_commit = Class.extend({
 	            },
 	            callback: function(r){
 	        		render_agreements();
-	        		msgprint("All Call/Commitment Save");
+	        		/*msgprint("All Call/Commitment Save");*/
 	        	}
 		    });	
 		}    

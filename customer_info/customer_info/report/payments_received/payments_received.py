@@ -19,7 +19,7 @@ def get_totals(filters):
 							sum(rental_payment+late_fees+receivables),
 							sum(bank_transfer),sum(cash),sum(bank_card),
 							sum(balance),sum(discount) from `tabPayments History`
-							where customer = '{0}'""".format(filters.get('customer')),as_list=1)[0]
+							{0}""".format(get_conditions(filters)),as_list=1,debug=1)[0]
 	else:
 		return frappe.db.sql("""select sum(rental_payment),sum(late_fees),sum(receivables),
 							sum(rental_payment+late_fees+receivables),
@@ -33,7 +33,9 @@ def get_data(filters):
 								late_fees,receivables,rental_payment+late_fees+receivables as total_payment_received,
 								bank_transfer,cash,bank_card,
 								balance,discount 
-								from `tabPayments History` where customer = '{0}' order by customer """.format(filters.get('customer')),as_list=1)
+								from `tabPayments History` 
+								{0}
+								order by customer """.format(get_conditions(filters)),as_list=1,debug=1)
 		
 		blank_list = ["","","","","","","","","","",""]
 		result.append(blank_list)
@@ -49,13 +51,38 @@ def get_data(filters):
 		result.append(blank_list)
 		return result
 
+def get_conditions(filters):
+	cond = ''
+	if filters.get('customer') and filters.get('from_date') and filters.get('to_date'):
+		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') ".format(filters.get('customer'),filters.get('from_date'),filters.get('to_date'))
+
+	elif filters.get('customer') and filters.get('from_date'):
+		cond = "where customer = '{0}' and payment_date >= '{1}'".format(filters.get('customer'),filters.get('from_date'))
+
+	elif filters.get('customer') and filters.get('to_date'):
+		cond = "where customer = '{0}' and payment_date < '{1}'".format(filters.get('customer'),filters.get('to_date'))
+
+	elif filters.get('from_date') and filters.get('to_date'):
+		cond = "where (payment_date BETWEEN '{0}' AND '{1}') ".format(filters.get('from_date'),filters.get('to_date'))
+
+	elif filters.get('customer'):
+		cond = "where customer = '{0}' ".format(filters.get("customer"))
+
+	elif filters.get('from_date'):
+		cond = "where payment_date >= '{0}'".format(filters.get('from_date'))
+
+	elif filters.get('to_date'):
+		cond = "where payment_date <= '{0}'".format(filters.get("to_date"))	
+	return cond
+
+
 def get_colums():
-	columns = [("Payment Date") + ":Date:90"] + [("Customer") + ":Data:150"] + \
-	[("Rental Payment") + ":Currency:120"] + [("Late Fees") + ":Currency:120"] + \
-	[("Receivables") + ":Currency:120"] + [("Total Payment Received") + ":Currency:120"] + \
-	[("Bank Transfer") + ":Currency:120"] + \
-	[("Cash") + ":Currency:120"] + [("Bank Card") + ":Currency:120"] + \
-	[("Balance") + ":Currency:120"] + [("Discount") + ":Currency:120"]
+	columns = [("Payment Date") + ":Date:90"] + [("Customer") + ":Data:118"] + \
+	[("Rental Payment") + ":Currency:110"] + [("Late Fees") + ":Currency:75"] + \
+	[("Receivables") + ":Currency:85"] + [("Total Payment Received") + ":Currency:160"] + \
+	[("Bank Transfer") + ":Currency:90"] + \
+	[("Cash") + ":Currency:80"] + [("Bank Card") + ":Currency:90"] + \
+	[("Balance") + ":Currency:90"] + [("Discount") + ":Currency:90"]
 	return columns
 
 
