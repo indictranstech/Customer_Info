@@ -432,11 +432,12 @@ def make_payment_history(cash,bank_card,bank_transfer,balance,receivables,custom
 
 @frappe.whitelist()
 def add_notes_in_customer(customer,notes_on_customer_payments,summary_of_notes=None):
+	now_date = datetime.now().date()
 	customer = frappe.get_doc("Customer",customer)
 	if summary_of_notes == None:
 		notes = notes_on_customer_payments
 	else:	
-		notes = "{0} \n{1}".format(summary_of_notes,notes_on_customer_payments)
+		notes = "{0} \n{1} - {2}".format(notes_on_customer_payments,summary_of_notes,now_date)
 
 	customer.update({
 		"summary_of_notes" : notes

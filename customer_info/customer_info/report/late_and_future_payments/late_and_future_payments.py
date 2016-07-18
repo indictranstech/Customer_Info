@@ -20,7 +20,8 @@ def get_data(filters):
 									concat(t3.first_name," ",t3.last_name) as customer,
 									t3.company_phone_1,t3.bonus,
 									CASE WHEN DATEDIFF('{0}',t1.due_date) > 3 
-									THEN DATEDIFF('{0}',t1.due_date) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees
+									THEN DATEDIFF('{0}',t1.due_date) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
+									t2.contact_result,t2.suspension_date
 									from `tabPayments Record`t1,`tabCustomer Agreement`t2,
 									`tabCustomer`t3		 
 									where t1.parent = t2.name and t3.name = t2.customer 
@@ -39,5 +40,18 @@ def get_colums():
 			  [("Payment Id") + ":Data:150"] + \
 			  [("Rental Payment") + ":Float:100"] + [("Product") + ":Data:200"] + \
 			  [("Customer") + ":Data:80"] + [("Phone") + ":Data:120"] + \
-			  [("Bonus") + ":Float:90"] + [("Late Fees") + ":Float:80"] + [("Total Due") + ":Float:100"]
+			  [("Bonus") + ":Float:90"] + [("Late Fees") + ":Float:80"] + \
+			  [("Contact Result") + ":Data:90"] + [("Susupension Date") + ":Date:90"] + \
+			  [("Total Due") + ":Float:100"] 	
 	return columns
+
+# {id: "agreement_no", 
+# name: "Agreement No", 
+# field: "agreement_no",
+# width: 80,
+# toolTip: "Agreement No"}
+
+
+@frappe.whitelist()
+def get_agreement_according_to_contact_result(customer):
+	print customer,"customerrrrrrrrrrrr"	
