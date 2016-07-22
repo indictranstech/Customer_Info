@@ -12,7 +12,7 @@ var index = 0
 frappe.ui.form.on("Payments Management", {
 	refresh: function(frm) {
 		frm.disable_save();
-		$($(".indicator")[0]).hide()
+		$(".orange").hide()
 	},
 	onload:function(frm){
 		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")

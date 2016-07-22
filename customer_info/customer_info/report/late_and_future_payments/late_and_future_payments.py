@@ -42,5 +42,5 @@ def get_colums():
 			  [("Customer") + ":Data:80"] + [("Phone") + ":Data:120"] + \
 			  [("Bonus") + ":Float:90"] + [("Late Fees") + ":Float:80"] + \
 			  [("Total Due") + ":Float:90"] + [("Contact Result") + ":Data:100"] + \
-			  [("Suspension Date") + ":Date:80"] 	
+			  [("Suspension Date") + ":Date:80"]	
 	return columns
