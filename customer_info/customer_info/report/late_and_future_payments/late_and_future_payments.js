@@ -13,16 +13,17 @@ frappe.query_reports["late and future payments"] = {
         console.log(dataContext["Suspension Date"],"daye tyepee")
 	    if (dataContext["Contact Result"] == "WBI" && dataContext["Suspension Date"] < now_date) {
 	    	console.log(dataContext,"customer customer")
-            value = "<span style='color:#ff3300!important;font-weight:bold'>" + value + "</span>";
+            value = "<span style='color:#ff3300!important'>" + value + "</span>";
 	    }
 	    if (dataContext["Contact Result"] == "WBI" && dataContext["Suspension Date"] > now_date) {
 	    	console.log(dataContext,"customer customer")
-            value = "<span style='color:#4db8ff!important;font-weight:bold'>" + value + "</span>";
+            value = "<span style='color:#4db8ff!important'>" + value + "</span>";
 	    }
 	    if (dataContext["Contact Result"] == "Sent SMS/Email") {
 	    	console.log(dataContext,"customer customer")
-            value = "<span style='color:#2eb82e!important;font-weight:bold'>" + value + "</span>";
+            value = "<span style='color:#2eb82e!important'>" + value + "</span>";
 	    }
 	    return value;
 	}
 }
+	
