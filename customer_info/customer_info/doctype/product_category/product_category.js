@@ -52,7 +52,7 @@ frappe.ui.form.on("Product Category",{
 		    });
 		}    
 	},
-	validate:function(frm){	
+	/*validate:function(frm){	
 		if(cur_frm.doc.__islocal){
 			return frappe.call({
 				method: "customer_info.customer_info.doctype.product_category.product_category.new_item_group",
@@ -61,5 +61,5 @@ frappe.ui.form.on("Product Category",{
 				}
 			})
 		}	
-	}	
+	}*/	
 })

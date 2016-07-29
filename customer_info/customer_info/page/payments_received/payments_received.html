@@ -1,0 +1,58 @@
+<style>
+.data {
+overflow-y: auto;
+max-height: 400px;
+}
+</style>
+
+<div class="data">
+    <table id="tableSearchResults" class="table table-hover  table-striped table-condensed" style="font-size:11px;">
+        <tbody id="accordion">
+            {% for(var i=0, l=data.length; i < l; i++) { %}
+            <tr id= {{ data[i]["refund"] }} data-toggle="collapse" data-parent="#accordion" href={{"#accordion" + parseInt(i+1) }}>
+                <td width="10%">{{data[i]["payment_date"]}}</td>
+                <td width="7%">{{data[i]["customer"]}}</td>
+                <td width="9%" align="center">{{data[i]["rental_payment"]}}</td>
+                <td width="7%" align="center">{{data[i]["late_fees"]}}</td>
+                <td width="7%" align="center">{{data[i]["receivables"]}}</td>
+                <td width="13%" align="center">{{data[i]["total_payment_received"]}}</td>
+                <td width="12%" align="center">{{data[i]["bank_transfer"]}}</td>
+                <td width="6%" align="center">{{data[i]["cash"]}}</td>
+                <td width="7%" align="center">{{data[i]["bank_card"]}}</td>
+                <td width="6%" align="center">{{data[i]["balance"]}}</td>
+                <td width="5%" align="center">{{data[i]["discount"]}}</td>
+                <td width="5%" align="center">{{data[i]["bonus"]}}</td>
+                <td width="5%" align="center"><input class= "refund" type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></td>
+            </tr>
+            <tr id={{ data[i]["refund"] }}>
+                <td colspan="13" class="hiddenRow data" style="padding: 2px;">
+                    <div class="collapse" id={{"accordion" + parseInt(i+1) }}>
+                        <table class="table">
+                            <tr>
+                              <th>Payment Id</th>
+                              <th>Due Date</th>
+                              <th>Rental Payment</th>
+                              <th>Late Fees</th>
+                              <th>Total</th>
+                              <!-- <th><input class= "refund" type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></input></th> -->
+                            </tr>
+                            {% for(var j=0, le=data[i]["payments_ids"].length; j < le; j++) { %}
+                            <tr>
+                                <td class = {{ data[i]["refund"] }} >{{ data[i]["payments_ids"][j]["payments_id"] }}</td>
+                                <td>{{ data[i]["payments_ids"][j]["due_date"] }}</td>
+                                <td>{{ data[i]["payments_ids"][j]["rental_payment"] }}</td>
+                                <td>{{ data[i]["payments_ids"][j]["late_fees"] }}</td>
+                                <td>{{ data[i]["payments_ids"][j]["total"] }}</td>
+                            </tr>
+                            {% } %}
+                        </table>
+                    <!-- <div class="table">
+                        <input class= "refund" type="button" value="Refund" ph-name={{data[i]["refund"]}}></input>
+                    </div> -->
+                    </div>
+                </td>
+            </tr>
+            {% } %}
+        </tbody>
+    </table>
+</div>

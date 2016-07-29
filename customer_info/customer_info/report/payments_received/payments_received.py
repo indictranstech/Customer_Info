@@ -3,14 +3,15 @@
 
 from __future__ import unicode_literals
 import frappe
+import json
 
 def execute(filters=None):
 	columns, data = [], []
 	columns = get_colums()
 	data = get_data(filters)
-	static_list = ["","Totals"]
-	static_list.extend(get_totals(filters))
-	data.append(static_list)
+	# static_list = ["","Totals"]
+	# static_list.extend(get_totals(filters))
+	# data.append(static_list)
 	return columns, data
 
 def get_totals(filters):
@@ -18,13 +19,13 @@ def get_totals(filters):
 		return frappe.db.sql("""select sum(rental_payment),sum(late_fees),sum(receivables),
 							sum(rental_payment+late_fees+receivables),
 							sum(bank_transfer),sum(cash),sum(bank_card),
-							sum(balance),sum(discount) from `tabPayments History`
+							sum(balance),sum(discount),sum(bonus) from `tabPayments History`
 							{0}""".format(get_conditions(filters)),as_list=1,debug=1)[0]
 	else:
 		return frappe.db.sql("""select sum(rental_payment),sum(late_fees),sum(receivables),
 							sum(rental_payment+late_fees+receivables),
 							sum(bank_transfer),sum(cash),sum(bank_card),
-							sum(balance),sum(discount) from `tabPayments History`""",as_list=1)[0]			
+							sum(balance),sum(discount),sum(bonus) from `tabPayments History`""",as_list=1)[0]			
 
 
 def get_data(filters):
@@ -32,23 +33,23 @@ def get_data(filters):
 		result = frappe.db.sql("""select payment_date,customer,rental_payment,
 								late_fees,receivables,rental_payment+late_fees+receivables as total_payment_received,
 								bank_transfer,cash,bank_card,
-								balance,discount 
+								balance,discount,bonus,concat(name,'') 
 								from `tabPayments History` 
 								{0}
-								order by customer """.format(get_conditions(filters)),as_list=1,debug=1)
+								order by customer """.format(get_conditions(filters)),as_list=1)
 		
-		blank_list = ["","","","","","","","","","",""]
-		result.append(blank_list)
+		# blank_list = ["","","","","","","","","","",""]
+		# result.append(blank_list)
 		return result
 	else:	
 		result = frappe.db.sql("""select payment_date,customer,rental_payment,
 								late_fees,receivables,rental_payment+late_fees+receivables as total_payment_received,
 								bank_transfer,cash,bank_card,
-								balance,discount 
+								balance,discount,bonus,concat(name,'')
 								from `tabPayments History` order by customer """,as_list=1)
 		
-		blank_list = ["","","","","","","","","","",""]
-		result.append(blank_list)
+		# blank_list = ["","","","","","","","","","",""]
+		# result.append(blank_list)
 		return result
 
 def get_conditions(filters):
@@ -82,7 +83,7 @@ def get_colums():
 	[("Receivables") + ":Currency:85"] + [("Total Payment Received") + ":Currency:160"] + \
 	[("Bank Transfer") + ":Currency:90"] + \
 	[("Cash") + ":Currency:80"] + [("Bank Card") + ":Currency:90"] + \
-	[("Balance") + ":Currency:90"] + [("Discount") + ":Currency:90"]
+	[("Balance") + ":Currency:90"] + [("Discount") + ":Currency:90"] + \
+	[("Bonus") + ":Currency:90"] + [("Refund") + ":Data:80"]
 	return columns
-
-
+		

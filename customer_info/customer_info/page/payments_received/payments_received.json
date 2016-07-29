@@ -1,0 +1,23 @@
+{
+ "content": null, 
+ "creation": "2016-07-25 12:58:25.330506", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "icon": "icon-exchange", 
+ "idx": 0, 
+ "modified": "2016-07-25 12:58:25.330506", 
+ "modified_by": "Administrator", 
+ "module": "Customer Info", 
+ "name": "payments-received", 
+ "owner": "Administrator", 
+ "page_name": "Payments Received", 
+ "roles": [
+  {
+   "role": "All"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "title": "Payments Received"
+}

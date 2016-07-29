@@ -14,26 +14,14 @@ frappe.ui.form.on("Customer Agreement",{
 		}
         if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal){
             date_of_next_month_according_to_payment_day()
-            /*for(i=0;i<cur_frm.doc.payments_record.length;i++){
-                if(cur_frm.doc.payments_record[i]['due_date']){
-                    cur_frm.doc.payments_record[i]['due_date'] = get_update_due_date(cur_frm.doc.due_date_of_next_month,i)
-                    refresh_field("payments_record")
-                }
-            }*/
             frappe.call({
                 method: "change_due_dates_in_child_table",
                 doc: frm.doc,
                 callback: function(r){
                     console.log(r.message)
-                    /*cur_frm.save()*/
                 }   
             });
         }
-        /*if(cur_frm.doc.payment_day){
-            var a = parseInt(cur_frm.doc.payment_day)
-            cur_frm.set_value("today_plus_payment_day",frappe.datetime.add_days(frappe.datetime.nowdate(),a))
-            refresh_field("today_plus_payment_day") 
-        }*/
 	},
 	customer: function(frm){
 		if(cur_frm.doc.customer){
@@ -82,15 +70,6 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
             cur_frm.set_df_property("agreement_period","read_only",0)
         }
-        /*if(cur_frm.doc.agreement_status == "Updated"){
-            cur_frm.set_df_property("agreement_update_date","hidden",0)
-        }*/
-        /*if(cur_frm.doc.agreement_status != "Updated"){
-            cur_frm.set_df_property("agreement_update_date","hidden",1)    
-        }*/
-        /*if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
-            cur_frm.set_df_property("agreement_update_date","hidden",1)    
-        }*/
     },
     today_plus_90_days:function(frm){
         if(cur_frm.doc.today_plus_90_days){
@@ -118,10 +97,6 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
         }
-        /*if(cur_frm.doc.suspended_until){
-            cur_frm.doc.suspended_from = frappe.datetime.nowdate()
-            refresh_field("suspended_from")
-        }*/
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
         }
@@ -146,7 +121,6 @@ frappe.ui.form.on("Customer Agreement",{
                 },
                 callback: function(res){
                     if (res && res.message){
-                        console.log(res.message,"message of get_valuesssssssssssss")
                         cur_frm.set_value("bonus",20)
                     }
                 }   
@@ -184,19 +158,6 @@ frappe.ui.form.on("Customer Agreement",{
                 cur_frm.save();
             }
         }
-        /*if(cur_frm.doc.today_plus_90_days){
-            console.log("in if cond")
-            var today_date = frappe.datetime.nowdate()
-            var date_diff = frappe.datetime.get_diff(today_date,cur_frm.doc.today_plus_90_days)
-            console.log(date_diff,"date_diff")
-            console.log((date_diff >= 0),"if")
-            if(date_diff >= 0){
-                console.log("in date_diff")
-                cur_frm.set_value('s90d_sac_price',0)
-                cur_frm.set_value('today_plus_90_days','')
-                cur_frm.save();
-            }
-        }*/
     },
     agreement_status:function(frm){
         if(cur_frm.doc.agreement_status == "Closed" && !cur_frm.doc.__islocal){
@@ -209,9 +170,6 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
-        /*if(cur_frm.doc.agreement_status == "Closed" || cur_frm.doc.agreement_status == "Open" || cur_frm.doc.agreement_status == "Suspended"){
-            cur_frm.set_df_property("agreement_update_date","hidden",1)    
-        }*/
     }
 
 })

@@ -26,4 +26,3 @@ frappe.query_reports["late and future payments"] = {
 	    return value;
 	}
 }
-	

@@ -9,12 +9,13 @@ from frappe.model.document import Document
 class ProductCategory(Document):
 	pass
 
-@frappe.whitelist()
-def new_item_group(category_name):
-	group = frappe.db.get_value("Item Group",{"name":category_name},"name")
+@frappe.whitelist(allow_guest = True)	
+def new_item_group(self,method):
+	print self.category_name,"\n\n","category_name"
+	group = frappe.db.get_value("Item Group",{"name":self.category_name},"name")
 	if not group:
 		group = frappe.new_doc("Item Group")
-		group.item_group_name = category_name
+		group.item_group_name = self.category_name
 		group.parent_item_group = "All Item Groups"
 		group.is_group = "No"
 		group.save(ignore_permissions = True)

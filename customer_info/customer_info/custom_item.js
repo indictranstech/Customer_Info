@@ -10,6 +10,7 @@ frappe.ui.form.on("Item", {
                 },
              	callback: function(res){
                     if(res && res.message){
+                        console.log(res.message,"dddddddddddddd")
                         cur_frm.doc.period = res.message['period_value']
                         cur_frm.doc.ratio = res.message['ratio_value']
                         cur_frm.doc.agreement_period = res.message['period']

@@ -42,7 +42,6 @@ class CustomerAgreement(Document):
 										order by replace(name,"BK-","")*1 """,as_list=1)
 			if len(old_name) > 0:
 				new_name_list = old_name[-1][0].split("-")
-				print new_name_list[-1]
 				count = int(new_name_list[-1]) + 1
 			self.name = "BK-0" + str(count)
 			self.parent_name = self.name
@@ -63,20 +62,14 @@ class CustomerAgreement(Document):
 				})
 				parent.save(ignore_permissions = True)
 
-			# if len(parent_name) > 1:			
-			# 	old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
-			# 	counter = int(old_name_list[-1]) + 1
+
 			if len(parent_name) == 1 and len(parent_name[0][0].split('-')) == 2:
-				print "my cond 00000"
 				counter = 1
 
 			elif len(parent_name) > 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 2):			
-				print "in my cond 11111111111111111111111"
-				print parent_name,"parent_name"
 				old_name_list = parent_name[-1][0].split(('{0}').format(parent_name[0][0])+'-')
-				print old_name_list,"old_name_list"
 				counter = int(old_name_list[-1]) + 1
-				print counter,"counter"
+
 			elif len(parent_name) >= 1 and (len(parent_name[0][0].split('-')) > 1 and len(parent_name[0][0].split('-')) == 3):			
 				old_counter = int(parent_name[-1][0].split('-')[-1])
 				counter = old_counter + 1	
@@ -84,7 +77,6 @@ class CustomerAgreement(Document):
 			self.name = self.parent_name + "-" + str(counter)
 			self.flag = 1
 		self.agreement_no = self.name
-
 
 
 	# add row in child table	
@@ -106,26 +98,18 @@ class CustomerAgreement(Document):
 			nl.due_date = d['due_date']
 			nl.payment_id = d['payment_id']	
 
-
-	# get date after i month
-	def get_next_due_date(self,date,i):
-		add_month_to_date = add_months(date,i)
-		return add_month_to_date.date()
-		# return str(add_month_to_date)[0:10]					
-
-
 	# get date after i month on changeing payment day	
 	def change_due_dates_in_child_table(self):
 	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 	    for row in self.payments_record:
-	    	# print row.due_date,"row.due_date"
-	    	print type(row.due_date),"1"
 	    	row.update({
 	    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
-	    		})
-	    	print type(row.due_date),"2"
-	    	# row.due_date = getdate(get_next_month_date(due_date_of_next_month,row.idx-1))
-	    	# row.save(ignore_permissions=True)	
+	    	})
+
+	# get date after i month
+	def get_next_due_date(self,date,i):
+		add_month_to_date = add_months(date,i)
+		return add_month_to_date.date()    	
 
 	# Comment For Changing Payment Day
 	def payment_date_comment(self):
@@ -350,12 +334,10 @@ def get_product(doctype, txt, searchfield, start, page_len, filters):
 def set_bonus_in_customer(customer,bonus):
 	customer = frappe.get_doc("Customer",customer)
 	previuos_bonus = customer.bonus
-	print type(previuos_bonus),"previuos_bonus"
-	print type(bonus),"bonus"
 	total_bonus = previuos_bonus + float(bonus)
 	customer.update({
 		"bonus":total_bonus
-		})
+	})
 	if float(bonus) > 0:
 		comment = """ {0} EUR Bonus Added """.format(bonus)
 		customer.add_comment("Comment",comment)
