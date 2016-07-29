@@ -84,6 +84,9 @@ fixtures =['Custom Field', "Property Setter","Custom Script","Letter Head","Prin
 doc_events = {
 	"Item": {
 		"on_update": "customer_info.customer_info.custom_item.product_status_change"
+	},
+	"Product Category": {
+		"validate": "customer_info.customer_info.doctype.product_category.product_category.new_item_group"
 	}	
 }
 # Scheduled Tasks

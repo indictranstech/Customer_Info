@@ -41,7 +41,7 @@ frappe.ui.form.on("Payments Management", {
 		}
 	},
 	submit:function(){
-		if(cur_frm.doc.customer){	
+		if(cur_frm.doc.customer){
 			var me = this;
 			new process_payment()
 		}
@@ -158,7 +158,6 @@ calculate_total_charges = function(frm){
 }
 
 render_agreements = function(){
-	list_of_row_to_update_on_submit = [];
 	var grid;
 
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
@@ -252,7 +251,7 @@ make_grid= function(data1,columns,options){
         console.log(dataView,"dataView")
         if($(e.target).hasClass("detail")) {
             index = parseInt(index) + 1;
-            console.log(index, "in clcikc_____________")            
+            console.log(index, "in clcikc_____________")
         	new Payments_Details(item, index)
         }
         if($(e.target).hasClass("suspenison")) {
@@ -791,13 +790,17 @@ process_payment = Class.extend({
 	            },
 	            callback: function(r){
 	              if(r.message){
-	            		cur_frm.doc.receivables = value.balance
-	            		refresh_field("receivables")
+	            		/*cur_frm.doc.receivables = value.balance
+	            		refresh_field("receivables")*/
 	            		/*msgprint("Receivables Added In Customer Record")*/
 	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
 	            		$('button[data-fieldname="return_to_customer"]').css("display","none");
 	            		$('button[data-fieldname="submit_payment"]').css("display","");
 	            		me.click_on_submit();
+	            		cur_frm.doc.receivables = value.balance
+	            		refresh_field("receivables")
+	            		cur_frm.doc.bonus = cur_frm.doc.bonus - value.bonus
+	            		refresh_field("bonus")
 	            	}
 	        	}
 		    });	
@@ -815,8 +818,8 @@ process_payment = Class.extend({
 	            },
 	            callback: function(r){
 	              if(r.message){
-	            		cur_frm.doc.receivables = "0"
-	            		refresh_field("receivables")
+	            		/*cur_frm.doc.receivables = "0"
+	            		refresh_field("receivables")*/
 	            		/*msgprint("Return To Customer")*/
 	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
 	            		$('button[data-fieldname="add_in_receivables"]').css("display","none");
@@ -831,14 +834,19 @@ process_payment = Class.extend({
 		var me =this;
 		me.dialog.fields_dict.submit_payment.$input.click(function() {
 			console.log(this,me,"in primary_action 123423123")
-            me.click_on_make_entry();
+            /*me.click_on_make_entry();*/
             me.update_payments_records();
             me.dialog.hide();	
 		});
 	},
-	click_on_make_entry:function(){
+	click_on_make_entry:function(payment_ids){
 		var me =this;
 		value = me.dialog.get_values();
+		payments_ids_list = []
+		$.each(payment_ids, function(i, d) {
+			payments_ids_list.push(d["payment_id"]+"/"+d["due_date"]+"/"+d["monthly_rental_amount"]+"/"+d["payment_date"])
+		});
+		console.log(payments_ids_list,"payments_ids_list")
 		frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.make_payment_history",
             async:false,
@@ -854,9 +862,12 @@ process_payment = Class.extend({
               "receivables":flt(cur_frm.doc.receivables),
               "rental_payment":value.rental_payment,
               "late_fees":value.late_fees,
+              "payment_ids":payments_ids_list,
+              "total_charges":cur_frm.doc.total_charges
             },
             callback: function(r){
-             	
+             	/*cur_frm.doc.receivables = value.balance
+	            refresh_field("receivables")*/
         	}
 	    });
 	},
@@ -871,12 +882,12 @@ process_payment = Class.extend({
 	        	"bonus":cur_frm.doc.bonus
 	        },
 	       	callback: function(r){
-	       		console.log(r.message)
+	       		console.log(r.message,"my result")
+	        	me.click_on_make_entry(r.message);
 	       		cur_frm.set_value("total_charges","0")
 	       		cur_frm.set_value("amount_of_due_payments","0")
 	       		/*cur_frm.set_value("receivables","0")*/
-	        	render_agreements()
-	        	/*me.click_on_make_entry*/
+	        	render_agreements();
 	        	/*msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement\n Entry Made For this Payment"))*/
 	    	}
 	    })
@@ -1059,6 +1070,8 @@ Payments_Details = Class.extend({
     			me.row_to_uncheck.push($(item).val())
     		}
         });
+
+        
         console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
         console.log(me.row_to_update,"row_to_update")
         console.log(me.row_to_uncheck,"row_to_uncheck")
@@ -1089,6 +1102,7 @@ Payments_Details = Class.extend({
 	           	args: {
 	           		"customer_agreement":this.item['id'],
 	            	"frm_bonus":cur_frm.doc.bonus,
+	            	"cond":1,
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){

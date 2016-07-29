@@ -43,15 +43,17 @@ def get_data():
 					"type": "report",
 					"is_query_report": True,
 					"name": "late and future payments",
+					"label": _("Late And Future Payments"),
 					"description": _("Record of late and future Payment"),
 					"doctype": "Customer Agreement",
 				},
 				{
-					"type": "report",
-					"is_query_report": True,
-					"name": "Payments Received",
+					"type": "page",
+					"name": "payments-received",
+					"label": _("Received Payment"),
 					"description": _("Record of Received Payment"),
 					"doctype": "Payments History",
+					"icon": "icon-bar-chart",
 				}
 			]
 		},
