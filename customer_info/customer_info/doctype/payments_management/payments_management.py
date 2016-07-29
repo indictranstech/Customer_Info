@@ -93,10 +93,10 @@ def update_on_submit(payment_date,customer,bonus):
 	customer_doc.update({
 		"bonus":bonus
 		})
-	if float(added_bonus) > 0:
-		comment = """ {0} EUR Bonus Added """.format(added_bonus)
-		customer_doc.add_comment("Comment",comment)
-	customer_doc.save(ignore_permissions=True)
+	# if float(added_bonus) > 0:
+	# 	comment = """ {0} EUR Bonus Added """.format(added_bonus)
+	# 	customer_doc.add_comment("Comment",comment)
+	# customer_doc.save(ignore_permissions=True)
 
 	return submitted_payments_ids
 
@@ -147,7 +147,9 @@ def make_refund_payment(payments_ids,ph_name):
 		customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 		customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
 		customer.save(ignore_permissions=True)
-		frappe.delete_doc("Payments History", ph_name)
+		ph_doc = frappe.get_doc("Payments History", ph_name)
+		ph_doc.refund = "Yes"
+		ph_doc.save(ignore_permissions=True)
 
 
 @frappe.whitelist()
