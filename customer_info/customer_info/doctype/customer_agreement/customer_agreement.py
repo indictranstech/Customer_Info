@@ -139,7 +139,7 @@ class CustomerAgreement(Document):
 			item = frappe.get_doc("Item",self.product)
 			item.update({
 			"merchandise_status": self.merchandise_status,
-			"old_status": item.merchandise_status
+			# "old_status": item.merchandise_status
 			})
 			item.save(ignore_permissions = True)
 			self.old_merchandise_status = self.merchandise_status

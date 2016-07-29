@@ -39,11 +39,12 @@ def get_payments_details(customer,from_date,to_date):
 								bank_transfer,cash,bank_card,
 								balance,discount,bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
+								where refund = "No"
 								order by customer """.format(cond),as_dict=1,debug=1)
 
 def get_child_data(parent):
 	return frappe.db.sql("""select payment_id,due_date,total,late_fees,rental_payment
-						from `tabPayment History Record` where parent =  '{0}' """.format(parent),as_dict=1,debug=1)
+						from `tabPayment History Record` where parent = '{0}' """.format(parent),as_dict=1,debug=1)
 
 @frappe.whitelist()
 def set_payments_history_record(record_data,parent):
