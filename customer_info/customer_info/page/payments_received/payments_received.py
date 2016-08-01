@@ -10,28 +10,28 @@ def get_payments_details(customer,from_date,to_date):
 	print customer,from_date,to_date
 
 	if customer and from_date and to_date:
-		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') ".format(customer,from_date,to_date)
+		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
 
 	elif customer and from_date:
-		cond = "where customer = '{0}' and payment_date >= '{1}'".format(customer,from_date)
+		cond = "where customer = '{0}' and payment_date >= '{1}' and refund = 'No' ".format(customer,from_date)
 
 	elif customer and to_date:
-		cond = "where customer = '{0}' and payment_date < '{1}'".format(customer,to_date)
+		cond = "where customer = '{0}' and payment_date < '{1}' and refund = 'No' ".format(customer,to_date)
 
 	elif from_date and to_date:
-		cond = "where (payment_date BETWEEN '{0}' AND '{1}') ".format(from_date,to_date)
+		cond = "where (payment_date BETWEEN '{0}' AND '{1}')  and refund = 'No' ".format(from_date,to_date)
 
 	elif customer:
-		cond = "where customer = '{0}' ".format(customer)
+		cond = "where customer = '{0}'  and refund = 'No' ".format(customer)
 
 	elif from_date:
-		cond = "where payment_date >= '{0}'".format(from_date)
+		cond = "where payment_date >= '{0}' and refund = 'No' ".format(from_date)
 
 	elif to_date:
-		cond = "where payment_date <= '{0}'".format(to_date)
+		cond = "where payment_date <= '{0}' and refund = 'No' ".format(to_date)
 
 	else:
-		cond = ""
+		cond = " where refund = 'No' "
 
 	
 	return frappe.db.sql("""select payment_date,customer,rental_payment,
@@ -39,7 +39,6 @@ def get_payments_details(customer,from_date,to_date):
 								bank_transfer,cash,bank_card,
 								balance,discount,bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
-								where refund = "No"
 								order by customer """.format(cond),as_dict=1,debug=1)
 
 def get_child_data(parent):
