@@ -137,12 +137,15 @@ class CustomerAgreement(Document):
 	def changed_merchandise_status(self):
 		if self.merchandise_status and self.old_merchandise_status and self.merchandise_status != self.old_merchandise_status:
 			item = frappe.get_doc("Item",self.product)
-			item.update({
-			"merchandise_status": self.merchandise_status,
-			# "old_status": item.merchandise_status
-			})
+			item.merchandise_status = self.merchandise_status
 			item.save(ignore_permissions = True)
-			self.old_merchandise_status = self.merchandise_status
+			item.old_status = self.merchandise_status
+			item.save(ignore_permissions = True)
+			# item.update({
+			# "merchandise_status": self.merchandise_status,
+			# "old_status": item.merchandise_status
+			# })
+		self.old_merchandise_status = self.merchandise_status
 
 	# add comment on changing of agreement status		
 	def comment_for_agreement_status_change(self):
