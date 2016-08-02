@@ -842,11 +842,14 @@ process_payment = Class.extend({
 	click_on_make_entry:function(payment_ids){
 		var me =this;
 		value = me.dialog.get_values();
-		payments_ids_list = []
+		payments_detalis_list = []
+		payment_ids_list = []
 		$.each(payment_ids, function(i, d) {
-			payments_ids_list.push(d["payment_id"]+"/"+d["due_date"]+"/"+d["monthly_rental_amount"]+"/"+d["payment_date"])
+			payments_detalis_list.push(d["payment_id"]+"/"+d["due_date"]+"/"+d["monthly_rental_amount"]+"/"+d["payment_date"])
+			payment_ids_list.push(d["payment_id"])
 		});
-		console.log(payments_ids_list,"payments_ids_list")
+		console.log(payments_detalis_list,"payments_detalis_list")
+		console.log(payment_ids_list,"payment_ids_list")
 		frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.make_payment_history",
             async:false,
@@ -862,8 +865,9 @@ process_payment = Class.extend({
               "receivables":flt(cur_frm.doc.receivables),
               "rental_payment":value.rental_payment,
               "late_fees":value.late_fees,
-              "payment_ids":payments_ids_list,
-              "total_charges":cur_frm.doc.total_charges
+              "payment_ids":payments_detalis_list,
+              "total_charges":cur_frm.doc.total_charges,
+              "payment_ids_list": payment_ids_list
             },
             callback: function(r){
              	/*cur_frm.doc.receivables = value.balance
@@ -919,6 +923,8 @@ Payments_Details = Class.extend({
                         me.make_list_of_payments_checked()
                     }
        	});
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "800px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "800px");
        	this.payments_record_list = []
        	this.fd = this.dialog.fields_dict;
        	this.initial_amount = cur_frm.doc.remaining_amount;
@@ -945,12 +951,15 @@ Payments_Details = Class.extend({
 				"customer_agreement":me.item['id'],
 				"receivable":cur_frm.doc.receivables
 			},
+			freeze: true,
+			freeze_message: __("Please Wait..."),
 			callback:function(r){
 				if(r.message && template_name == "common_template"){
 					html = $(frappe.render_template("common_template",{
             	   				"post":me.check_payment_record_for_pre_select(r.message,"Yes"),
             	   				"payment_date":cur_frm.doc.payment_date,
             	   				"summary":r.message['summary_records'],
+            	   				"history":r.message['history_record'],
             	   				"index":me.index
             	   			})).appendTo(me.fd.payments_record.wrapper);
 					me.increase_decrease_total_charges_and_due_payment();
@@ -960,6 +969,8 @@ Payments_Details = Class.extend({
 					$(me.dialog.body).parent().find('.btn-primary').show()
 					$(me.dialog.body).find('#home'+ me.index).remove()
 					$(me.dialog.body).find('#menu'+ me.index).remove()
+					$(me.dialog.body).find('#history'+ me.index).remove()
+					$('#history'+ me.index).hide()
 					html = $(frappe.render_template("payments_management",{
         	   				"post":me.check_payment_record_for_pre_select(r.message,"No"),
         	   				"payment_date":cur_frm.doc.payment_date,
@@ -973,6 +984,10 @@ Payments_Details = Class.extend({
 					$(me.dialog.body).parent().find('.btn-primary').hide()
 					$(me.dialog.body).find('#home'+ me.index).remove()
 					$(me.dialog.body).find('#menu'+ me.index).remove()
+					$(me.dialog.body).find('#history'+ me.index).remove()
+					$('#history'+ me.index).hide()
+					console.log($(me.dialog.body).find('#history'+ me.index),"sssssssssss")
+			
 					if(r.message['summary_records']['cond'] == 1){
 						$('button[data-fieldname="pay_off_agreement"]').removeAttr("style");
 						me.click_on_pay_off_agreement(r.message["summary_records"]);
@@ -986,6 +1001,18 @@ Payments_Details = Class.extend({
         	   				"index":me.index
         	   			})).appendTo(me.fd.payments_record.wrapper);
 					$(me.dialog.body).find('#menu'+ me.index).removeClass("tab-pane fade");
+				}
+				else if(r.message && template_name == "payment_history"){
+					$(me.dialog.body).parent().find('.btn-primary').hide()
+					$(me.dialog.body).find('#home'+ me.index).remove()
+					$(me.dialog.body).find('#menu'+ me.index).remove()
+					$(me.dialog.body).find('#history'+ me.index).remove()
+					console.log(r.message["history_record"],"history_record history_record")
+					html = $(frappe.render_template("payment_history",{
+        	   				"index":me.index,
+        	   				"history":r.message['history_record']
+        	   			})).appendTo(me.fd.payments_record.wrapper);
+					$(me.dialog.body).find('#history'+ me.index).removeClass("tab-pane fade");
 				}
 			}	
 		});
@@ -1003,6 +1030,12 @@ Payments_Details = Class.extend({
 		
 		$(me.dialog.body).find(".summary-li").click(function(){
 			me.common_function_for_render_templates("summary_record")
+		});
+
+		$(me.dialog.body).find(".history-li").click(function(){
+			$('button[data-fieldname="pay_off_agreement"]').css("display","none");
+			$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
+			me.common_function_for_render_templates("payment_history")
 		});
 	},
 	check_payment_record_for_pre_select:function(payments_records,first_time){

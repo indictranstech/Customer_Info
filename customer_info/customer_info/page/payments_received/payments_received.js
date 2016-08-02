@@ -204,13 +204,19 @@ payments_received = Class.extend({
 	get_data_export:function(){
 		var me = this;
 		console.log(me,"in export")
+		console.log(JSON.stringify(me["data"]))
 		window.location.href = repl(frappe.request.url +
+		'?cmd=%(cmd)s&data=%(data)s', {
+			cmd: "customer_info.customer_info.page.payments_received.payments_received.create_csv",
+			data:JSON.stringify(me["data"])
+		});
+		/*window.location.href = repl(frappe.request.url +
 		'?cmd=%(cmd)s&to_date=%(to_date)s&from_date=%(from_date)s&customer=%(customer)s', {
 			cmd: "customer_info.customer_info.page.payments_received.payments_received.create_csv",
 			to_date:me.to_date.$input.val(),
 			from_date: me.from_date.$input.val(),
 			customer: me.customer_link.$input.val()
-		});
+		});*/
 	}
 })
 
@@ -235,7 +241,7 @@ update_dict_by_payment_ids = function(payments_ids,ph_name){
    		});
    	});	
 	console.log(payments_list_of_dict,"payments_list_of_dict")
-	if(payments_list_of_dict.length > 0 ){
+	/*if(payments_list_of_dict.length > 0 ){
 		frappe.call({
 			async:false,
 			method: "customer_info.customer_info.page.payments_received.payments_received.set_payments_history_record",
@@ -247,7 +253,8 @@ update_dict_by_payment_ids = function(payments_ids,ph_name){
 			}
 		})	
 		return {"payments_list_of_dict":payments_list_of_dict}
-	}
+	}*/
+	return {"payments_list_of_dict":payments_list_of_dict}
 }
 
 get_late_fees = function(date1,date2,rental_payment){
