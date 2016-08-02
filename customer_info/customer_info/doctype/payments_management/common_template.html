@@ -9,6 +9,7 @@
     <ul class="nav nav-tabs" data-tabs="tabs">
         <li class="active payment-li"><a data-toggle="tab" href="#home{{ index }}" >Payments Details</a></li>
         <li class="summary-li"><a data-toggle="tab" href="#menu{{ index }}">Summary Details</a></li>
+        <li class="history-li"><a data-toggle="tab" href="#history{{ index }}">Payment History Details</a></li>
     </ul>
 
     <div class="tab-content">
@@ -23,5 +24,10 @@
                                             "summary":summary,
                                             "index":index
                                         }) %}
+
+    {%= frappe.render_template("payment_history",{
+                                            "history":history,
+                                            "index":index
+                                        }) %}                                    
     </div>
 </div>
