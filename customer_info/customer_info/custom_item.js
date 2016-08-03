@@ -104,6 +104,10 @@ frappe.ui.form.on("Item", {
             cur_frm.set_df_property("product_category","read_only",1)
             refresh_field("product_category")
         }
+    },
+    refresh:function(frm){
+        $('[data-fieldname="stock_uom"]').hide()
+        $('[data-fieldname="item_group"]').hide()
     }
 });
 
