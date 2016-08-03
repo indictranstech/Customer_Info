@@ -321,7 +321,9 @@ def get_history_records(customer_agreement):
 											monthly_rental_amount,"balance" as balance,pmt,
 											"asso" as associate, "late" as late_days from `tabPayments Record`
 											where parent ='{0}' and check_box_of_submit = 1""".format(customer_agreement),as_dict=1)
-	balance = frappe.db.get_value("Customer Agreement",{"name":customer_agreement},"balance")
+	# balance = frappe.db.get_value("Customer Agreement",{"name":customer_agreement},"balance")
+	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
+	balance = "{0:.2f}".format(float(agreement.agreement_period) * float(agreement.monthly_rental_payment))
 	print balance,"balance"
 	for i in history_record_dict:
 		if float(balance) > float(i["monthly_rental_amount"]):
