@@ -131,7 +131,7 @@ def make_refund_payment(payments_ids,ph_name):
 	agreement_list = []
 	for i in payments_ids:
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
-							payment_date = "",check_box_of_submit = 0 
+							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="" 
 							where check_box_of_submit = 1 
 							and payment_id = '{0}' """.format(i))
 		payments_id_list.append(i)
@@ -391,14 +391,20 @@ def calculate_total_charges(customer):
 	return {"amount_of_due_payments":sum(due_payment_list),"receivables":receivables}
 
 @frappe.whitelist()
-def add_receivables_in_customer(customer,receivables):
-	receivables = float(receivables)
+def add_receivables_in_customer(customer,receivables=None,add_receivables=None):
 	print receivables,"receivables"
+	print add_receivables,"add_receivables"
 	customer = frappe.get_doc("Customer",customer)
-	customer.update({
-		"receivables":receivables
-		})
-	customer.save(ignore_permissions = True)
+	if receivables:	
+		customer.update({
+			"receivables":float(receivables)
+			})
+		customer.save(ignore_permissions = True)
+	if add_receivables:
+		customer.update({
+			"receivables": customer.receivables + float(add_receivables)
+			})
+		customer.save(ignore_permissions = True)			
 	return "True"
 
 
