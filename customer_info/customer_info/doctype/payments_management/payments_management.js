@@ -631,12 +631,10 @@ process_payment = Class.extend({
 	               	{"fieldtype": "Section Break" , "fieldname": "section"},
 	               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
 	               	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add to receivables"},
-	               	{"fieldtype": "Column Break" , "fieldname": "column"},
 	               	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
-	               	{"fieldtype": "Column Break" , "fieldname": "column"},	
+	               	{"fieldtype": "Button" , "fieldname": "submit_payment" , "label": "Complete Payment"},
+	               	{"fieldtype": "Column Break" , "fieldname": "column"},
 	               	{"fieldtype": "HTML" , "fieldname": "msg"},
-	               	{"fieldtype": "Section Break" , "fieldname": "section"},
-	               	{"fieldtype": "Button" , "fieldname": "submit_payment" , "label": "SUBMIT"},
 	               	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
@@ -654,9 +652,9 @@ process_payment = Class.extend({
 		var me = this;
 		/*$('button[data-fieldname="process_payment"]').css("margin-top","-506px");
 		$('button[data-fieldname="process_payment"]').css("margin-left","399px");*/
-       	$('button[data-fieldname="submit_payment"]').css("display","none");
-		$('button[data-fieldname="add_in_receivables"]').css("display","none");
-	    $('button[data-fieldname="return_to_customer"]').css("display","none");
+       	$('button[data-fieldname="submit_payment"]').hide();
+		$('button[data-fieldname="add_in_receivables"]').hide();
+	    $('button[data-fieldname="return_to_customer"]').hide();
 		this.dialog.show();
        	$(this.dialog.body).parent().find('.btn-primary').hide();
 		/*this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
@@ -755,8 +753,8 @@ process_payment = Class.extend({
        		console.log("onclick of process_payment")
        		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) > 0 ){
        			console.log("in if")
-       			$('button[data-fieldname="add_in_receivables"]').removeAttr("style");
-       			$('button[data-fieldname="return_to_customer"]').removeAttr("style");
+       			$('button[data-fieldname="add_in_receivables"]').show();
+       			$('button[data-fieldname="return_to_customer"]').show();
        			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
        			html = "<div class='row' style='margin-left: -88px;'>There Is "+me.dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.dialog.fields_dict.msg.$wrapper.empty()
@@ -794,7 +792,9 @@ process_payment = Class.extend({
 	            		refresh_field("receivables")*/
 	            		/*msgprint("Receivables Added In Customer Record")*/
 	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
-	            		$('button[data-fieldname="return_to_customer"]').css("display","none");
+	            		$('button[data-fieldname="return_to_customer"]').hide();
+	            		$('button[data-fieldname="add_in_receivables"]').hide();
+	            		$('[data-fieldname="msg"]').hide();
 	            		$('button[data-fieldname="submit_payment"]').css("display","");
 	            		me.click_on_submit();
 	            		cur_frm.doc.receivables = value.balance
@@ -822,7 +822,9 @@ process_payment = Class.extend({
 	            		refresh_field("receivables")*/
 	            		/*msgprint("Return To Customer")*/
 	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
-	            		$('button[data-fieldname="add_in_receivables"]').css("display","none");
+	            		$('button[data-fieldname="return_to_customer"]').hide();
+	            		$('button[data-fieldname="add_in_receivables"]').hide();
+	            		$('[data-fieldname="msg"]').hide();
 	            		$('button[data-fieldname="submit_payment"]').css("display","");
 	            		me.click_on_submit();
 	            	}
@@ -915,7 +917,7 @@ Payments_Details = Class.extend({
                 fields: [
                    	{"fieldtype": "HTML" , "fieldname": "payments_record" , "label": "Relative Items"},
                    	{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "90 day pay Off"},
-                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": " Pay Off Agreement"}
+                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": "Pay Off Agreement"}
                    	],
                    	primary_action_label: "Add",
                    	primary_action: function(){
@@ -1150,7 +1152,7 @@ Payments_Details = Class.extend({
 	    }
 	},
 	increase_decrease_total_charges_and_due_payment:function(){
-		var me = this
+		var me = this;
 		console.log(me.payments_record_list,"me in side increase_decrease_total_charges_and_due_payment")
         var factor = me.payments_record_list[0][1].monthly_rental_amount;		
 		$(this.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
@@ -1208,7 +1210,8 @@ Payments_Details = Class.extend({
 		var me = this;
 		this.values = values;
 		me.dialog.fields_dict.pay_off_agreement.$input.click(function() {
-			me.show_inner_dialog()
+			old_me = me;
+			me.show_inner_dialog(old_me)
 		});
 	},
 	click_on_90_day_pay_Off: function(values){
@@ -1216,10 +1219,10 @@ Payments_Details = Class.extend({
 		console.log("in s90_day_pay_Off")
 		this.values = values;
 		me.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
-			me.show_inner_dialog()
+			me.show_inner_dialog(old_me)
 		});
 	},
-	show_inner_dialog:function(){
+	show_inner_dialog:function(old_me){
 		var me = this;
 		this.inner_dialog = new frappe.ui.Dialog({
 	        title: "Payments Detalis",
@@ -1232,8 +1235,11 @@ Payments_Details = Class.extend({
 		               	{"fieldtype": "Data" , "fieldname": "balance" , "label": "Balance"},
 		               	{"fieldtype": "Section Break" , "fieldname": "section"},
 		               	{"fieldtype": "Button" , "fieldname": "process_payment" , "label": "Process payment"},
-		               	{"fieldtype": "Column Break" , "fieldname": "column"},	
-		               	{"fieldtype": "HTML" , "fieldname": "msg"}
+		               	{"fieldtype": "Button" , "fieldname": "add_in_receivables" , "label": "Add to receivables"},
+		               	{"fieldtype": "Button" , "fieldname": "return_to_customer" , "label": "Give Change"},
+		               	{"fieldtype": "Button" , "fieldname": "submit_payment" , "label": "Complete Payment"},
+		               	{"fieldtype": "Column Break" , "fieldname": "column"},
+		               	{"fieldtype": "HTML" , "fieldname": "msg"},
 	            	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
@@ -1242,47 +1248,44 @@ Payments_Details = Class.extend({
 	                }
 	   	});
 	    this.inner_fd = this.inner_dialog.fields_dict;
-	    me.set_value_of_balance(this.inner_dialog);
+	    me.set_value_of_balance(this.inner_dialog,old_me);
 	},
-	set_value_of_balance:function(inner_dialog){
+	set_value_of_balance:function(inner_dialog,old_me){
 		var me = this;
 		console.log(inner_dialog,"inner_dialog")
 		console.log(me,"me me")
+		$('button[data-fieldname="submit_payment"]').hide();
+		$('button[data-fieldname="add_in_receivables"]').hide();
+	    $('button[data-fieldname="return_to_customer"]').hide();
 		$(inner_dialog.body).parent().find('.btn-primary').hide()
        	if(me.values['cond'] == 2){
        		this.val_balance = 0 - flt(me.values['Total_payoff_amount'])
 	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
 			inner_dialog.show();
 			me.init_for_trigger_of_amount_paid_by_customer();
-			me.click_on_process_payment();
+			me.click_on_process_payment(old_me);
 		}
 		else if(me.values['cond'] == 1){
 			this.val_balance = 0 - flt(me.values['s90_day_pay_Off'])
 	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
 			inner_dialog.show();
 			me.init_for_trigger_of_amount_paid_by_customer();
-			me.click_on_process_payment();
+			me.click_on_process_payment(old_me);
 		}
 	},
 	init_for_trigger_of_amount_paid_by_customer:function(){
-		var me = this;
-		/*$(me.inner_fd.amount_paid_by_customer.input).change(function(){
-			s90_day_pay_Off = 0 - flt(me.values['s90_day_pay_Off'])
-			var val_of_balance = flt(me.inner_fd.amount_paid_by_customer.$input.val()) + s90_day_pay_Off
-			console.log(val_of_balance,"val_of_balance")
-			cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
-		})*/	
+		var me = this;	
 		$(me.inner_fd.amount_paid_by_customer.input).change(function(){
-			me.init_for_commom_calculation()
+			me.init_for_commom_calculation();
 		})
 		$(me.inner_fd.bank_card.input).change(function(){
-			me.init_for_commom_calculation()
+			me.init_for_commom_calculation();
 		})
 		$(me.inner_fd.bank_transfer.input).change(function(){
-			me.init_for_commom_calculation()
+			me.init_for_commom_calculation();
 		})
 		$(me.inner_fd.discount.input).change(function(){
-			me.init_for_commom_calculation()
+			me.init_for_commom_calculation();
 		})	
 	},
 	init_for_commom_calculation:function(){
@@ -1295,10 +1298,8 @@ Payments_Details = Class.extend({
 		console.log(val_of_balance,"val_of_balance")
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.inner_dialog.fields_dict.msg.$wrapper.empty()
-		/*$(me.dialog.body).parent().find('.btn-primary').hide()*/
-		/*$(me.dialog.body).find("[data-fieldname ='process_payment']").show();*/
 	},
-	click_on_process_payment:function(){
+	click_on_process_payment:function(old_me){
 		var me = this;
 		me.inner_dialog.fields_dict.process_payment.$input.click(function() {
 			console.log(me,"me onClick of process_payment")
@@ -1308,18 +1309,76 @@ Payments_Details = Class.extend({
        			html = "<div class='row'>There Is "+me.inner_dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.inner_dialog.fields_dict.msg.$wrapper.empty()
        			me.inner_dialog.fields_dict.msg.$wrapper.append(html)
-       			me.update_agreement_according_today_plus_90days();
+       			$('button[data-fieldname="process_payment"]').hide();
+				$('button[data-fieldname="add_in_receivables"]').show();
+			    $('button[data-fieldname="return_to_customer"]').show();
+			    me.click_on_add_in_receivables(old_me);
+			    me.click_on_return_to_customer(old_me);
+       			//me.update_agreement_according_today_plus_90days();
        		}
-       		if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) < 0 ){
+       		if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) <= 0 ){
        			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
-       			/*$(me.dialog.body).parent().find('.btn-primary').hide()*/
        			me.inner_dialog.fields_dict.msg.$wrapper.empty()
        			me.inner_dialog.fields_dict.msg.$wrapper.append(html)
        		}
 
 		});
 	},
-	update_agreement_according_today_plus_90days:function(){
+	click_on_add_in_receivables:function(old_me){
+		var me = this;
+		me.inner_dialog.fields_dict.add_in_receivables.$input.click(function() {
+			value = me.inner_dialog.get_values();
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
+	            async:false,
+	            args: {
+	              "customer": cur_frm.doc.customer,
+	              "add_receivables":value.balance
+	            },
+	            callback: function(r){
+	              if(r.message){
+	            		$('button[data-fieldname="return_to_customer"]').hide();
+	            		$('button[data-fieldname="add_in_receivables"]').hide();
+	            		$('[data-fieldname="msg"]').hide();
+	            		$('button[data-fieldname="submit_payment"]').show();
+	            		cur_frm.doc.receivables = flt(cur_frm.doc.receivables)  + flt(value.balance)
+	            		refresh_field("receivables")
+	            		me.click_on_submit(old_me);
+	            	}
+	        	}
+		    });	
+		})
+	},
+	click_on_return_to_customer:function(old_me){
+		var me =this;
+		me.inner_dialog.fields_dict.return_to_customer.$input.click(function() {
+			frappe.call({
+	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
+	            async:false,
+	            args: {
+	              "customer": cur_frm.doc.customer,
+	              "add_receivables":0
+	            },
+	            callback: function(r){
+	              if(r.message){
+	            		$('button[data-fieldname="return_to_customer"]').hide();
+	            		$('button[data-fieldname="add_in_receivables"]').hide();
+	            		$('[data-fieldname="msg"]').hide();
+	            		$('button[data-fieldname="submit_payment"]').show();
+	            		me.click_on_submit(old_me);
+	            	}
+	        	}
+		    });
+		})
+	},
+	click_on_submit:function(old_me){
+		var me = this;
+		console.log(old_me,"old_me")
+		me.inner_dialog.fields_dict.submit_payment.$input.click(function(){
+			me.update_agreement_according_today_plus_90days(old_me)
+		});
+	},
+	update_agreement_according_today_plus_90days:function(old_me){
 		var me = this;
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_agreement_according_today_plus_90days",
@@ -1330,9 +1389,11 @@ Payments_Details = Class.extend({
 	        },
 	       	callback: function(r){
 	       		console.log(r.message)
+	       		me.inner_dialog.hide();
+				old_me.dialog.hide();
 	    		render_agreements();
-	    		/*msgprint("Changes Added")*/
-	    		/*me.inner_dialog.hide();*/
+				calculate_total_charges();
+	    		update_payments_record_by_due_date();
 	    	}
 	    });	
 	}

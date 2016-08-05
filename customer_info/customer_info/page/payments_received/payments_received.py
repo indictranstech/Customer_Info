@@ -35,9 +35,9 @@ def get_payments_details(customer,from_date,to_date):
 
 	
 	return frappe.db.sql("""select payment_date,customer,rental_payment,
-								late_fees,receivables,rental_payment+late_fees+receivables as total_payment_received,
-								bank_transfer,cash,bank_card,
-								balance,discount,bonus,concat(name,'') as refund,payments_ids
+								format(1*late_fees,2) as late_fees,receivables,format(rental_payment+late_fees+receivables,2) as total_payment_received,
+								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,format(bank_card,2) as bank_card,
+								balance,format(discount, 2) as discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
 								order by customer """.format(cond),as_dict=1,debug=1)
 

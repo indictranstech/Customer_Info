@@ -138,14 +138,17 @@ payments_received = Class.extend({
 	refund:function(){
 		var me = this;
 		console.log($(me.page),"me inside refund refund")
+		
 		$(me.page).find(".refund").click(function() {
-			me.show_dialog();
+			this.ph_name = $(this).attr("ph-name")
+			me.show_dialog($(this).attr("ph-name"));
 			console.log($(this).attr("ph-name"))
 			console.log($(this).attr("payments-ids"),"pa")
 		});
 	},
-	show_dialog:function(){
+	show_dialog:function(ph_name){
 		var me = this;
+		console.log(me,"me inside show_dialog")
 		this.dialog = new frappe.ui.Dialog({
             		title: "Refund Process",
                 	fields: [
@@ -162,21 +165,20 @@ payments_received = Class.extend({
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
-       	me.click_on_refund_inside_dialog();
+       	me.click_on_refund_inside_dialog(ph_name);
 	},
-	click_on_refund_inside_dialog:function(){
+	click_on_refund_inside_dialog:function(ph_name){
 		var me = this;
 		me.fd.refund_payment.$input.click(function() {
 			console.log("inside refund_payment")
-			me.make_refund_payment()
+			me.make_refund_payment(ph_name)
 		})	
 	},
-	make_refund_payment:function(){
+	make_refund_payment:function(ph_name){
 		var me = this;
 		if(me.fd.refund.$input.val() == "Yes"){
-			var refund = $(me.page).find(".refund")
-			var ph_name = $(refund).attr("ph-name")
 			var id_list = []
+			console.log(ph_name,"ph_name")
 			console.log($('.'+String(ph_name)).length,"ccccccccccc")
 			len = $('.'+String(ph_name)).length
 			for(i=0;i<len;i++){
@@ -188,7 +190,7 @@ payments_received = Class.extend({
 			        method: "customer_info.customer_info.doctype.payments_management.payments_management.make_refund_payment",
 		           	args: {
 		           		"payments_ids":id_list,
-		            	"ph_name":$(refund).attr("ph-name")
+		            	"ph_name":ph_name
 		            },
 			       	callback: function(r){
 			       		$('tr#'+String(ph_name)).hide()
