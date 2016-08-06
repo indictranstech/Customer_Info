@@ -650,16 +650,11 @@ process_payment = Class.extend({
 	},
 	show_dialog:function(){
 		var me = this;
-		/*$('button[data-fieldname="process_payment"]').css("margin-top","-506px");
-		$('button[data-fieldname="process_payment"]').css("margin-left","399px");*/
        	$('button[data-fieldname="submit_payment"]').hide();
 		$('button[data-fieldname="add_in_receivables"]').hide();
 	    $('button[data-fieldname="return_to_customer"]').hide();
 		this.dialog.show();
        	$(this.dialog.body).parent().find('.btn-primary').hide();
-		/*this.dialog.set_value("bonus",flt(cur_frm.doc.bonus).toFixed(2))
-		this.fd.bonus.df.read_only=1;
-		this.fd.bonus.refresh();*/
        	this.dialog.set_value("balance",(flt(me.fd.amount_paid_by_customer.$input.val()) 
 										- flt(cur_frm.doc.total_charges) 
 										+ flt(me.fd.bank_card.$input.val())
@@ -740,6 +735,7 @@ process_payment = Class.extend({
 		$(me.dialog.body).parent().find('.btn-primary').hide()
 		$('button[data-fieldname="add_in_receivables"]').css("display","none");
 		$('button[data-fieldname="return_to_customer"]').css("display","none");
+		$('button[data-fieldname="submit_payment"]').hide();
 		$(me.dialog.body).find("[data-fieldname ='process_payment']").show();
 	},
 	setFocusToTextBox:function(){
@@ -767,79 +763,70 @@ process_payment = Class.extend({
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        		}
 	    });
-	    /*me.dialog.fields_dict.process_payment.$input.keypress(function(){
-       		console.log("keypress of process_payment")
-	    	$(me.dialog.body).find("[data-fieldname ='process_payment']").show();
-			$(me.dialog.body).find("[data-fieldname ='add_in_receivables']").hide();
-			$(me.dialog.body).find("[data-fieldname ='return_to_customer']").hide();
-	    	$(me.dialog.body).find("[data-fieldname ='msg']").hide();
-	    });	*/
 	},
 	click_on_add_in_receivables:function(){
 		var me = this;
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
-			frappe.call({
-	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
-	            async:false,
-	            args: {
-	              "customer": cur_frm.doc.customer,
-	              "receivables":value.balance
-	            },
-	            callback: function(r){
-	              if(r.message){
-	            		/*cur_frm.doc.receivables = value.balance
-	            		refresh_field("receivables")*/
-	            		/*msgprint("Receivables Added In Customer Record")*/
-	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
-	            		$('button[data-fieldname="return_to_customer"]').hide();
-	            		$('button[data-fieldname="add_in_receivables"]').hide();
-	            		$('[data-fieldname="msg"]').hide();
-	            		$('button[data-fieldname="submit_payment"]').css("display","");
-	            		me.click_on_submit();
-	            		cur_frm.doc.receivables = value.balance
-	            		refresh_field("receivables")
-	            		cur_frm.doc.bonus = cur_frm.doc.bonus - value.bonus
-	            		refresh_field("bonus")
-	            	}
-	        	}
-		    });	
+			me.add_in_receivables = value.balance;
+			$('button[data-fieldname="return_to_customer"]').hide();
+    		$('button[data-fieldname="add_in_receivables"]').hide();
+    		$('[data-fieldname="msg"]').hide();
+    		$('button[data-fieldname="submit_payment"]').css("display","");
+    		me.click_on_submit();
 		})
 	},
 	click_on_return_to_customer:function(){
 		var me =this;
 		me.dialog.fields_dict.return_to_customer.$input.click(function() {
-			frappe.call({
-	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
-	            async:false,
-	            args: {
-	              "customer": cur_frm.doc.customer,
-	              "receivables":0
-	            },
-	            callback: function(r){
-	              if(r.message){
-	            		/*cur_frm.doc.receivables = "0"
-	            		refresh_field("receivables")*/
-	            		/*msgprint("Return To Customer")*/
-	            		/*$(me.dialog.body).parent().find('.btn-primary').show()*/
-	            		$('button[data-fieldname="return_to_customer"]').hide();
-	            		$('button[data-fieldname="add_in_receivables"]').hide();
-	            		$('[data-fieldname="msg"]').hide();
-	            		$('button[data-fieldname="submit_payment"]').css("display","");
-	            		me.click_on_submit();
-	            	}
-	        	}
-		    });
+			me.add_in_receivables = 0
+			$('button[data-fieldname="return_to_customer"]').hide();
+    		$('button[data-fieldname="add_in_receivables"]').hide();
+    		$('[data-fieldname="msg"]').hide();
+    		$('button[data-fieldname="submit_payment"]').css("display","");
+			me.click_on_submit();
 		})
 	},
 	click_on_submit:function(){
 		var me =this;
 		me.dialog.fields_dict.submit_payment.$input.click(function() {
 			console.log(this,me,"in primary_action 123423123")
-            /*me.click_on_make_entry();*/
+            console.log(me,"me inside submit_payment submit_payment")
             me.update_payments_records();
             me.dialog.hide();	
 		});
+	},
+	update_payments_records:function(){
+		var me = this;
+		value = me.dialog.get_values();
+		frappe.call({
+			async:false,    
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_on_submit",
+	       	args: {
+	        	"payment_date":cur_frm.doc.payment_date,
+	        	"customer":cur_frm.doc.customer,
+	        	"bonus":cur_frm.doc.bonus,
+	        	"receivables":me.add_in_receivables
+	        },
+	       	callback: function(r){
+	       		console.log(r.message,"my result")
+	       		if(r.message){
+	       			me.click_on_make_entry(r.message);
+	       		}
+	        	cur_frm.doc.bonus = flt(cur_frm.doc.bonus) - flt(value.bonus)
+	            refresh_field("bonus")
+	            console.log(flt(me.add_in_receivables),"me.add_in_receivables")
+	            if(flt(me.add_in_receivables) == 0){
+	            	cur_frm.set_value("receivables","0")
+	            }
+	            if(flt(me.add_in_receivables) > 0){
+	            	cur_frm.set_value("receivables",flt(me.add_in_receivables))	
+	            }
+	        	render_agreements();
+	        	calculate_total_charges();
+	    		update_payments_record_by_due_date();
+	    	}
+	    })
 	},
 	click_on_make_entry:function(payment_ids){
 		var me =this;
@@ -872,31 +859,9 @@ process_payment = Class.extend({
               "payment_ids_list": payment_ids_list
             },
             callback: function(r){
-             	/*cur_frm.doc.receivables = value.balance
-	            refresh_field("receivables")*/
+
         	}
 	    });
-	},
-	update_payments_records:function(){
-		var me = this;
-		frappe.call({
-			async:false,    
-	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_on_submit",
-	       	args: {
-	        	"payment_date":cur_frm.doc.payment_date,
-	        	"customer":cur_frm.doc.customer,
-	        	"bonus":cur_frm.doc.bonus
-	        },
-	       	callback: function(r){
-	       		console.log(r.message,"my result")
-	        	me.click_on_make_entry(r.message);
-	       		cur_frm.set_value("total_charges","0")
-	       		cur_frm.set_value("amount_of_due_payments","0")
-	       		/*cur_frm.set_value("receivables","0")*/
-	        	render_agreements();
-	        	/*msgprint(__("Payments Summary Successfully Updated Against All Above Customer Agreement\n Entry Made For this Payment"))*/
-	    	}
-	    })
 	}	
 })
 
@@ -964,6 +929,7 @@ Payments_Details = Class.extend({
             	   				"history":r.message['history_record'],
             	   				"index":me.index
             	   			})).appendTo(me.fd.payments_record.wrapper);
+					me.add_date_on_check();
 					me.increase_decrease_total_charges_and_due_payment();
 					me.init_trigger_for_nav_tabs();
 				}
@@ -978,7 +944,8 @@ Payments_Details = Class.extend({
         	   				"payment_date":cur_frm.doc.payment_date,
         	   				"index":me.index
         	   			})).appendTo(me.fd.payments_record.wrapper);
-					$(me.dialog.body).find('#home'+ me.index).removeClass("tab-pane fade");	
+					$(me.dialog.body).find('#home'+ me.index).removeClass("tab-pane fade");
+					me.add_date_on_check();	
 					me.increase_decrease_total_charges_and_due_payment();
 				}
 				else if(r.message && template_name == "summary_record"){
@@ -1126,9 +1093,6 @@ Payments_Details = Class.extend({
 	           		"payment_date":cur_frm.doc.payment_date
 	            },
 	           	callback: function(res){
-	        		/*render_agreements()
-	            	me.update_total_charges_and_due_payments()
-	        		me.hide_dialog()*/
 	        	}
 	        });
 	        frappe.call({
@@ -1145,11 +1109,23 @@ Payments_Details = Class.extend({
 	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
-	        		/*msgprint("Changes Added")*/
-	        		/*me.hide_dialog()*/
 	        	}
 	        });
 	    }
+	},
+	add_date_on_check:function(){
+		$('.select').change(function() {  
+		    var value = '"'+$(this).attr("value")+'"' 
+		    if ($(this).is(':checked')){
+		    	console.log("checked")
+		    	console.log($('[payment-id= '+value+']'))
+		    	$('[payment-id= '+value+']').text(cur_frm.doc.payment_date)
+		    }
+		    else{
+		    	console.log("unchecked")
+		    	$('[payment-id= '+value+']').empty()
+		    }	
+		});
 	},
 	increase_decrease_total_charges_and_due_payment:function(){
 		var me = this;
@@ -1201,8 +1177,6 @@ Payments_Details = Class.extend({
 		var payments_cheked = me.row_to_check.length + me.row_to_update.length
 		console.log(me,"me me me")
 		console.log(me.row_to_check.length + me.row_to_update.length,"length")
-		/*cur_frm.set_value("total_charges",(cur_frm.doc.total_charges - flt(payments_cheked*factor))==0?"0":cur_frm.doc.total_charges - flt(payments_cheked*factor))
-		cur_frm.set_value("amount_of_due_payments",(cur_frm.doc.amount_of_due_payments - flt(payments_cheked*factor))==0?"0":cur_frm.doc.amount_of_due_payments - flt(payments_cheked*factor))*/
 		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.total_charges').text()))
 		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.due_payments').text()))
 	},
@@ -1298,6 +1272,10 @@ Payments_Details = Class.extend({
 		console.log(val_of_balance,"val_of_balance")
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.inner_dialog.fields_dict.msg.$wrapper.empty()
+		$('button[data-fieldname="add_in_receivables"]').hide();
+		$('button[data-fieldname="return_to_customer"]').hide();
+		$('button[data-fieldname="submit_payment"]').hide();
+		$(me.inner_dialog.body).find("[data-fieldname ='process_payment']").show();
 	},
 	click_on_process_payment:function(old_me){
 		var me = this;
@@ -1314,7 +1292,6 @@ Payments_Details = Class.extend({
 			    $('button[data-fieldname="return_to_customer"]').show();
 			    me.click_on_add_in_receivables(old_me);
 			    me.click_on_return_to_customer(old_me);
-       			//me.update_agreement_according_today_plus_90days();
        		}
        		if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) <= 0 ){
        			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
@@ -1328,64 +1305,42 @@ Payments_Details = Class.extend({
 		var me = this;
 		me.inner_dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.inner_dialog.get_values();
-			frappe.call({
-	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
-	            async:false,
-	            args: {
-	              "customer": cur_frm.doc.customer,
-	              "add_receivables":value.balance
-	            },
-	            callback: function(r){
-	              if(r.message){
-	            		$('button[data-fieldname="return_to_customer"]').hide();
-	            		$('button[data-fieldname="add_in_receivables"]').hide();
-	            		$('[data-fieldname="msg"]').hide();
-	            		$('button[data-fieldname="submit_payment"]').show();
-	            		cur_frm.doc.receivables = flt(cur_frm.doc.receivables)  + flt(value.balance)
-	            		refresh_field("receivables")
-	            		me.click_on_submit(old_me);
-	            	}
-	        	}
-		    });	
+			me.add_in_receivables = value.balance;
+			$('button[data-fieldname="return_to_customer"]').hide();
+			$('button[data-fieldname="add_in_receivables"]').hide();
+			$('[data-fieldname="msg"]').hide();
+			$('button[data-fieldname="submit_payment"]').show();
+			me.click_on_submit(old_me);
 		})
 	},
 	click_on_return_to_customer:function(old_me){
 		var me =this;
 		me.inner_dialog.fields_dict.return_to_customer.$input.click(function() {
-			frappe.call({
-	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_receivables_in_customer",
-	            async:false,
-	            args: {
-	              "customer": cur_frm.doc.customer,
-	              "add_receivables":0
-	            },
-	            callback: function(r){
-	              if(r.message){
-	            		$('button[data-fieldname="return_to_customer"]').hide();
-	            		$('button[data-fieldname="add_in_receivables"]').hide();
-	            		$('[data-fieldname="msg"]').hide();
-	            		$('button[data-fieldname="submit_payment"]').show();
-	            		me.click_on_submit(old_me);
-	            	}
-	        	}
-		    });
+			me.add_in_receivables = 0
+			$('button[data-fieldname="return_to_customer"]').hide();
+    		$('button[data-fieldname="add_in_receivables"]').hide();
+    		$('[data-fieldname="msg"]').hide();
+    		$('button[data-fieldname="submit_payment"]').show();
+    		me.click_on_submit(old_me);
 		})
 	},
 	click_on_submit:function(old_me){
 		var me = this;
 		console.log(old_me,"old_me")
 		me.inner_dialog.fields_dict.submit_payment.$input.click(function(){
-			me.update_agreement_according_today_plus_90days(old_me)
+			me.payoff_submit(old_me)
 		});
 	},
-	update_agreement_according_today_plus_90days:function(old_me){
+	payoff_submit:function(old_me){
 		var me = this;
 		frappe.call({
-	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_agreement_according_today_plus_90days",
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
 	       	args: {
 	       		"customer_agreement":me.item['id'],
 	        	"agreement_status":"Closed",
-	        	"condition": me.values['cond']
+	        	"condition": me.values['cond'],
+	        	"customer":cur_frm.doc.customer,
+	        	"receivables":me.add_in_receivables
 	        },
 	       	callback: function(r){
 	       		console.log(r.message)
@@ -1397,56 +1352,4 @@ Payments_Details = Class.extend({
 	    	}
 	    });	
 	}
-
 })
-
-
-/*add_comment:function(frm){
-		if(cur_frm.doc.comment){
-			frappe.call({
-            method: "frappe.desk.form.utils.add_comment",
-            args: {
-                doc:{
-                    doctype: "Communication",
-                    comment_type: "Comment",
-                    reference_doctype: "Customer",
-                    subject: cur_frm.doc.comment,
-                    content: cur_frm.doc.comment,
-                    reference_name: cur_frm.doc.customer,
-                    comment: cur_frm.doc.comment,
-                    communication_type:'Comment'
-                }
-            },
-            callback: function(r) {
-            	msgprint("Comment Added Successfully");
-            	cur_frm.set_value("comment","")
-            }
-	        });
-		}
-	}
-get_other_field_value_from_customer = function(){
-	if(cur_frm.doc.customer){
-		frappe.call({    
-			method: "frappe.client.get_list",
-			async:false,
-		   	args: {
-		    	doctype: "Customer",
-		       	fields: ["first_name","last_name","company_phone_1","company_phone_2","prersonal_code","summary_of_notes","bonus"],
-		       	filters: { "name" : cur_frm.doc.customer
-		        	},
-				},
-				callback: function(res){
-				if(res && res.message){
-					console.log(res.message[0]['company_phone_1'])
-					cur_frm.set_value("first_name",res.message[0]['first_name'])
-					cur_frm.set_value("last_name",res.message[0]['last_name'])
-					cur_frm.set_value("company_phone_1",res.message[0]['company_phone_1'])
-					cur_frm.set_value("company_phone_2",res.message[0]['company_phone_2'])
-					cur_frm.set_value("prersonal_code",res.message[0]['prersonal_code'])
-					cur_frm.set_value("summary_of_notes",res.message[0]['summary_of_notes'])
-					cur_frm.set_value("bonus",res.message[0]['bonus'])
-				}
-			}
-		});
-	}
-}*/
