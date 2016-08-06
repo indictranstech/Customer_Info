@@ -208,26 +208,32 @@ def update_on_submit(payment_date,customer,bonus,receivables):
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
-	
-	add_bonus_and_receivables_to_customer(customer,bonus,receivables)
+		flag = "Process Payment"
+	add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
 
 	return submitted_payments_ids
 
 
-def add_bonus_and_receivables_to_customer(customer,bonus,receivables):
+def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 	customer_doc = frappe.get_doc("Customer",customer)
-	if bonus > 0 and customer_doc.customer_group == "Individual":
-		added_bonus = float(bonus) - customer_doc.bonus
+	if flag == "Process Payment":
+		if bonus > 0 and customer_doc.customer_group == "Individual":
+			added_bonus = float(bonus) - customer_doc.bonus
+			customer_doc.update({
+				"bonus":bonus
+			})
+			if float(added_bonus) > 0:
+				comment = """ {0} EUR Bonus Added """.format(added_bonus)
+				customer_doc.add_comment("Comment",comment)
 		customer_doc.update({
-			"bonus":bonus
-		})
-		if float(added_bonus) > 0:
-			comment = """ {0} EUR Bonus Added """.format(added_bonus)
-			customer_doc.add_comment("Comment",comment)
-	customer_doc.update({
 			"receivables":float(receivables)
 		}) 	
-	customer_doc.save(ignore_permissions=True)
+		customer_doc.save(ignore_permissions=True)
+	elif flag == "Payoff Payment":
+		customer_doc.update({
+				"receivables":float(customer_doc.receivables) + float(receivables)
+			}) 	
+		customer_doc.save(ignore_permissions=True)	
 
 def set_values_in_agreement_on_submit(customer_agreement):
 	payment_made = []
@@ -267,7 +273,8 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 			"agreement_closing_suspending_reason":"40% Offer"
 		})
 		agreement.save(ignore_permissions=True)
-	add_bonus_and_receivables_to_customer(customer,0,receivables)
+	flag = "Payoff Payment"	
+	add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
 
 
 # call from payment received report 
