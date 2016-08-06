@@ -2,13 +2,13 @@
         <table class="table table-bordered table-condensed" id="header-fixed" style="margin-bottom: 0px;">
             <thead>
               <tr>
-                <td align="center" width="14%"><b>Payment Id</b></td>
+                <td align="center" width="13%"><b>Payment Id</b></td>
                 <td align="center" width="12%"><b>Due Date</b></td>
                 <td align="center" width="12%"><b>Payment Date</b></td>
                 <td align="center" width="12%"><b>Days Late</b></td>
                 <td align="center" width="12%"><b>Amount</b></td>
                 <td align="center" width="12%"><b>Balance</b></td>
-                <td align="center" width="12%"><b>Associate</b></td>
+                <td align="center" width="13%"><b>Associate</b></td>
                 <td align="center" width="12%"><b>PMT From</b></td>
                 <td align="center" width="2%"></td>
               </tr>
@@ -20,13 +20,13 @@
                 {% if (history.length) { %}
                     {% for(var i=0, l=history.length; i < l; i++) { %}
                             <tr>
-                                <td align="center" width="14%">{{ history[i].payment_id }}</td>
-                                <td align="center" width="13%">{{ history[i].due_date }}</td>
-                                <td align="center" width="13%">{{ history[i].payment_date }}</td>
-                                <td align="center" width="12%">{{ history[i].late_days }}</td>
+                                <td align="center" width="13%">{{ history[i].payment_id }}</td>
+                                <td align="center" width="12.1%">{{ history[i].due_date }}</td>
+                                <td align="center" width="12.1%">{{ history[i].payment_date }}</td>
+                                <td align="center" width="12.1%">{{ history[i].late_days }}</td>
                                 <td align="center" width="12%">{{ history[i].monthly_rental_amount }}</td>
                                 <td align="center" width="12%">{{ history[i].balance }}</td>
-                                <td align="center" width="11%">{{ history[i].associate }}</td>
+                                <td align="center" width="13%">{{ history[i].associate }}</td>
                                 <td align="center" width="12%">{{ history[i].pmt }}</td>
                             </tr>
                     {% } %}

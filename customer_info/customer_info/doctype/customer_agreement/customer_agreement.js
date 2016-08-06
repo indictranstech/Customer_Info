@@ -4,6 +4,7 @@ cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment')
 cur_frm.add_fetch('product', 'period', 'agreement_period');
 cur_frm.add_fetch('product', 'product_category', 'product_category');
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
+cur_frm.add_fetch('customer','customer_group','customer_group')
 
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
@@ -111,30 +112,32 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.__islocal){
             cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
-            frappe.call({
-                async:false,
-                method: "frappe.client.get_value",
-                args: {
-                    doctype: "Customer Agreement",
-                    fieldname: "name",
-                    filters: { customer: cur_frm.doc.customer },
-                },
-                callback: function(res){
-                    if (res && res.message){
-                        cur_frm.set_value("bonus",20)
-                    }
-                }   
-            });
-            frappe.call({
-                async:false,
-                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
-                args: {
-                    "customer": cur_frm.doc.customer,
-                    "bonus":cur_frm.doc.bonus
-                },
-                callback: function(res){
-                }   
-            });
+            if(cur_frm.doc.customer_group == "Individual"){    
+                frappe.call({
+                    async:false,
+                    method: "frappe.client.get_value",
+                    args: {
+                        doctype: "Customer Agreement",
+                        fieldname: "name",
+                        filters: { customer: cur_frm.doc.customer },
+                    },
+                    callback: function(res){
+                        if (res && res.message){
+                            cur_frm.set_value("bonus",20)
+                        }
+                    }   
+                });
+                frappe.call({
+                    async:false,
+                    method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
+                    args: {
+                        "customer": cur_frm.doc.customer,
+                        "bonus":cur_frm.doc.bonus
+                    },
+                    callback: function(res){
+                    }   
+                });
+            }
         }         
     },
     refresh:function(frm){
