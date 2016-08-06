@@ -959,11 +959,16 @@ Payments_Details = Class.extend({
 			
 					if(r.message['summary_records']['cond'] == 1){
 						$('button[data-fieldname="pay_off_agreement"]').removeAttr("style");
-						me.click_on_pay_off_agreement(r.message["summary_records"]);
+						/*me.click_on_pay_off_agreement(r.message["summary_records"]);*/
+						me.values = r.message["summary_records"];
+						new payoff_details(me)
+						//me.click_on_pay_off_agreement();
 					}
 					else if(r.message['summary_records']['cond'] == 2){
 						$('button[data-fieldname="s90_day_pay_Off"]').removeAttr("style");
-						me.click_on_90_day_pay_Off(r.message["summary_records"]);
+						me.values = r.message["summary_records"];
+						new payoff_details(me)
+						//me.click_on_90_day_pay_Off();
 					}
 					html = $(frappe.render_template("summary_record",{
         	   				"summary":r.message['summary_records'],
@@ -1130,46 +1135,50 @@ Payments_Details = Class.extend({
 	increase_decrease_total_charges_and_due_payment:function(){
 		var me = this;
 		console.log(me.payments_record_list,"me in side increase_decrease_total_charges_and_due_payment")
-        var factor = me.payments_record_list[0][1].monthly_rental_amount;		
-		$(this.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
-		$(this.fd.payments_record.wrapper).find('div.total_charges').append(flt((cur_frm.doc.total_charges)).toFixed(2))
+	    var factor = me.payments_record_list[0][1].monthly_rental_amount;		
+		$(me.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
+		$(me.fd.payments_record.wrapper).find('div.total_charges').append(flt((cur_frm.doc.total_charges)).toFixed(2))
 		$('input[data-from=""]').change(function() {  
 		    if ($(this).is(':checked')){
-				var add_in_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) + parseFloat(factor)
-				var add_in_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) + parseFloat(factor)
-				$(cur_dialog.body).find('div.due_payments').empty()
-				$(cur_dialog.body).find('div.due_payments').append(add_in_due_payments.toFixed(2))
-				$(cur_dialog.body).find('div.total_charges').empty()
-				$(cur_dialog.body).find('div.total_charges').append(add_in_total_charges.toFixed(2))
-    		} 
-    		else {
-				var subtract_from_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) - parseFloat(factor)
-				var subtract_from_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) - parseFloat(factor)
-				console.log(subtract_from_total_charges.toFixed(2),"subtract_from_total_charges")
-				$(cur_dialog.body).find('div.due_payments').empty()
-				$(cur_dialog.body).find('div.due_payments').append(subtract_from_due_payments.toFixed(2))
-				$(cur_dialog.body).find('div.total_charges').empty()
-				$(cur_dialog.body).find('div.total_charges').append(subtract_from_total_charges.toFixed(2))
-    		}
+		    	me.add = "Yes"
+				me.add_and_subtract_from_total_and_due_charges()
+			} 
+			else {
+				me.add = "No"
+				me.add_and_subtract_from_total_and_due_charges()
+			}
 		});
 		$('input[data-from="from_child_table"]').change(function() {  
 		    if ($(this).is(':checked')){
-				var add_in_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) + parseFloat(factor)
-				var add_in_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) + parseFloat(factor)
-				$(cur_dialog.body).find('div.due_payments').empty()
-				$(cur_dialog.body).find('div.due_payments').append(add_in_due_payments.toFixed(2))
-				$(cur_dialog.body).find('div.total_charges').empty()
-				$(cur_dialog.body).find('div.total_charges').append(add_in_total_charges.toFixed(2))
-    		} 
-    		else {
-				var subtract_from_due_payments = parseFloat($(cur_dialog.body).find('div.due_payments').text()) - parseFloat(factor)
-				var subtract_from_total_charges = parseFloat($(cur_dialog.body).find('div.total_charges').text()) - parseFloat(factor)
-				$(cur_dialog.body).find('div.due_payments').empty()
-				$(cur_dialog.body).find('div.due_payments').append(subtract_from_due_payments.toFixed(2))
-				$(cur_dialog.body).find('div.total_charges').empty()
-				$(cur_dialog.body).find('div.total_charges').append(subtract_from_total_charges.toFixed(2))
-    		}
+		    	me.add = "Yes"
+				me.add_and_subtract_from_total_and_due_charges()
+			} 
+			else {
+				me.add = "No"
+				me.add_and_subtract_from_total_and_due_charges()
+			}
 		});
+	},
+	add_and_subtract_from_total_and_due_charges:function(){
+		var me = this;
+		var factor = me.payments_record_list[0][1].monthly_rental_amount;
+		if(me.add == "Yes"){
+			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) + parseFloat(factor)
+			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) + parseFloat(factor)
+			me.set_total_due_and_total_charges()
+		}
+		if(me.add == "No"){
+			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) - parseFloat(factor)
+			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) - parseFloat(factor)
+			me.set_total_due_and_total_charges()
+		}
+	},
+	set_total_due_and_total_charges:function(){
+		var me = this;
+		$(me.dialog.body).find('div.due_payments').empty()
+		$(me.dialog.body).find('div.due_payments').append(me.due_payments.toFixed(2))
+		$(me.dialog.body).find('div.total_charges').empty()
+		$(me.dialog.body).find('div.total_charges').append(me.total_charges.toFixed(2))
 	},
 	update_total_charges_and_due_payments : function(frm){
 		var me = this;
@@ -1179,24 +1188,37 @@ Payments_Details = Class.extend({
 		console.log(me.row_to_check.length + me.row_to_update.length,"length")
 		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.total_charges').text()))
 		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.due_payments').text()))
+	}
+});
+
+
+payoff_details = Class.extend({
+	init:function(me){
+		this.old_instance = me;
+		this.init_for_render_dialog();
 	},
-	click_on_pay_off_agreement:function(values){
+	init_for_render_dialog:function(){
 		var me = this;
-		this.values = values;
-		me.dialog.fields_dict.pay_off_agreement.$input.click(function() {
-			old_me = me;
-			me.show_inner_dialog(old_me)
+		me.click_on_pay_off_agreement();
+		me.click_on_90_day_pay_Off();
+	},
+	click_on_pay_off_agreement:function(){
+		var me = this;
+		console.log(me,"inside click_on_pay_off_agreement")
+		me.old_instance.dialog.fields_dict.pay_off_agreement.$input.click(function() {
+			me.old_dialog = me.old_instance.dialog;
+			me.show_inner_dialog();
 		});
 	},
-	click_on_90_day_pay_Off: function(values){
+	click_on_90_day_pay_Off: function(){
 		var me = this;
 		console.log("in s90_day_pay_Off")
-		this.values = values;
-		me.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
-			me.show_inner_dialog(old_me)
+		me.old_instance.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
+			me.old_dialog = me.old_instance.dialog;
+			me.show_inner_dialog();
 		});
 	},
-	show_inner_dialog:function(old_me){
+	show_inner_dialog:function(){
 		var me = this;
 		this.inner_dialog = new frappe.ui.Dialog({
 	        title: "Payments Detalis",
@@ -1222,29 +1244,26 @@ Payments_Details = Class.extend({
 	                }
 	   	});
 	    this.inner_fd = this.inner_dialog.fields_dict;
-	    me.set_value_of_balance(this.inner_dialog,old_me);
+	    me.set_value_of_balance();
 	},
-	set_value_of_balance:function(inner_dialog,old_me){
+	set_value_of_balance:function(){
 		var me = this;
-		console.log(inner_dialog,"inner_dialog")
 		console.log(me,"me me")
-		$('button[data-fieldname="submit_payment"]').hide();
-		$('button[data-fieldname="add_in_receivables"]').hide();
-	    $('button[data-fieldname="return_to_customer"]').hide();
-		$(inner_dialog.body).parent().find('.btn-primary').hide()
-       	if(me.values['cond'] == 2){
-       		this.val_balance = 0 - flt(me.values['Total_payoff_amount'])
-	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
-			inner_dialog.show();
+		me.hide_button();
+		$(me.inner_dialog.body).parent().find('.btn-primary').hide()
+       	if(me.old_instance.values['cond'] == 2){
+       		this.val_balance = 0 - flt(me.old_instance.values['Total_payoff_amount'])
+	       	me.inner_dialog.fields_dict.balance.set_input(this.val_balance)
+			me.inner_dialog.show();
 			me.init_for_trigger_of_amount_paid_by_customer();
-			me.click_on_process_payment(old_me);
+			me.click_on_process_payment();
 		}
-		else if(me.values['cond'] == 1){
-			this.val_balance = 0 - flt(me.values['s90_day_pay_Off'])
-	       	inner_dialog.fields_dict.balance.set_input(this.val_balance)
-			inner_dialog.show();
+		else if(me.old_instance.values['cond'] == 1){
+			this.val_balance = 0 - flt(me.old_instance.values['s90_day_pay_Off'])
+	       	me.inner_dialog.fields_dict.balance.set_input(this.val_balance)
+			me.inner_dialog.show();
 			me.init_for_trigger_of_amount_paid_by_customer();
-			me.click_on_process_payment(old_me);
+			me.click_on_process_payment();
 		}
 	},
 	init_for_trigger_of_amount_paid_by_customer:function(){
@@ -1272,12 +1291,15 @@ Payments_Details = Class.extend({
 		console.log(val_of_balance,"val_of_balance")
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.inner_dialog.fields_dict.msg.$wrapper.empty()
+		me.hide_button();
+		$(me.inner_dialog.body).find("[data-fieldname ='process_payment']").show();
+	},
+	hide_button:function(){
 		$('button[data-fieldname="add_in_receivables"]').hide();
 		$('button[data-fieldname="return_to_customer"]').hide();
 		$('button[data-fieldname="submit_payment"]').hide();
-		$(me.inner_dialog.body).find("[data-fieldname ='process_payment']").show();
 	},
-	click_on_process_payment:function(old_me){
+	click_on_process_payment:function(){
 		var me = this;
 		me.inner_dialog.fields_dict.process_payment.$input.click(function() {
 			console.log(me,"me onClick of process_payment")
@@ -1290,8 +1312,8 @@ Payments_Details = Class.extend({
        			$('button[data-fieldname="process_payment"]').hide();
 				$('button[data-fieldname="add_in_receivables"]').show();
 			    $('button[data-fieldname="return_to_customer"]').show();
-			    me.click_on_add_in_receivables(old_me);
-			    me.click_on_return_to_customer(old_me);
+			    me.click_on_add_in_receivables();
+			    me.click_on_return_to_customer();
        		}
        		if(parseFloat(me.inner_dialog.fields_dict.balance.$input.val()) <= 0 ){
        			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
@@ -1301,55 +1323,57 @@ Payments_Details = Class.extend({
 
 		});
 	},
-	click_on_add_in_receivables:function(old_me){
+	click_on_add_in_receivables:function(){
 		var me = this;
 		me.inner_dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.inner_dialog.get_values();
 			me.add_in_receivables = value.balance;
-			$('button[data-fieldname="return_to_customer"]').hide();
-			$('button[data-fieldname="add_in_receivables"]').hide();
-			$('[data-fieldname="msg"]').hide();
-			$('button[data-fieldname="submit_payment"]').show();
-			me.click_on_submit(old_me);
+			me.hide_other_and_show_complete_payment();
+			me.click_on_submit();
 		})
 	},
-	click_on_return_to_customer:function(old_me){
+	click_on_return_to_customer:function(){
 		var me =this;
 		me.inner_dialog.fields_dict.return_to_customer.$input.click(function() {
 			me.add_in_receivables = 0
-			$('button[data-fieldname="return_to_customer"]').hide();
-    		$('button[data-fieldname="add_in_receivables"]').hide();
-    		$('[data-fieldname="msg"]').hide();
-    		$('button[data-fieldname="submit_payment"]').show();
-    		me.click_on_submit(old_me);
+    		me.hide_other_and_show_complete_payment();
+    		me.click_on_submit();
 		})
 	},
-	click_on_submit:function(old_me){
+	hide_other_and_show_complete_payment:function(){
+		$('button[data-fieldname="return_to_customer"]').hide();
+		$('button[data-fieldname="add_in_receivables"]').hide();
+		$('[data-fieldname="msg"]').hide();
+		$('button[data-fieldname="submit_payment"]').show();
+	},
+	click_on_submit:function(){
 		var me = this;
-		console.log(old_me,"old_me")
 		me.inner_dialog.fields_dict.submit_payment.$input.click(function(){
-			me.payoff_submit(old_me)
+			me.payoff_submit()
 		});
 	},
-	payoff_submit:function(old_me){
+	payoff_submit:function(){
 		var me = this;
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
 	       	args: {
-	       		"customer_agreement":me.item['id'],
+	       		"customer_agreement":me.old_instance.item['id'],
 	        	"agreement_status":"Closed",
-	        	"condition": me.values['cond'],
+	        	"condition": me.old_instance.values['cond'],
 	        	"customer":cur_frm.doc.customer,
 	        	"receivables":me.add_in_receivables
 	        },
 	       	callback: function(r){
 	       		console.log(r.message)
 	       		me.inner_dialog.hide();
-				old_me.dialog.hide();
+				me.old_dialog.hide();
 	    		render_agreements();
 				calculate_total_charges();
 	    		update_payments_record_by_due_date();
 	    	}
 	    });	
 	}
-})
+});
+
+
+	
