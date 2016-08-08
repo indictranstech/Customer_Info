@@ -7,7 +7,6 @@ cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
 cur_frm.add_fetch('customer','bonus','bonus')
 cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
 
-var list_of_row_to_update_on_submit = [];
 var index = 0
 frappe.ui.form.on("Payments Management", {
 	refresh: function(frm) {
@@ -71,7 +70,6 @@ frappe.ui.form.on("Payments Management", {
 	            		cur_frm.set_value("summary_of_notes",r.message)
 	            	}
 	            	cur_frm.set_value("notes_on_customer_payments","")
-	            	/*msgprint("Comment Added Successfully");*/
 	            }
 	        });
 		}
@@ -103,27 +101,27 @@ get_address_of_customer = function(){
 
 update_payments_record_by_due_date = function(frm){
 	frappe.call({
-			async:false,
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_record_by_due_date",
-            args: {
-              "customer": cur_frm.doc.customer
-            },
-            callback: function(r){
-        		
-        	}
+		async:false,
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_record_by_due_date",
+        args: {
+          "customer": cur_frm.doc.customer
+        },
+        callback: function(r){
+    		
+    	}
     });
 }
 
 remove_all_not_submitted =function(frm){
 	frappe.call({
-			async:false,
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_not_submitted",
-            args: {
-              "customer": cur_frm.doc.customer
-            },
-            callback: function(r){
-        		
-        	}
+		async:false,
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_not_submitted",
+        args: {
+          "customer": cur_frm.doc.customer
+        },
+        callback: function(r){
+    		
+    	}
     });	
 }
 
@@ -141,12 +139,6 @@ calculate_total_charges = function(frm){
               	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
 	           	cur_frm.doc.receivables = r.message['receivables'] > 0 ? r.message['receivables']:"0";
 	           	cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables'])
-	           	/*if((r.message['amount_of_due_payments'] - cur_frm.doc.receivables) == 0){
-	           		cur_frm.doc.total_charges = "0"
-	           	}
-	           	else{
-	           		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - cur_frm.doc.receivables)
-	           	}*/
 	           	cur_frm.refresh_fields()
             }
             else{
@@ -1083,7 +1075,8 @@ Payments_Details = Class.extend({
         console.log(me.row_to_update,"row_to_update")
         console.log(me.row_to_uncheck,"row_to_uncheck")
         console.log(me.row_to_check,"row_to_check")
-	    console.log(cur_frm.doc.bonus,"bonus")    
+	    console.log(cur_frm.doc.bonus,"bonus")
+
 		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
 			var me = this
 	   		frappe.call({    
@@ -1106,7 +1099,7 @@ Payments_Details = Class.extend({
 	           	args: {
 	           		"customer_agreement":this.item['id'],
 	            	"frm_bonus":cur_frm.doc.bonus,
-	            	"cond":1,
+	            	//"flag":"Payment Details",
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){
@@ -1122,12 +1115,9 @@ Payments_Details = Class.extend({
 		$('.select').change(function() {  
 		    var value = '"'+$(this).attr("value")+'"' 
 		    if ($(this).is(':checked')){
-		    	console.log("checked")
-		    	console.log($('[payment-id= '+value+']'))
 		    	$('[payment-id= '+value+']').text(cur_frm.doc.payment_date)
 		    }
 		    else{
-		    	console.log("unchecked")
 		    	$('[payment-id= '+value+']').empty()
 		    }	
 		});

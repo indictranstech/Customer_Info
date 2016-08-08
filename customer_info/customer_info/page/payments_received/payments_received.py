@@ -39,7 +39,7 @@ def get_payments_details(customer,from_date,to_date):
 								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
-								order by customer """.format(cond),as_dict=1,debug=1)
+								order by customer """.format(cond),as_dict=1)
 
 
 

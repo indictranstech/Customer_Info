@@ -20,7 +20,7 @@ def get_data(filters):
 									concat(t3.first_name," ",t3.last_name) as customer,
 									t3.company_phone_1,t3.bonus,
 									CASE WHEN DATEDIFF('{0}',t1.due_date) > 3 
-									THEN DATEDIFF('{0}',t1.due_date) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
+									THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
 									"a",
 									t2.contact_result,t2.suspension_date									
 									from `tabPayments Record`t1,`tabCustomer Agreement`t2,
