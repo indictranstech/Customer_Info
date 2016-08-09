@@ -423,43 +423,49 @@ def get_summary_records(agreement,receivable):
 				}	
 
 
+# def make_payment_history(cash,bank_card,bank_transfer,balance,receivables,customer,payment_date,discount,bonus,rental_payment,late_fees,payment_ids,total_charges,payment_ids_list):
 @frappe.whitelist()
-def make_payment_history(cash,bank_card,bank_transfer,balance,receivables,customer,payment_date,discount,bonus,rental_payment,late_fees,payment_ids,total_charges,payment_ids_list):
-	payments_ids_list = json.loads(payment_ids_list)
-	print cash,bank_card,bank_transfer,balance,receivables,customer,discount,type(bonus)
+def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payment_ids_list):
+	values = json.loads(values)
 	payment_ids = json.loads(payment_ids)
+	payments_ids_list = json.loads(payment_ids_list)
 	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
-	payments_history.cash = float(cash)
-	payments_history.bank_card = float(bank_card)
-	payments_history.bank_transfer = float(bank_transfer)
-	payments_history.balance = float(balance)
-	payments_history.receivables = float(receivables)
+	payments_history.cash = float(values['amount_paid_by_customer'])
+	payments_history.bank_card = float(values['bank_card'])
+	payments_history.bank_transfer = float(values['bank_transfer'])
+	payments_history.balance = float(values['balance'])
+	payments_history.bonus = float(values['bonus'])
+	payments_history.discount = float(values['discount'])
+	payments_history.rental_payment = float(values['rental_payment'])
+	payments_history.late_fees = float(values['late_fees'])
 	payments_history.customer = customer
+	payments_history.receivables = float(receivables)
 	payments_history.payment_date = payment_date.date()
-	payments_history.bonus = float(bonus)
-	payments_history.discount = float(discount)
-	payments_history.rental_payment = float(rental_payment)
 	payments_history.total_charges = float(total_charges)
-	payments_history.late_fees = float(late_fees)
+	
 	for i in payment_ids:
 		if payments_history.payments_ids:
 			payments_history.payments_ids = payments_history.payments_ids + str(i) + ','
 		else:
 			payments_history.payments_ids = '"' + str(i) + ','
+	
 	payments_history.save(ignore_permissions = True)
-	if float(cash) == 0 and float(bank_transfer ) == 0 and float(bank_card) > 0:
+
+	if float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) > 0:
 		pmt = "Credit Card"
-	elif float(cash) > 0 and float(bank_transfer ) == 0 and float(bank_card) == 0:
+	elif float(values['amount_paid_by_customer']) > 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) == 0:
 		pmt = "Cash"
 	else:
 		pmt = "Split"		
 	id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
 	print id_list
+	
 	if len(id_list) == 1:
 		cond ="where payment_id = '{0}' ".format(id_list[0]) 
 	elif len(id_list) > 1:	
 		cond = "where payment_id in {0} ".format(id_list)  
+	
 	frappe.db.sql("""update `tabPayments Record` 
 					set payment_history = '{0}',pmt = '{2}' 
 					{1} """.format(payments_history.name,cond,pmt))

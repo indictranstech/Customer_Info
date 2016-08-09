@@ -5,6 +5,7 @@ cur_frm.add_fetch('customer', 'company_phone_2', 'company_phone_2');
 cur_frm.add_fetch('customer', 'prersonal_code', 'prersonal_code');
 cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
 cur_frm.add_fetch('customer','bonus','bonus')
+cur_frm.add_fetch('customer','bonus','static_bonus')
 cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
 
 var index = 0
@@ -37,6 +38,11 @@ frappe.ui.form.on("Payments Management", {
 			update_payments_record_by_due_date();
 			calculate_total_charges();
 			get_address_of_customer();			
+		}
+	},
+	static_bonus:function(){
+		if(cur_frm.doc.static_bonus){
+			cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
 		}
 	},
 	submit:function(){
@@ -806,7 +812,8 @@ process_payment = Class.extend({
 	       			me.click_on_make_entry(r.message);
 	       		}
 	        	cur_frm.doc.bonus = flt(cur_frm.doc.bonus) - flt(value.bonus)
-	            refresh_field("bonus")
+	        	cur_frm.doc.static_bonus = flt(cur_frm.doc.bonus) - flt(value.bonus)
+	            refresh_field(["bonus","static_bonus"])
 	            console.log(flt(me.add_in_receivables),"me.add_in_receivables")
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
@@ -823,6 +830,7 @@ process_payment = Class.extend({
 	click_on_make_entry:function(payment_ids){
 		var me =this;
 		value = me.dialog.get_values();
+		console.log(JSON.stringify(value),"value value")
 		payments_detalis_list = []
 		payment_ids_list = []
 		$.each(payment_ids, function(i, d) {
@@ -835,20 +843,21 @@ process_payment = Class.extend({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.make_payment_history",
             async:false,
             args: {
-              "cash":value.amount_paid_by_customer,
+              "values":JSON.stringify(value),
+              "customer":cur_frm.doc.customer,
+              "payment_date":cur_frm.doc.payment_date,
+              "receivables":flt(cur_frm.doc.receivables),
+              "total_charges":cur_frm.doc.total_charges,
+              "payment_ids":payments_detalis_list,
+              "payment_ids_list": payment_ids_list
+              /*"cash":value.amount_paid_by_customer,
               "bank_card":value.bank_card,
               "bank_transfer":value.bank_transfer,
               "bonus":value.bonus,
               "discount":value.discount,
-              "balance":value.balance,
-              "payment_date":cur_frm.doc.payment_date,
-              "customer":cur_frm.doc.customer,
-              "receivables":flt(cur_frm.doc.receivables),
-              "rental_payment":value.rental_payment,
-              "late_fees":value.late_fees,
-              "payment_ids":payments_detalis_list,
-              "total_charges":cur_frm.doc.total_charges,
-              "payment_ids_list": payment_ids_list
+              "balance":value.balance,*/
+              //"rental_payment":value.rental_payment,
+              //"late_fees":value.late_fees,
             },
             callback: function(r){
 
@@ -1032,6 +1041,7 @@ Payments_Details = Class.extend({
 	   			console.log(due_date_dateformat,"due_date after slice")
 	   			me.payments_record_list[0][i]['check_box'] = 1
 	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
+	   			me.payments_record_list[0][i]['payment_date'] = cur_frm.doc.payment_date
 	   		}
 	   		else{
 	   			me.payments_record_list[0][i]['pre_select'] = "No"
@@ -1107,6 +1117,7 @@ Payments_Details = Class.extend({
 	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
+	        		me.dialog.hide();
 	        	}
 	        });
 	    }
