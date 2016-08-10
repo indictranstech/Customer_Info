@@ -165,12 +165,12 @@ render_agreements = function(){
 	var buttonFormat_suspension = function (row, cell, value, columnDef, dataContext) {
 		console.log(dataContext['suspenison'],"dataContext")
 		var id = "mybutton" + String(row);
-			if(dataContext['suspenison']){
-				return "<input type='button' value = "+dataContext['suspenison']+" id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		    
-			}
-			else{
-				return "<input type='button' value = 'Call/Commitment' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";		
-			}
+		if(dataContext['suspenison']){
+			return "<input type='button' value = "+dataContext['suspenison']+" id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		    
+		}
+		else{
+			return "<input type='button' value = 'Call/Commitment' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";		
+		}
 	}
 
 
@@ -287,9 +287,9 @@ call_commit = Class.extend({
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
        	this.get_customer_agreement();
-		this.before_select_contact_result()
-		this.select_contact_result()
-		this.click_on_reset()
+		this.before_select_contact_result();
+		this.select_contact_result();
+		this.click_on_reset();
 	},
 	get_customer_agreement:function(){
 		this.agreements = [];
@@ -673,9 +673,18 @@ process_payment = Class.extend({
 	},
 	get_value_of_rental_payment_and_late_fees:function(){
 		var me = this;
+		console.log(me,"me inside get_value_of_rental_payment_and_late_fees")
 		var total_due = 0
 		var late_fees = 0
-		frappe.call({
+		var flt_precision = frappe.defaults.get_default("float_precision")
+		$.each($(".slick-row"),function(i,d){
+			console.log($($(d).children()[0]).text()) 
+			late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
+			total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
+		});
+		me.dialog.set_value("rental_payment",total_due - late_fees)
+       	me.dialog.set_value("late_fees",late_fees)
+		/*frappe.call({
             method: "frappe.client.get_list",
 		   	args: {
 		    	doctype: "Customer Agreement",
@@ -693,7 +702,7 @@ process_payment = Class.extend({
         		me.dialog.set_value("rental_payment",total_due - late_fees)
         		me.dialog.set_value("late_fees",late_fees)
         	}
-	    });	
+	    });*/	
 	},
 	init_for_trigger_of_amount_paid_by_customer:function(){
 		var me = this;
@@ -904,14 +913,15 @@ Payments_Details = Class.extend({
 	render_payment_management:function(){
 		var me = this;
 		var counter = 0
-		$('button[data-fieldname="pay_off_agreement"]').css("display","none");
-		$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
+		$('button[data-fieldname="pay_off_agreement"]').hide();
+		$('button[data-fieldname="s90_day_pay_Off"]').hide();
 		if(this.item['id']){
-			this.common_function_for_render_templates("common_template")	
+			me.template_name = "common_template"
+			this.common_function_for_render_templates()	
 			me.dialog.show();
 		}
 	},
-	common_function_for_render_templates:function(template_name){
+	common_function_for_render_templates:function(){
 		var me = this;
 		frappe.call({
 			method:"customer_info.customer_info.doctype.payments_management.payments_management.get_payments_record",
@@ -922,9 +932,11 @@ Payments_Details = Class.extend({
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback:function(r){
-				if(r.message && template_name == "common_template"){
+				if(r.message && me.template_name == "common_template"){
+					me.rendering_data = r.message
+					me.check_pre_select = "Yes"
 					html = $(frappe.render_template("common_template",{
-            	   				"post":me.check_payment_record_for_pre_select(r.message,"Yes"),
+            	   				"post":me.check_payment_record_for_pre_select(),
             	   				"payment_date":cur_frm.doc.payment_date,
             	   				"summary":r.message['summary_records'],
             	   				"history":r.message['history_record'],
@@ -934,14 +946,13 @@ Payments_Details = Class.extend({
 					me.increase_decrease_total_charges_and_due_payment();
 					me.init_trigger_for_nav_tabs();
 				}
-				else if(r.message && template_name == "payments_management"){
-					$(me.dialog.body).parent().find('.btn-primary').show()
-					$(me.dialog.body).find('#home'+ me.index).remove()
-					$(me.dialog.body).find('#menu'+ me.index).remove()
-					$(me.dialog.body).find('#history'+ me.index).remove()
-					$('#history'+ me.index).hide()
+				else if(r.message && me.template_name == "payments_management"){
+					me.remove_id_of_nav_tab_and_hide_primary_button()
+					$('#history'+ me.index).hide();
+					me.rendering_data = r.message
+					me.check_pre_select = "No"
 					html = $(frappe.render_template("payments_management",{
-        	   				"post":me.check_payment_record_for_pre_select(r.message,"No"),
+        	   				"post":me.check_payment_record_for_pre_select(),
         	   				"payment_date":cur_frm.doc.payment_date,
         	   				"index":me.index
         	   			})).appendTo(me.fd.payments_record.wrapper);
@@ -949,27 +960,21 @@ Payments_Details = Class.extend({
 					me.add_date_on_check();	
 					me.increase_decrease_total_charges_and_due_payment();
 				}
-				else if(r.message && template_name == "summary_record"){
+				else if(r.message && me.template_name == "summary_record"){
 					console.log(r.message['summary_records']['cond'],"summary-li summary-li")
-					$(me.dialog.body).parent().find('.btn-primary').hide()
-					$(me.dialog.body).find('#home'+ me.index).remove()
-					$(me.dialog.body).find('#menu'+ me.index).remove()
-					$(me.dialog.body).find('#history'+ me.index).remove()
+					me.remove_id_of_nav_tab_and_hide_primary_button();
 					$('#history'+ me.index).hide()
 					console.log($(me.dialog.body).find('#history'+ me.index),"sssssssssss")
 			
 					if(r.message['summary_records']['cond'] == 1){
-						$('button[data-fieldname="pay_off_agreement"]').removeAttr("style");
-						/*me.click_on_pay_off_agreement(r.message["summary_records"]);*/
+						$('button[data-fieldname="pay_off_agreement"]').show();
 						me.values = r.message["summary_records"];
 						new payoff_details(me)
-						//me.click_on_pay_off_agreement();
 					}
 					else if(r.message['summary_records']['cond'] == 2){
-						$('button[data-fieldname="s90_day_pay_Off"]').removeAttr("style");
+						$('button[data-fieldname="s90_day_pay_Off"]').show();
 						me.values = r.message["summary_records"];
 						new payoff_details(me)
-						//me.click_on_90_day_pay_Off();
 					}
 					html = $(frappe.render_template("summary_record",{
         	   				"summary":r.message['summary_records'],
@@ -977,11 +982,8 @@ Payments_Details = Class.extend({
         	   			})).appendTo(me.fd.payments_record.wrapper);
 					$(me.dialog.body).find('#menu'+ me.index).removeClass("tab-pane fade");
 				}
-				else if(r.message && template_name == "payment_history"){
-					$(me.dialog.body).parent().find('.btn-primary').hide()
-					$(me.dialog.body).find('#home'+ me.index).remove()
-					$(me.dialog.body).find('#menu'+ me.index).remove()
-					$(me.dialog.body).find('#history'+ me.index).remove()
+				else if(r.message && me.template_name == "payment_history"){
+					me.remove_id_of_nav_tab_and_hide_primary_button();
 					console.log(r.message["history_record"],"history_record history_record")
 					html = $(frappe.render_template("payment_history",{
         	   				"index":me.index,
@@ -992,35 +994,45 @@ Payments_Details = Class.extend({
 			}	
 		});
 	},
+	remove_id_of_nav_tab_and_hide_primary_button:function(){
+		var me = this;
+		$(me.dialog.body).parent().find('.btn-primary').show()
+		$(me.dialog.body).find('#home'+ me.index).remove()
+		$(me.dialog.body).find('#menu'+ me.index).remove()
+		$(me.dialog.body).find('#history'+ me.index).remove()	
+	},
 	init_trigger_for_nav_tabs:function(){
 		var me = this;
 		console.log($(me.dialog.body).find(".summary-li"), $(me.dialog.body).find(".nav-tabs"),"summary onClick")
 		
 		$(me.dialog.body).find(".payment-li").click(function(){
-			$('button[data-fieldname="pay_off_agreement"]').css("display","none");
-			$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
-			me.common_function_for_render_templates("payments_management")
+			$('button[data-fieldname="pay_off_agreement"]').hide();
+			$('button[data-fieldname="s90_day_pay_Off"]').hide();
+			me.template_name = "payments_management"
+			me.common_function_for_render_templates()
 		});
 
 		
 		$(me.dialog.body).find(".summary-li").click(function(){
-			me.common_function_for_render_templates("summary_record")
+			me.template_name = "summary_record"
+			me.common_function_for_render_templates()
 		});
 
 		$(me.dialog.body).find(".history-li").click(function(){
-			$('button[data-fieldname="pay_off_agreement"]').css("display","none");
-			$('button[data-fieldname="s90_day_pay_Off"]').css("display","none");
-			me.common_function_for_render_templates("payment_history")
+			$('button[data-fieldname="pay_off_agreement"]').hide();
+			$('button[data-fieldname="s90_day_pay_Off"]').hide();
+			me.template_name = "payment_history"
+			me.common_function_for_render_templates()
 		});
 	},
-	check_payment_record_for_pre_select:function(payments_records,first_time){
+	check_payment_record_for_pre_select:function(){
 		var me = this;
-
-		if(first_time == "No"){
+		console.log(me,"me insie check_payment_record_for_pre_select")
+		if(me.check_pre_select == "No"){
 			me.payments_record_list = []
 		}
 		
-		$.each(payments_records, function(i, d) {
+		$.each(me.rendering_data, function(i, d) {
 			me.payments_record_list.push(d)
 		});
 
@@ -1062,15 +1074,18 @@ Payments_Details = Class.extend({
 		this.row_to_uncheck = []
 		this.row_to_pre_select_uncheck = []
 		var me = this;
-        $.each($(this.fd.payments_record.wrapper).find('.select:checked[data-from=""]'), function(name, item){
-                me.row_to_update.push($(item).val());
+        
+        /*$.each($(this.fd.payments_record.wrapper).find('.select:checked[data-from=""]'), function(name, item){
+            me.row_to_update.push($(item).val());
         });
         console.log($(this.fd.payments_record.wrapper).find('[pre-select="Yes"]'),"pre-select row")
+        
         $.each($(this.fd.payments_record.wrapper).find('[pre-select="Yes"]'), function(name, item){
             if($(this).is(':not(:checked)')){
                 me.row_to_pre_select_uncheck.push($(item).val());
     		}
         });
+
         $.each($(this.fd.payments_record.wrapper).find('.new-entry'), function(name, item){
     		if($(this).is(':checked')){
     			me.row_to_check.push($(item).val())
@@ -1078,8 +1093,23 @@ Payments_Details = Class.extend({
     		if($(this).is(':not(:checked)')){
     			me.row_to_uncheck.push($(item).val())
     		}
-        });
+        });*/
 
+
+        $.each($(this.fd.payments_record.wrapper).find(".select"), function(name, item){
+        	if($(this).is(':checked') && ($(this).attr("data-from") == "")){	
+        		me.row_to_update.push($(item).val());
+        	}
+        	if($(this).is(':not(:checked)') && ($(this).attr("pre-select") == "Yes")){
+                me.row_to_pre_select_uncheck.push($(item).val());
+    		}
+    		if($(this).hasClass("new-entry") && $(this).is(':checked')){
+                me.row_to_check.push($(item).val());
+    		}
+    		if($(this).hasClass("new-entry") && $(this).is(':not(:checked)')){
+                me.row_to_uncheck.push($(item).val());
+    		}
+        });
         
         console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
         console.log(me.row_to_update,"row_to_update")
