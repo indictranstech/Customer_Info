@@ -219,7 +219,7 @@ def get_next_due_date(date,i):
 
 
 @frappe.whitelist()
-def update_on_submit(values,customer,receivables,payment_date,bonus,total_charges):
+def update_on_submit(values,customer,receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
 
 	values = json.loads(values)
 	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(customer)
@@ -250,7 +250,7 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 	for d in submitted_payments_ids:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list)	
+	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,late_fees)	
 
 
 def set_values_in_agreement_on_submit(customer_agreement):
@@ -295,7 +295,7 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 			}) 	
 		customer_doc.save(ignore_permissions=True)	
 
-def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payments_ids_list):
+def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,late_fees):
 	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(values['amount_paid_by_customer'])
@@ -304,8 +304,8 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 	payments_history.balance = float(values['balance'])
 	payments_history.bonus = float(values['bonus'])
 	payments_history.discount = float(values['discount'])
-	payments_history.rental_payment = float(values['rental_payment'])
-	payments_history.late_fees = float(values['late_fees'])
+	payments_history.rental_payment = rental_payment
+	payments_history.late_fees = late_fees
 	payments_history.customer = customer
 	payments_history.receivables = float(receivables)
 	payments_history.payment_date = payment_date.date()
