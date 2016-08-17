@@ -569,6 +569,27 @@ def get_payments_management(source_name, target_doc=None):
 	return target_doc
 
 
+@frappe.whitelist()
+def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,receivables):
+	print amount_paid_by_customer,"\n\n\n\n"
+	agreements = json.loads(agreements)
+
+	id_list = tuple([x.encode('UTF8') for x in list(agreements) if x])
+	
+	if len(id_list) == 1:
+		cond ="where parent = '{0}' ".format(id_list[0]) 
+	elif len(id_list) > 1:	
+		cond = "where parent in {0} ".format(id_list)  
+	
+	record = frappe.db.sql("""select monthly_rental_amount from `tabPayments Record`
+							{0} and payment_date = '{1}' and check_box = 1 and check_box_of_submit = 0
+							order by due_date""".format(cond,payment_date),as_list=1)
+	add = sum([e[0] for e in record][0:-1]) + [e[0] for e in record][-1]/2
+	total = float(add) - float(receivables)
+	return total
+	# if float(amount_paid_by_customer) >= float(total):
+	# 	return float(total)
+		
 
 # call from payment received report 
 @frappe.whitelist()

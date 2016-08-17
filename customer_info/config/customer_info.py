@@ -42,6 +42,14 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
+					"name": "late payment on daily basis",
+					"label": _("Late Payments On Daily Basis"),
+					"description": _("Record of late Payment"),
+					"doctype": "Customer Agreement",
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
 					"name": "late and future payments",
 					"label": _("Late And Future Payments"),
 					"description": _("Record of late and future Payment"),
