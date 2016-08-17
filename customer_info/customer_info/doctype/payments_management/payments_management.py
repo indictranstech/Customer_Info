@@ -24,18 +24,21 @@ def calculate_total_charges(customer,flag):
 						add_bonus_to_this_payment = 0	 
 						where check_box_of_submit = 0 
 						and parent in (select name from `tabCustomer Agreement`
-						where customer = '{0}' and agreement_status = "Open") """.format(customer),debug=1)
+						where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
 		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,late_fees = 0 
 						where customer = '{0}' 
-						and agreement_status = "Open" """.format(customer),debug=1)
+						and agreement_status = "Open" """.format(customer))
 	
 	now_date = datetime.now().date()
 	firstDay_this_month = date(now_date.year, now_date.month, 1)
 	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
 	due_payment_list = []
 
-	customer_agreement = agreement_by_customer_and_status(customer)
+	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+									where customer = '{0}' 
+									and agreement_status = 'Open'""".format(customer),as_list=1)
+
 	receivables = frappe.db.get_value("Customer",{"name":customer},"receivables")
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 	for agreement in [e[0] for e in customer_agreement]:
@@ -251,7 +254,7 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,late_fees)	
-
+	return "Payment Complete"
 
 def set_values_in_agreement_on_submit(customer_agreement):
 	payment_made = []
@@ -505,19 +508,15 @@ def update_call_commitment_data_in_agreement(customer_agreement,date,contact_res
 	# 			})
 	# 		customer_agreement.save(ignore_permissions = True)			
 	 
-	
-def agreement_by_customer_and_status(customer):
-	return frappe.db.sql("""select name from `tabCustomer Agreement`
-									where customer = '{0}' 
-									and agreement_status = 'Open'""".format(customer),as_list=1)
 
 @frappe.whitelist()
-def set_or_reset_call_commitment(customer,agreement_name):
+def set_or_reset_call_commitment(customer,agreement_name,agreements):
+	print agreements,"\n\n\n\n\n\n\n"
 	now_date = datetime.now().date()
+	agreements = json.loads(agreements)
 	#if customer and not agreement_name:	
 	if customer and agreement_name == "Common":	
-		agreement = agreement_by_customer_and_status(customer)
-		for i in [i[0] for i in agreement]:
+		for i in agreements:
 			agreement_doc = frappe.get_doc("Customer Agreement",i)
 			agreement_doc.update({
 				"suspension_date":now_date,

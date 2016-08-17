@@ -29,7 +29,7 @@ def get_data():
 												where agreement_status = "Open") 
 								and DATEDIFF('{0}',t1.due_date) >= 0
 								and t1.check_box_of_submit != 1
-								order by t1.due_date""" .format(now_date),as_list=1,debug=1)
+								order by t1.due_date""" .format(now_date),as_list=1)
 	for l in result:
 		if float(l[8]):
 			l[9] = l[8] + l[3]
