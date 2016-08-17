@@ -25,7 +25,6 @@ frappe.ui.form.on("Payments Management", {
   			</tr>\
 		</table>");
 		if(cur_frm.doc.customer){
-			//update_payments_record_by_due_date();
 			calculate_total_charges("Onload");
 			get_address_of_customer()
 			render_agreements();
@@ -36,8 +35,6 @@ frappe.ui.form.on("Payments Management", {
 			calculate_total_charges("Customer");
 			get_address_of_customer();			
 			render_agreements();
-			//remove_all_not_submitted();
-			//update_payments_record_by_due_date();
 		}
 	},
 	static_bonus:function(){
@@ -49,7 +46,6 @@ frappe.ui.form.on("Payments Management", {
 		if(cur_frm.doc.customer){
 			var me = "Process Payments";
 			new payoff_details(me)
-			//new process_payment()
 		}
 		else{
 			msgprint("Select Customer First")
@@ -87,7 +83,6 @@ frappe.ui.form.on("Payments Management", {
 
 
 get_address_of_customer = function(){
-	console.log("in get_address_of_customer")
 	cur_frm.set_value("full_address","")
 	frappe.call({
         method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_primary_address",
@@ -95,7 +90,6 @@ get_address_of_customer = function(){
             "customer": cur_frm.doc.customer,
         },
      	callback: function(r){
-            console.log(r.message)
             if(r.message[0]['address_line1'] && !r.message[0]['address_line2']){
             	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
      			refresh_field('full_address')
@@ -108,33 +102,6 @@ get_address_of_customer = function(){
     });
 }
 
-/*update_payments_record_by_due_date = function(frm){
-	frappe.call({
-		async:false,
-        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_record_by_due_date",
-        args: {
-          "customer": cur_frm.doc.customer
-        },
-        callback: function(r){
-    		
-    	}
-    });
-}
-
-remove_all_not_submitted =function(frm){
-	frappe.call({
-		async:false,
-        method: "customer_info.customer_info.doctype.payments_management.payments_management.remove_all_not_submitted",
-        args: {
-          "customer": cur_frm.doc.customer
-        },
-        callback: function(r){
-    		
-    	}
-    });	
-}*/
-
-
 calculate_total_charges = function(flag){
 	frappe.call({
 			async:false,
@@ -145,7 +112,6 @@ calculate_total_charges = function(flag){
             },
             callback: function(r){
             if(r.message){
-              	console.log(r.message)
               	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
            		cur_frm.doc.receivables = r.message['receivables'] > 0 ? r.message['receivables']:"0";
            		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables']);
@@ -171,7 +137,6 @@ render_agreements = function(){
 	}
 
 	var buttonFormat_suspension = function (row, cell, value, columnDef, dataContext) {
-		console.log(dataContext['suspenison'],"dataContext")
 		var id = "mybutton" + String(row);
 		if(dataContext['suspenison']){
 			return "<input type='button' value = "+dataContext['suspenison']+" id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		    
@@ -214,7 +179,6 @@ render_agreements = function(){
             },
             callback: function(r){
               if(r.message){
-              	console.log(r.message,"customer_agreementss")
                 this.data = r.message;
                 make_grid(r.message,columns,options)
             }
@@ -254,14 +218,11 @@ make_grid= function(data1,columns,options){
 	grid = new Slick.Grid("#payments_grid", dataView, columns, options);
 	grid.onClick.subscribe(function (e, args) {
         var item = dataView.getItem(args.row);
-        console.log(dataView,"dataView")
         if($(e.target).hasClass("detail")) {
             index = parseInt(index) + 1;
-            console.log(index, "in clcikc_____________")
         	new Payments_Details(item, index)
         }
         if($(e.target).hasClass("suspenison")) {
-        	console.log("in mybutton",$(e.target).attr('id'))
         	var id = $(e.target).attr('id')
         	//new manage_suspenison(id,item)
         	new call_commit(id,item)
@@ -319,9 +280,7 @@ call_commit = Class.extend({
 			},
 			callback: function(r){
 				if(r && r.message){
-					console.log(r.message,"result result")
 					if(me.item == "Common"){
-						console.log("inside result result")
 						for(i=0;i<r.message.length;i++){
 							me.agreements.push({"name":r.message[i]['name'],
 												"call_commitment":r.message[i]['call_commitment']})
@@ -345,14 +304,12 @@ call_commit = Class.extend({
 					}
 					else{
 						if(r && r.message[0]['contact_result'] == "WBI"){
-							console.log(r.message,"contact_result contact_result")
 							me.contact_result = r.message[0]['contact_result']
 							me.suspension_date = r.message[0]['suspension_date']
 							me.amount_of_contact_result = r.message[0]['amount_of_contact_result']
 							me.set_values()
 						}
 						else if(r && r.message[0]['contact_result'] == "Sent SMS/Email"){
-							console.log(r.message,"contact_result contact_result")
 							me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
 						}
 					}
@@ -431,7 +388,6 @@ call_commit = Class.extend({
 	},
 	update_call_commitment_data_in_agreement:function(){
 		var me  = this;
-		console.log(me,"me in side of update_call_commitment_data_in_agreement")
 		frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
             args: {
@@ -454,11 +410,8 @@ Payments_Details = Class.extend({
 		this.item = item;
 		this.index = index;
 		this.init_for_render_dialog();
-		console.log(this.index, "in clcikc87687678678687_____________")       
 	},
 	init_for_render_dialog:function(){
-		console.log(this.item)
-		console.log(this,"in init_for_render_dialog")
 		var me = this;
 		this.dialog = new frappe.ui.Dialog({
             title: "Payments And Summary Detalis",
@@ -469,7 +422,6 @@ Payments_Details = Class.extend({
                    	],
                    	primary_action_label: "Add",
                    	primary_action: function(){
-                   		console.log(this,me,"in primary_action")
                         me.make_list_of_payments_checked()
                     }
        	});
@@ -535,11 +487,9 @@ Payments_Details = Class.extend({
 					me.increase_decrease_total_charges_and_due_payment();
 				}
 				else if(r.message && me.template_name == "summary_record"){
-					console.log(r.message['summary_records']['cond'],"summary-li summary-li")
 					me.remove_id_of_nav_tab_and_hide_primary_button();
 					$('#history'+ me.index).hide();
 					$(me.dialog.body).parent().find('.btn-primary').hide();
-					console.log($(me.dialog.body).find('#history'+ me.index),"sssssssssss")
 			
 					if(r.message['summary_records']['cond'] == 1){
 						$('button[data-fieldname="pay_off_agreement"]').show();
@@ -559,7 +509,6 @@ Payments_Details = Class.extend({
 				}
 				else if(r.message && me.template_name == "payment_history"){
 					me.remove_id_of_nav_tab_and_hide_primary_button();
-					console.log(r.message["history_record"],"history_record history_record")
 					html = $(frappe.render_template("payment_history",{
         	   				"index":me.index,
         	   				"history":r.message['history_record']
@@ -578,22 +527,17 @@ Payments_Details = Class.extend({
 		$(me.dialog.body).find('#history'+ me.index).remove()	
 	},
 	init_trigger_for_nav_tabs:function(){
-		var me = this;
-		console.log($(me.dialog.body).find(".summary-li"), $(me.dialog.body).find(".nav-tabs"),"summary onClick")
-		
+		var me = this;		
 		$(me.dialog.body).find(".payment-li").click(function(){
 			$('button[data-fieldname="pay_off_agreement"]').hide();
 			$('button[data-fieldname="s90_day_pay_Off"]').hide();
 			me.template_name = "payments_management"
 			me.common_function_for_render_templates()
-		});
-
-		
+		});		
 		$(me.dialog.body).find(".summary-li").click(function(){
 			me.template_name = "summary_record"
 			me.common_function_for_render_templates()
 		});
-
 		$(me.dialog.body).find(".history-li").click(function(){
 			$('button[data-fieldname="pay_off_agreement"]').hide();
 			$('button[data-fieldname="s90_day_pay_Off"]').hide();
@@ -603,15 +547,12 @@ Payments_Details = Class.extend({
 	},
 	check_payment_record_for_pre_select:function(){
 		var me = this;
-		console.log(me,"me insie check_payment_record_for_pre_select")
 		if(me.check_pre_select == "No"){
 			me.payments_record_list = []
 		}
-		
 		$.each(me.rendering_data, function(i, d) {
 			me.payments_record_list.push(d)
 		});
-
    		var date = new Date();
 		var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
 		var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -625,8 +566,6 @@ Payments_Details = Class.extend({
 	   		due_date_dateformat.setSeconds(00)
 	   		due_date_dateformat.setMinutes(00)
 	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= lastDay && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
-	   			console.log("in if first")
-	   			console.log(due_date_dateformat,"due_date after slice")
 	   			me.payments_record_list[0][i]['check_box'] = 1
 	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
 	   			me.payments_record_list[0][i]['payment_date'] = cur_frm.doc.payment_date
@@ -641,7 +580,6 @@ Payments_Details = Class.extend({
 	   			me.payments_record_list[0][i]['paid'] = "No"		
 	   		}
 	   	}
-	   	console.log(me.payments_record_list,"return by check_payment_record_for_pre_select")
 	   	return me.payments_record_list
 	},
 	make_list_of_payments_checked:function(){
@@ -666,11 +604,11 @@ Payments_Details = Class.extend({
     		}
         });
         
-        console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
-        console.log(me.row_to_update,"row_to_update")
-        console.log(me.row_to_uncheck,"row_to_uncheck")
-        console.log(me.row_to_check,"row_to_check")
-	    console.log(cur_frm.doc.bonus,"bonus")
+        //console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
+        //console.log(me.row_to_update,"row_to_update")
+        //console.log(me.row_to_uncheck,"row_to_uncheck")
+        //console.log(me.row_to_check,"row_to_check")
+	    //console.log(cur_frm.doc.bonus,"bonus")
 
 		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
 			var me = this
@@ -698,7 +636,6 @@ Payments_Details = Class.extend({
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){
-	           		console.log(r.message,"message of bonus")
 	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
@@ -720,7 +657,6 @@ Payments_Details = Class.extend({
 	},
 	increase_decrease_total_charges_and_due_payment:function(){
 		var me = this;
-		console.log(me.payments_record_list,"me in side increase_decrease_total_charges_and_due_payment")
 	    var factor = me.payments_record_list[0][1].monthly_rental_amount;		
 		$(me.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
 		$(me.fd.payments_record.wrapper).find('div.total_charges').append(flt((cur_frm.doc.total_charges)).toFixed(2))
@@ -770,8 +706,6 @@ Payments_Details = Class.extend({
 		var me = this;
 		var factor = me.payments_record_list[0][1].monthly_rental_amount;
 		var payments_cheked = me.row_to_check.length + me.row_to_update.length
-		console.log(me,"me me me")
-		console.log(me.row_to_check.length + me.row_to_update.length,"length")
 		cur_frm.set_value("total_charges",parseFloat($(cur_dialog.body).find('div.total_charges').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.total_charges').text()))
 		cur_frm.set_value("amount_of_due_payments",parseFloat($(cur_dialog.body).find('div.due_payments').text()) == 0 ? "0":parseFloat($(cur_dialog.body).find('div.due_payments').text()))
 	}
@@ -795,7 +729,6 @@ payoff_details = Class.extend({
 	},
 	click_on_pay_off_agreement:function(){
 		var me = this;
-		console.log(me,"inside click_on_pay_off_agreement")
 		me.old_instance.dialog.fields_dict.pay_off_agreement.$input.click(function() {
 			me.old_dialog = me.old_instance.dialog;
 			me.show_dialog();
@@ -803,7 +736,6 @@ payoff_details = Class.extend({
 	},
 	click_on_90_day_pay_Off: function(){
 		var me = this;
-		console.log("in s90_day_pay_Off")
 		me.old_instance.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
 			me.old_dialog = me.old_instance.dialog;
 			me.show_dialog();
@@ -831,7 +763,6 @@ payoff_details = Class.extend({
 	            	],
 	               	primary_action_label: "OK",
 	               	primary_action: function(){
-	               		console.log(this,me,"in primary_action")
 	                    me.dialog.hide()
 	                }
 	   	});
@@ -840,7 +771,6 @@ payoff_details = Class.extend({
 	},
 	set_value_of_balance:function(){
 		var me = this;
-		console.log(me,"me me")
 		me.hide_button();
 		$(me.dialog.body).parent().find('.btn-primary').hide()
 	    if(me.old_instance != "Process Payments"){
@@ -880,17 +810,19 @@ payoff_details = Class.extend({
 	},
 	get_value_of_rental_payment_and_late_fees:function(){
 		var me = this;
-		console.log(me,"me inside get_value_of_rental_payment_and_late_fees")
 		var total_due = 0;
 		var late_fees = 0;
 		var flt_precision = frappe.defaults.get_default("float_precision")
+		var agreements = []
 		$.each($(".slick-row"),function(i,d){
-			console.log($($(d).children()[0]).text()) 
 			late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
 			total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
+			agreements.push($($(d).children()[0]).text())
 		});
+
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
+		this.agreements = agreements;
 	},
 	setFocusToTextBox:function(){
 	    $("input[data-fieldname='amount_paid_by_customer']").focus();
@@ -922,7 +854,7 @@ payoff_details = Class.extend({
 	},
 	init_for_commom_calculation:function(){
 		var me = this;
-		console.log(me,"me inside init_for_commom_calculation")
+		me.hide_button();
 		if(me.old_instance != "Process Payments"){
 			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																				  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
@@ -936,7 +868,6 @@ payoff_details = Class.extend({
 																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
 																			  + flt(cur_dialog.fields_dict.discount.$input.val())
 		}
-		console.log(val_of_balance,"val_of_balance")
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.dialog.fields_dict.msg.$wrapper.empty()
 		$(me.dialog.body).find("[data-fieldname ='process_payment']").show();
@@ -949,9 +880,7 @@ payoff_details = Class.extend({
 	click_on_process_payment:function(){
 		var me = this;
 		me.dialog.fields_dict.process_payment.$input.click(function() {
-			console.log(me,"me onClick of process_payment")
 			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) > 0 ){
-       			console.log("in if")
        			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
        			html = "<div class='row'>There Is "+me.dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.dialog.fields_dict.msg.$wrapper.empty()
@@ -962,13 +891,46 @@ payoff_details = Class.extend({
 			    me.click_on_add_in_receivables();
 			    me.click_on_return_to_customer();
        		}
-       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) <= 0 ){
-       			html = "<div class='row' style='margin-left: -88px;color: red;'>Error Message Balance Is Negative</div>"
-       			me.dialog.fields_dict.msg.$wrapper.empty()
-       			me.dialog.fields_dict.msg.$wrapper.append(html)
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) <= 0){
+       			me.calculate_underpayment();
        		}
 
 		});
+	},
+	calculate_underpayment:function(){
+		var me = this;
+		value = me.dialog.get_values();
+		console.log(value.amount_paid_by_customer,"values")
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_underpayment",
+	       	args: {
+	       		"agreements":me.agreements,
+	        	"payment_date":cur_frm.doc.payment_date,
+	        	"amount_paid_by_customer":value.amount_paid_by_customer,
+	        	"receivables":cur_frm.doc.receivables
+	        },
+	       	callback: function(r){
+	       		var flt_precision = frappe.defaults.get_default("float_precision")
+				r.message = Number((flt(r.message)).toFixed(flt_precision))
+	       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && parseFloat(me.dialog.fields_dict.amount_paid_by_customer.$input.val()) >= parseFloat(r.message)){
+		       		$('button[data-fieldname="process_payment"]').hide();
+				    $('button[data-fieldname="return_to_customer"]').hide();
+					$('button[data-fieldname="add_in_receivables"]').show();
+					html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+r.message+" add in receivables</div>"
+				    me.dialog.fields_dict.msg.$wrapper.empty()
+				    me.dialog.fields_dict.msg.$wrapper.append(html)
+				    me.click_on_add_in_receivables();
+				    me.click_on_return_to_customer();
+				}	    
+		       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && parseFloat(me.dialog.fields_dict.amount_paid_by_customer.$input.val()) < parseFloat(r.message)){
+		       		html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative Cash should be >= "+" "+r.message+"</div>"
+	       			$('button[data-fieldname="add_in_receivables"]').hide();
+				    $('button[data-fieldname="return_to_customer"]').hide();
+	       			me.dialog.fields_dict.msg.$wrapper.empty()
+	       			me.dialog.fields_dict.msg.$wrapper.append(html)
+		       	}	
+	    	}
+	    });
 	},
 	click_on_add_in_receivables:function(){
 		var me = this;
@@ -995,10 +957,8 @@ payoff_details = Class.extend({
 	},
 	click_on_submit:function(){
 		var me = this;
-		console.log(me,"me inside click_on_submit 123")
 		me.dialog.fields_dict.submit_payment.$input.click(function(){
 			if(me.old_instance == "Process Payments"){
-				console.log("in mycond")
 				me.update_payments_records();
 			}
 			else{
@@ -1018,7 +978,6 @@ payoff_details = Class.extend({
 	        	"receivables":me.add_in_receivables
 	        },
 	       	callback: function(r){
-	       		console.log(r.message)
 	       		me.dialog.hide();
 				me.old_dialog.hide();
 				calculate_total_charges("Payoff");
@@ -1027,6 +986,7 @@ payoff_details = Class.extend({
 	    });	
 	},
 	update_payments_records:function(){
+		console.log("in update_payments_records")
 		var me = this;
 		value = me.dialog.get_values();
 		frappe.call({
@@ -1043,10 +1003,8 @@ payoff_details = Class.extend({
               	"total_charges":cur_frm.doc.total_charges,
 	        },
 	       	callback: function(r){
-	       		console.log(r.message,"my result")
        			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
 	       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
-	            console.log(flt(me.add_in_receivables),"me.add_in_receivables")
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
 	            }
