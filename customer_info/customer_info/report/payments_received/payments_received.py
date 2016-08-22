@@ -20,7 +20,7 @@ def get_totals(filters):
 							sum(rental_payment+late_fees+receivables),
 							sum(bank_transfer),sum(cash),sum(bank_card),
 							sum(balance),sum(discount),sum(bonus) from `tabPayments History`
-							{0}""".format(get_conditions(filters)),as_list=1,debug=1)[0]
+							{0}""".format(get_conditions(filters)),as_list=1)[0]
 	else:
 		return frappe.db.sql("""select sum(rental_payment),sum(late_fees),sum(receivables),
 							sum(rental_payment+late_fees+receivables),

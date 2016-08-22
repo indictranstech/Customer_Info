@@ -45,6 +45,7 @@ payments_received = Class.extend({
 			                <th width='5%'>Discount</th>\
 			                <th width='5%'>Bonus</th>\
 			                <th width='5%'>Refund</th>\
+			                <th width='2%'></th>\
 			            </tr>\
 			        </thead></table>"
 		me.page.html(html)
