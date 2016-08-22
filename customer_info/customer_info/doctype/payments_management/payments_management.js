@@ -280,6 +280,7 @@ call_commit = Class.extend({
 			},
 			callback: function(r){
 				if(r && r.message){
+					console.log("r.message",r.message)
 					if(me.item == "Common"){
 						for(i=0;i<r.message.length;i++){
 							me.agreements.push({"name":r.message[i]['name'],
@@ -396,10 +397,11 @@ call_commit = Class.extend({
 	},
 	update_call_commitment_data_in_agreement:function(){
 		var me  = this;
+		console.log(me.agreements_name,"agreements")
 		frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
             args: {
-              "customer_agreement": me.item == "Common" ? me.agreements:me.item['id'],
+              "customer_agreement": me.item == "Common" ? me.agreements_name:me.item['id'],
               "date": me.date ? me.date :"",
               "contact_result": me.fd.contact_result.$input.val(),
               "amount":flt(me.fd.amount.$input.val()) > 0 ?  me.fd.amount.$input.val():0,
@@ -902,10 +904,16 @@ payoff_details = Class.extend({
 			    me.click_on_add_in_receivables();
 			    me.click_on_return_to_customer();
        		}
-       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) <= 0){
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments"){
        			me.calculate_underpayment();
        		}
-
+       		else if (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0){
+       			html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative</div>"
+       			$('button[data-fieldname="add_in_receivables"]').hide();
+			    $('button[data-fieldname="return_to_customer"]').hide();
+       			me.dialog.fields_dict.msg.$wrapper.empty()
+       			me.dialog.fields_dict.msg.$wrapper.append(html)
+       		}
 		});
 	},
 	calculate_underpayment:function(){
@@ -1009,7 +1017,7 @@ payoff_details = Class.extend({
 	        	"receivables":me.add_in_receivables,
 	        	"values":JSON.stringify(value),
 	        	"payment_date":cur_frm.doc.payment_date,
-              	"total_charges":cur_frm.doc.total_charges,
+	        	"total_charges":cur_frm.doc.total_charges,
               	"data":data
 	        },
 	       	callback: function(r){

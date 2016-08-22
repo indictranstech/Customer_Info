@@ -401,11 +401,14 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	values = json.loads(values)
 	data = json.loads(data)
 
+	_total_charges = 0
 	payments_detalis_list = []
 	payment_ids_list = []
 	for d in data['submitted_payments_ids']:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
+		_total_charges += d["monthly_rental_amount"]
+	total_charges = float(total_charges) + float(_total_charges)
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,data['rental_payment'],data['late_fees'],"Payoff Payment")	
 	
 
@@ -494,7 +497,9 @@ def update_call_commitment_data_in_agreement(customer_agreement,date,contact_res
 			customer_agreement.save(ignore_permissions = True)
 
 		if all_or_individual == "All":
+			print "\n\n\n\n","inside all"
 			agreements = json.loads(customer_agreement)
+			print "\n\n\n\n",agreements
 			if not date:
 				date = ""
 				amount = 0
