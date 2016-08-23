@@ -11,13 +11,14 @@ max-height: 400px;
             {% for(var i=0, l=data.length; i < l; i++) { %}
             <tr id= {{ data[i]["refund"] }} data-toggle="collapse" data-parent="#accordion" href={{"#accordion" + parseInt(i+1) }}>
                 <td width="10%">{{data[i]["payment_date"]}}</td>
-                <td width="7%">{{data[i]["customer"]}}</td>
-                <td width="9%" align="center">{{data[i]["rental_payment"]}}</td>
-                <td width="7%" align="center">{{data[i]["late_fees"]}}</td>
-                <td width="7%" align="center">{{data[i]["receivables"]}}</td>
-                <td width="13%" align="center">{{data[i]["total_payment_received"]}}</td>
-                <td width="12%" align="left">{{data[i]["bank_transfer"]}}</td>
-                <td width="6%" align="left">{{data[i]["cash"]}}</td>
+                <td width="6%">{{data[i]["customer"]}}</td>
+                <td width="8%">{{ data[i]["payoff_cond"] }}</td>
+                <td width="7%" align="center">{{data[i]["rental_payment"]}}</td>
+                <td width="6%" align="center">{{data[i]["late_fees"]}}</td>
+                <td width="6%" align="center">{{data[i]["receivables"]}}</td>
+                <td width="12%" align="center">{{data[i]["total_payment_received"]}}</td>
+                <td width="10%" align="center">{{data[i]["bank_transfer"]}}</td>
+                <td width="6%" align="center">{{data[i]["cash"]}}</td>
                 <td width="7%" align="center">{{data[i]["bank_card"]}}</td>
                 <td width="6%" align="center">{{data[i]["balance"]}}</td>
                 <td width="5%" align="center">{{data[i]["discount"]}}</td>
