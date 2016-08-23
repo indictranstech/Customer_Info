@@ -147,6 +147,9 @@ frappe.ui.form.on("Customer Agreement",{
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
             refresh_field("agreement_no")
+            cur_frm.add_custom_button(__('Payments Management'),function(){
+                go_to_payments_management();
+            });
         }
         if(cur_frm.doc.duplicate_today_plus_90_days && !cur_frm.doc.__islocal){
             console.log("in if cond")
@@ -225,4 +228,12 @@ get_update_due_date = function(due_date_of_next_month,i){
     var CurrentDate = new Date(due_date_of_next_month);
     console.log(((new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i))) instanceof Date),"dates")
     return new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i));
+}
+
+
+go_to_payments_management = function(frm){
+    frappe.model.open_mapped_doc({
+        method: "customer_info.customer_info.doctype.payments_management.payments_management._get_payments_management",
+        frm: cur_frm
+    })
 }
