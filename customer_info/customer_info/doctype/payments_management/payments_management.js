@@ -904,6 +904,14 @@ payoff_details = Class.extend({
 			    me.click_on_add_in_receivables();
 			    me.click_on_return_to_customer();
        		}
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) == 0 ){
+       			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
+       			me.dialog.fields_dict.msg.$wrapper.empty()
+       			$('button[data-fieldname="process_payment"]').hide();
+       			me.hide_other_and_show_complete_payment();
+       			me.add_in_receivables = 0
+				me.click_on_submit();
+       		}
        		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments"){
        			me.calculate_underpayment();
        		}
@@ -1057,6 +1065,7 @@ payoff_details = Class.extend({
 	        	render_agreements();
 	        	calculate_total_charges("Process Payment");
 	    		me.dialog.hide();
+	    		msgprint("Agreement paid off successfully")
 	    	}
 	    })
 	}

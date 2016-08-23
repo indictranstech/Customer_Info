@@ -33,12 +33,13 @@ payments_received = Class.extend({
 			     	<thead>\
 			            <tr>\
 			                <th width='10%'>Payment Date</th>\
-			                <th width='7%'>Customer</th>\
-			                <th width='9%'>Rental Payment</th>\
-			                <th width='7%'>Late Fees</th>\
-			                <th width='7%'>Receivables</th>\
-			                <th width='13%'>Total Rental Received</th>\
-			                <th width='12%'>Bank Transfer</th>\
+			                <th width='6%'>Customer</th>\
+			                <th width='8%'>90d SAC or Early buy</th>\
+			                <th width='7%'>Rental Payment</th>\
+			                <th width='6%'>Late Fees</th>\
+			                <th width='6%'>Receivables</th>\
+			                <th width='12%'>Total Rental Received</th>\
+			                <th width='10%'>Bank Transfer</th>\
 			                <th width='6%'>Cash</th>\
 			                <th width='7%'>Bank Card</th>\
 			                <th width='6%'>Balance</th>\
