@@ -18,7 +18,7 @@ def get_data(filters):
 		now_date = datetime.now().date()
 		result = frappe.db.sql("""select t1.due_date, DATEDIFF('{0}',t1.due_date) as difference,
 									t1.payment_id,t1.monthly_rental_amount,t2.concade_product_name_and_category,
-									concat(t3.first_name," ",t3.last_name) as customer,
+									t2.customer AS customer,
 									t3.company_phone_1,t3.bonus,
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{0}',t1.due_date) > 3 
 									THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
@@ -35,18 +35,25 @@ def get_data(filters):
 													where agreement_status = "Open") 
 									and DATEDIFF('{0}',t1.due_date) >= 0
 									and t1.check_box_of_submit != 1
-									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
+									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1,debug=1)
 		for l in result:
 			if float(l[8]):
-				l[9] = l[8] + l[3]
+				total_due = l[8] + l[3]
+				l[9] = "{0:.2f}".format(total_due)
+			else:
+				total_due = 0.00
+				l[9] = "{0:.2f}".format(total_due)
+			l[8] = "{0:.2f}".format(float(l[8]))
+			l[3] = "{0:.2f}".format(float(l[3]))
+			l[7] = "{0:.2f}".format(float(l[7]))
 
 		return result
 
 def get_colums():
 	columns = [("Due Date") + ":Date:80"] + [("Late Days") + ":Int:70"] + \
 			  [("Payment Id") + ":Data:150"] + \
-			  [("Rental Payment") + ":Float:100"] + [("Product") + ":Data:200"] + \
+			  [("Rental Payment") + ":Data:100"] + [("Product") + ":Data:200"] + \
 			  [("Customer") + ":Data:80"] + [("Phone") + ":Data:80"] + \
-			  [("Bonus") + ":Float:90"] + [("Late Fees") + ":Float:80"] + \
-			  [("Total Due") + ":Float:90"] + [("Contact Result") + ":Data:140"] + [("Email") + ":Data:140"]	
+			  [("Bonus") + ":Data:90"] + [("Late Fees") + ":Data:80"] + \
+			  [("Total Due") + ":Data:90"] + [("Contact Result") + ":Data:140"] + [("Email") + ":Data:140"]	
 	return columns

@@ -147,9 +147,11 @@ frappe.ui.form.on("Customer Agreement",{
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
             refresh_field("agreement_no")
-            cur_frm.add_custom_button(__('Payments Management'),function(){
-                go_to_payments_management();
-            });
+            if(cur_frm.doc.agreement_status == "Open"){
+                cur_frm.add_custom_button(__('Payments Management'),function(){
+                    go_to_payments_management();
+                });
+            }    
         }
         if(cur_frm.doc.duplicate_today_plus_90_days && !cur_frm.doc.__islocal){
             console.log("in if cond")

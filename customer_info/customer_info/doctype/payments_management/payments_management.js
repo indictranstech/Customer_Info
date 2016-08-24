@@ -460,8 +460,8 @@ Payments_Details = Class.extend({
                         me.make_list_of_payments_checked()
                     }
        	});
-       	this.dialog.$wrapper.find('.modal-dialog').css("width", "800px");
-       	this.dialog.$wrapper.find('.modal-dialog').css("height", "800px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "1000px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "1000px");
        	this.payments_record_list = []
        	this.fd = this.dialog.fields_dict;
        	this.initial_amount = cur_frm.doc.remaining_amount;
@@ -1058,6 +1058,7 @@ payoff_details = Class.extend({
 				me.old_dialog.hide();
 				calculate_total_charges("Payoff");
 	    		render_agreements();
+	    		msgprint("Agreement paid off successfully")
 	    	}
 	    });
 	},
@@ -1090,7 +1091,6 @@ payoff_details = Class.extend({
 	        	render_agreements();
 	        	calculate_total_charges("Process Payment");
 	    		me.dialog.hide();
-	    		msgprint("Agreement paid off successfully")
 	    	}
 	    })
 	}

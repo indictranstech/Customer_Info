@@ -392,7 +392,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
-	
+	merchandise_status = agreement.merchandise_status
 	if int(condition) == 2 and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
@@ -425,7 +425,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payment_ids_list.append(d["payment_id"])
 		_total_charges += d["monthly_rental_amount"]
 	total_charges = float(total_charges) + float(_total_charges)
-	merchandise_status = agreement.merchandise_status
+	
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,data['rental_payment'],data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
@@ -694,9 +694,8 @@ def make_refund_payment(payments_ids,ph_name):
 
 	merchandise_status = payment_history.merchandise_status
 	if len(merchandise_status.split(",")) > 1:
-		merchandise_status_list = merchandise_status.split(",")[0:-1]
-		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status_list if x]	
-	merchandise_status_list.sort()
+		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
+		merchandise_status_list.sort()
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
