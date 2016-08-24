@@ -133,7 +133,7 @@ render_agreements = function(){
 	var grid;
 
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
-		return "<input type='button' value='Detail' class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
+		return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
 	}
 
 	var buttonFormat_suspension = function (row, cell, value, columnDef, dataContext) {
@@ -181,6 +181,14 @@ render_agreements = function(){
               if(r.message){
                 this.data = r.message;
                 make_grid(r.message,columns,options)
+            	if(cur_frm.doc.customer_agreement){
+            		$.each($(".slick-row"),function(i,d){
+						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
+						if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
+							$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").trigger('click')
+						}
+					});
+            	}
             }
         }
     });
@@ -228,6 +236,7 @@ make_grid= function(data1,columns,options){
         	new call_commit(id,item)
         }
     });
+
 }
 
 call_commit = Class.extend({
@@ -300,7 +309,9 @@ call_commit = Class.extend({
 							me.set_values();
 						}
 						else if(me.values_of_agreement[0]['contact_result'] == "Sent SMS/Email" && me.values_of_agreement[0]["call_commitment"] == "All"){
-							me.dialog.fields_dict.contact_result.set_input(me.values_of_agreement[0]['contact_result'])
+							me.contact_result = r.message[0]['contact_result']
+							me.suspension_date = me.values_of_agreement[0]['suspension_date']
+							me._set_values()
 						}
 					}
 					else{
@@ -311,12 +322,20 @@ call_commit = Class.extend({
 							me.set_values()
 						}
 						else if(r && r.message[0]['contact_result'] == "Sent SMS/Email"){
-							me.dialog.fields_dict.contact_result.set_input(r.message[0]['contact_result'])
+							me.contact_result = r.message[0]['contact_result']
+							me.suspension_date = r.message[0]['suspension_date']
+							me._set_values()
 						}
 					}
 				}
 			}
 		});
+	},
+	_set_values:function(){
+		var me = this;
+		$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
+		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 	},
 	set_values:function(){
 		var me = this;
@@ -335,12 +354,18 @@ call_commit = Class.extend({
 		var me = this;
 		$(me.fd.contact_result.input).change(function(){
 			if(me.fd.contact_result.$input.val() == "WBI"){
+				console.log("inside mycond 123")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
 			}
-			else{
+			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
 				me.dialog.fields_dict.date_picker.set_input("")
 				me.dialog.fields_dict.amount.set_input("")
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();					
+				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+			}
+			if(me.fd.contact_result.$input.val() == ""){
+				console.log("inside hol")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
 			}
@@ -376,7 +401,7 @@ call_commit = Class.extend({
 	change_name_of_buttons:function(){
 		var me = this;
 		date = me.fd.date_picker.$input.val()
-		if(date){
+		if(me.fd.contact_result.$input.val() == "WBI"){
 			if(me.id != "Common"){	
 				id = "#" + me.id
 				$(id).attr('value', date);
@@ -385,12 +410,12 @@ call_commit = Class.extend({
 			me.update_call_commitment_data_in_agreement()
 			me.dialog.hide();
 		}
-		else if (me.fd.contact_result.$input.val() == "Sent SMS/Email"){
-			me.date = ""
+		if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
 			if(me.id != "Common"){	
 				id = "#" + me.id
 				$(id).attr('value', "SMS/Email");
 			}
+			me.date = date
 			me.update_call_commitment_data_in_agreement()
 			me.dialog.hide();
 		}
@@ -435,8 +460,8 @@ Payments_Details = Class.extend({
                         me.make_list_of_payments_checked()
                     }
        	});
-       	this.dialog.$wrapper.find('.modal-dialog').css("width", "800px");
-       	this.dialog.$wrapper.find('.modal-dialog').css("height", "800px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "1000px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "1000px");
        	this.payments_record_list = []
        	this.fd = this.dialog.fields_dict;
        	this.initial_amount = cur_frm.doc.remaining_amount;
@@ -1033,6 +1058,7 @@ payoff_details = Class.extend({
 				me.old_dialog.hide();
 				calculate_total_charges("Payoff");
 	    		render_agreements();
+	    		msgprint("Agreement paid off successfully")
 	    	}
 	    });
 	},
@@ -1065,7 +1091,6 @@ payoff_details = Class.extend({
 	        	render_agreements();
 	        	calculate_total_charges("Process Payment");
 	    		me.dialog.hide();
-	    		msgprint("Agreement paid off successfully")
 	    	}
 	    })
 	}

@@ -72,7 +72,7 @@ def get_customer_agreement(customer):
 										monthly_rental_payment,current_due_date,next_due_date,
 										payments_left,balance,late_fees,total_due,payments_made,
 										CASE 
-										WHEN DATEDIFF(suspension_date,now()) > 0 THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
+										WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
 										WHEN contact_result = "Sent SMS/Email" THEN "SMS/Email" 
 										ELSE "Call/Commitment" 
 										END AS suspension_date
@@ -392,7 +392,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
-	
+	merchandise_status = agreement.merchandise_status
 	if int(condition) == 2 and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
@@ -425,7 +425,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payment_ids_list.append(d["payment_id"])
 		_total_charges += d["monthly_rental_amount"]
 	total_charges = float(total_charges) + float(_total_charges)
-	merchandise_status = agreement.merchandise_status
+	
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,data['rental_payment'],data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
@@ -623,6 +623,20 @@ def add_notes_in_customer(customer,notes_on_customer_payments,summary_of_notes=N
 
 # call From Customer master OnClick Button Payment management 
 @frappe.whitelist()
+def _get_payments_management(source_name, target_doc=None):
+	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
+	target_doc = get_mapped_doc("Customer Agreement", source_name,
+		{
+			"Customer Agreement": {
+				"doctype": "Payments Management",
+			},
+		}, target_doc)
+
+	target_doc.customer = customer_agreement.customer
+	target_doc.customer_agreement = source_name
+	return target_doc
+
+@frappe.whitelist()
 def get_payments_management(source_name, target_doc=None):
 	target_doc = get_mapped_doc("Customer", source_name,
 		{
@@ -680,11 +694,8 @@ def make_refund_payment(payments_ids,ph_name):
 
 	merchandise_status = payment_history.merchandise_status
 	if len(merchandise_status.split(",")) > 1:
-		merchandise_status_list = merchandise_status.split(",")[0:-1]
-		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status_list if x]	
-	merchandise_status_list.sort()
-	print merchandise_status_list,"\n\n\n\n\n\n"
-	print agreement_list,"\n\n\n\n\n\n\n",merchandise_status_list
+		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
+		merchandise_status_list.sort()
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
@@ -696,7 +707,6 @@ def make_refund_payment(payments_ids,ph_name):
 			customer_agreement.save(ignore_permissions=True)
 
 		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
-			print "\n\n\n\n","inside my cond"
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.agreement_closing_suspending_reason = ""
 			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]  							

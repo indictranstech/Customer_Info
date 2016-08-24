@@ -38,13 +38,13 @@ payments_received = Class.extend({
 			                <th width='7%'>Rental Payment</th>\
 			                <th width='6%'>Late Fees</th>\
 			                <th width='6%'>Receivables</th>\
+			                <th width='5%'>Discount</th>\
+			                <th width='5%'>Bonus</th>\
 			                <th width='12%'>Total Rental Received</th>\
 			                <th width='10%'>Bank Transfer</th>\
 			                <th width='6%'>Cash</th>\
 			                <th width='7%'>Bank Card</th>\
 			                <th width='6%'>Balance</th>\
-			                <th width='5%'>Discount</th>\
-			                <th width='5%'>Bonus</th>\
 			                <th width='5%'>Refund</th>\
 			                <th width='2%'></th>\
 			            </tr>\

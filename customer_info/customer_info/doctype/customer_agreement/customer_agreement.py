@@ -102,9 +102,10 @@ class CustomerAgreement(Document):
 	def change_due_dates_in_child_table(self):
 	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 	    for row in self.payments_record:
-	    	row.update({
-	    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
-	    	})
+	    	if row.check_box_of_submit == 0:
+		    	row.update({
+		    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
+		    	})
 
 	# get date after i month
 	def get_next_due_date(self,date,i):

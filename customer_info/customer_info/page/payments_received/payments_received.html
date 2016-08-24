@@ -16,13 +16,13 @@ max-height: 400px;
                 <td width="7%" align="center">{{data[i]["rental_payment"]}}</td>
                 <td width="6%" align="center">{{data[i]["late_fees"]}}</td>
                 <td width="6%" align="center">{{data[i]["receivables"]}}</td>
+                <td width="5%" align="center">{{data[i]["discount"]}}</td>
+                <td width="5%" align="right">{{data[i]["bonus"]}}</td>
                 <td width="12%" align="center">{{data[i]["total_payment_received"]}}</td>
                 <td width="10%" align="center">{{data[i]["bank_transfer"]}}</td>
-                <td width="6%" align="center">{{data[i]["cash"]}}</td>
-                <td width="7%" align="center">{{data[i]["bank_card"]}}</td>
+                <td width="6%" align="right">{{data[i]["cash"]}}</td>
+                <td width="7%" align="right">{{data[i]["bank_card"]}}</td>
                 <td width="6%" align="center">{{data[i]["balance"]}}</td>
-                <td width="5%" align="center">{{data[i]["discount"]}}</td>
-                <td width="5%" align="center">{{data[i]["bonus"]}}</td>
                 <td width="5%" align="center"><input class= "refund" type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></td>
             </tr>
             <tr id={{ data[i]["refund"] }}>
