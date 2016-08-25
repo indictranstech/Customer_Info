@@ -65,8 +65,8 @@ def calculate_total_charges(customer,flag):
 
 
 @frappe.whitelist()
-def get_customer_agreement(customer):
-	return {
+def get_customer_agreement(customer,payment_date):
+	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
 										concade_product_name_and_category,number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
@@ -79,6 +79,17 @@ def get_customer_agreement(customer):
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
+	for entry in data['list_of_agreement']:
+		if float(entry[9]) == 0:
+			late_fees = frappe.db.sql("""select
+										CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
+										THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
+										`tabPayments Record`
+										where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+		else:
+			entry[9] = "{0:.2f}".format(entry[9])
+	return data	
 
 
 @frappe.whitelist()
@@ -256,7 +267,7 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 	for d in submitted_payments_ids:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,late_fees,"Normal Payment",merchandise_status)	
+	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
 	return "Payment Complete"
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
@@ -306,8 +317,7 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 			}) 	
 		customer_doc.save(ignore_permissions=True)	
 
-def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,late_fees,payment_type,merchandise_status,payoff_cond=None):
-	print "\n\n\n\n\n\n\n\n\n\n",merchandise_status
+def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,payoff_cond=None):
 	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(values['amount_paid_by_customer'])
@@ -324,6 +334,7 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 	payments_history.total_charges = float(total_charges)
 	payments_history.payment_type = payment_type
 	payments_history.merchandise_status = merchandise_status
+	payments_history.total_payment_received = float(total_amount)
 	payments_history.payoff_cond = payoff_cond if payoff_cond else ""
 
 
@@ -335,6 +346,11 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 	
 	payments_history.save(ignore_permissions = True)
 
+
+	if payment_type == "Payoff":
+		total_transaction_amount = float(total_amount)
+	else:
+		total_transaction_amount = float(rental_payment) + float(late_fees) + float(receivables)
 	
 	pmt = "Split"
 
@@ -347,14 +363,11 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 		
 
 	id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
-	
 	if len(id_list) == 1:
 		cond ="where payment_id = '{0}' ".format(id_list[0]) 
 	elif len(id_list) > 1:	
-		cond = "where payment_id in {0} ".format(id_list)  
+		cond = "where payment_id in {0} ".format(id_list)  	
 	
-
-	total_transaction_amount = float(rental_payment) + float(late_fees) + float(receivables)
 	frappe.db.sql("""update `tabPayments Record` 
 					set payment_history = '{0}',pmt = '{2}',total_transaction_amount = {3}
 					{1} """.format(payments_history.name,cond,pmt,total_transaction_amount))
@@ -380,7 +393,7 @@ def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
 	return {"submitted_payments_ids":submitted_payments_ids,"late_fees":late_fees,"rental_payment":rental_payment}
 
 @frappe.whitelist()
-def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,values,payment_date,total_charges,data):
+def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
 	now_date = datetime.now().date()
 	
 	frappe.db.sql("""update `tabPayments Record` 
@@ -416,7 +429,6 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 	values = json.loads(values)
 	data = json.loads(data)
-
 	_total_charges = 0
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -424,9 +436,11 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 		_total_charges += d["monthly_rental_amount"]
+
 	total_charges = float(total_charges) + float(_total_charges)
-	
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,data['rental_payment'],data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
+	total_amount = float(total_amount.split(" ")[0])
+	rental_payment = float(rental_payment.split(" ")[0])
+	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
 @frappe.whitelist()
@@ -527,54 +541,6 @@ def update_call_commitment_data_in_agreement(customer_agreement,date,contact_res
 					"call_commitment":all_or_individual
 					})
 				customer_agreement.save(ignore_permissions = True)
-				
-	# date = datetime.strptime(date, '%d-%m-%Y')
-	
-	# if all_or_individual == "individual" and date:
-	# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	# 	customer_agreement.update({
-	# 		"suspension_date":date,
-	# 		"contact_result": contact_result,
-	# 		"amount_of_contact_result":amount,
-	# 		"call_commitment":"Individual"
-	# 		})
-	# 	customer_agreement.save(ignore_permissions = True)
-
-	# if 	all_or_individual == "individual" and not date:
-	# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	# 	customer_agreement.update({
-	# 		"suspension_date":"",
-	# 		"contact_result": contact_result,
-	# 		"amount_of_contact_result":0,
-	# 		"call_commitment":"Individual"
-	# 		})
-	# 	customer_agreement.save(ignore_permissions = True)
-
-
-	# if all_or_individual == "all" and date:
-	# 	agreements = json.loads(customer_agreement)
-	# 	for agreement in agreements:
-	# 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	# 		customer_agreement.update({
-	# 			"suspension_date":date,
-	# 			"contact_result": contact_result,
-	# 			"amount_of_contact_result":amount,
-	# 			"call_commitment":"All"
-	# 			})
-	# 		customer_agreement.save(ignore_permissions = True)
-
-	# if all_or_individual == "all" and not date:
-	# 	agreements = json.loads(customer_agreement)
-	# 	for agreement in agreements:
-	# 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	# 		customer_agreement.update({
-	# 			"suspension_date":"",
-	# 			"contact_result": contact_result,
-	# 			"amount_of_contact_result":0,
-	# 			"call_commitment":"All"
-	# 			})
-	# 		customer_agreement.save(ignore_permissions = True)			
-	 
 
 @frappe.whitelist()
 def set_or_reset_call_commitment(customer,agreement_name,agreements):
@@ -681,7 +647,8 @@ def make_refund_payment(payments_ids,ph_name):
 	agreement_list = []
 	for i in payments_ids:
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
-							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="" 
+							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="",
+							total_transaction_amount = 0 
 							where check_box_of_submit = 1 
 							and payment_id = '{0}' """.format(i))
 		payments_id_list.append(i)

@@ -32,20 +32,20 @@ payments_received = Class.extend({
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
 			            <tr>\
-			                <th width='10%'>Payment Date</th>\
-			                <th width='6%'>Customer</th>\
-			                <th width='8%'>90d SAC or Early buy</th>\
-			                <th width='7%'>Rental Payment</th>\
-			                <th width='6%'>Late Fees</th>\
-			                <th width='6%'>Receivables</th>\
-			                <th width='5%'>Discount</th>\
-			                <th width='5%'>Bonus</th>\
-			                <th width='12%'>Total Rental Received</th>\
-			                <th width='10%'>Bank Transfer</th>\
-			                <th width='6%'>Cash</th>\
-			                <th width='7%'>Bank Card</th>\
-			                <th width='6%'>Balance</th>\
-			                <th width='5%'>Refund</th>\
+			                <th width='6%'>Payment Date</th>\
+			                <th width='7%'>Customer Name</th>\
+			                <th width='6%'>Payment Type</th>\
+			                <th width='7%'>Payment Amount</th>\
+			                <th width='6%'>Late Fees Amount</th>\
+			                <th width='7%'>Receivables Amount</th>\
+			                <th width='6%'>Discount Amount</th>\
+			                <th width='7%'>Bonus Amount</th>\
+			                <th width='12%'>Total Payment Received Amount</th>\
+			                <th width='10%'>Bank Transfer Amount</th>\
+			                <th width='6%'>Cash Amount</th>\
+			                <th width='7%'>Bank Card Amount</th>\
+			                <th width='6%'>Balance Amount</th>\
+			                <th width='7%'>Refund Payment</th>\
 			                <th width='2%'></th>\
 			            </tr>\
 			        </thead></table>"
@@ -113,9 +113,16 @@ payments_received = Class.extend({
 			callback: function(r) {
         	   	me.page.find(".data").empty();
 				$.each(r.message, function(i, d) {
+					if(d["payoff_cond"]){
+						me.payoff_cond = d["payoff_cond"]
+					}
 					me.payments_ids = d["payments_ids"]
 					d["payments_ids"] = me.update_dict_by_payment_ids()
         	   	});
+				/*$.each(r.message, function(i, d) {
+					me.payments_ids = d["payments_ids"]
+					d["payments_ids"] = me.update_dict_by_payment_ids()
+        	   	});*/
         	   	me.data = r.message;
         	   	html = frappe.render_template("payments_received",{"data": r.message})
 				me.page.append(html)
@@ -127,17 +134,43 @@ payments_received = Class.extend({
 		var me = this;
 		var flt_precision = frappe.defaults.get_default("float_precision")
 		var dict_of_payments_ids = []
+		var __dict_of_payments_ids = []
 		var formatted_list_of_payment_ids = JSON.parse("[" + me.payments_ids.slice(0,-1) + '"' + "]")[0].split(",")
 		//console.log(JSON.parse("[" + payments_ids.slice(0,-1) + '"' + "]")[0].split(","),"sssssssssaaaaaa");
-		$.each(formatted_list_of_payment_ids, function(i, d) {
-	   		dict_of_payments_ids.push({"payments_id":d.split("/")[0],
-				"due_date":d.split("/")[1],
-				"rental_payment":d.split("/")[2],
-				"late_fees":Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(flt_precision)),
-				"total": Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(flt_precision)) 
+		if(me.payoff_cond == "90d SAC" || me.payoff_cond == "Early buy"){
+			late_fees = 0
+			rental_payment = 0
+			total = 0
+			payment_id = ""
+			payments_ids = []
+			$.each(formatted_list_of_payment_ids, function(i, d) {
+				payment_id = d.split("/")[0].split("-P")[0],
+				payments_ids.push(d.split("/")[0])
+				late_fees += Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(flt_precision))
+				rental_payment += flt(d.split("/")[2])
+				total += Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(flt_precision)) 
+	   		});
+	   		__dict_of_payments_ids.push({"payments_id":payment_id+"-"+me.payoff_cond,
+				"payment_id_list": JSON.stringify(payments_ids.toString()),
+				"due_date":"-",
+				"rental_payment":rental_payment,
+				"late_fees":late_fees,
+				"total": total 
 	   		})
-	   	});
-		return dict_of_payments_ids
+			console.log("__dict_of_payments_ids",__dict_of_payments_ids)
+			return __dict_of_payments_ids
+		}
+		else{
+			$.each(formatted_list_of_payment_ids, function(i, d) {
+		   		dict_of_payments_ids.push({"payments_id":d.split("/")[0],
+					"due_date":d.split("/")[1],
+					"rental_payment":d.split("/")[2],
+					"late_fees":Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(flt_precision)),
+					"total": Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(flt_precision)) 
+		   		})
+		   	});
+			return dict_of_payments_ids
+		}
 	},
 	get_late_fees : function(date1,date2,rental_payment){
 		var date_diff = frappe.datetime.get_diff(date2,date1)
@@ -183,9 +216,16 @@ payments_received = Class.extend({
 		if(me.fd.refund.$input.val() == "Yes"){
 			var id_list = []
 			len = $('.'+String(me.ph_name)).length
-			for(i=0;i<len;i++){
-				id_list.push($($('.'+String(me.ph_name))[i]).text())
+			if($('.'+String(me.ph_name)).attr("payment-ids")){
+				id_list = $('.'+String(me.ph_name)).attr("payment-ids").split(",")
 			}
+			else{
+				for(i=0;i<len;i++){
+					id_list.push($($('.'+String(me.ph_name))[i]).text())
+				}
+			}
+			console.log(id_list,"id_list")
+			console.log(me.ph_name,"me.ph_name")
 			if(id_list.length>0){
 				frappe.call({
 			        method: "customer_info.customer_info.doctype.payments_management.payments_management.make_refund_payment",
