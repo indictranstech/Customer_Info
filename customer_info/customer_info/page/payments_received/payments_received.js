@@ -224,11 +224,9 @@ payments_received = Class.extend({
 					id_list.push($($('.'+String(me.ph_name))[i]).text())
 				}
 			}
-			console.log(id_list,"id_list")
-			console.log(me.ph_name,"me.ph_name")
 			if(id_list.length>0){
 				frappe.call({
-			        method: "customer_info.customer_info.doctype.payments_management.payments_management.make_refund_payment",
+			        method: "customer_info.customer_info.page.payments_received.payments_received.make_refund_payment",
 		           	args: {
 		           		"payments_ids":id_list,
 		            	"ph_name":me.ph_name

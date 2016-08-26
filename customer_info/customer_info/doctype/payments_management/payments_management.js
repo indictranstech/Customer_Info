@@ -1059,7 +1059,7 @@ payoff_details = Class.extend({
 	update_on_payoff:function(data){
 		var me = this;
 		value = me.dialog.get_values();
-
+		console.log(me.old_instance,"me old_instance ")
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
 	       	args: {
@@ -1072,8 +1072,8 @@ payoff_details = Class.extend({
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"total_charges":cur_frm.doc.total_charges,
               	"data":data,
-              	"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['s90d_SAC_price'],
-              	"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['s90_day_pay_Off']
+              	"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['Discounted_payment_amount'],
+              	"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['Total_payoff_amount']
 	        },
 	       	callback: function(r){
 	       		me.dialog.hide();
