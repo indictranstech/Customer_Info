@@ -175,7 +175,8 @@ render_agreements = function(){
             type: "GET",
             /*async: false,*/
             args: {
-              "customer": cur_frm.doc.customer
+              "customer": cur_frm.doc.customer,
+              "payment_date":cur_frm.doc.payment_date
             },
             callback: function(r){
               if(r.message){
@@ -186,6 +187,7 @@ render_agreements = function(){
 						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
 						if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 							$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").trigger('click')
+							cur_frm.set_value("customer_agreement","")
 						}
 					});
             	}
@@ -841,7 +843,19 @@ payoff_details = Class.extend({
 			me.get_value_of_rental_payment_and_late_fees();
 			me.init_for_trigger_of_amount_paid_by_customer();
 			me.click_on_process_payment();
-	    }   	
+	    }
+	    $("input").on("keydown", function(e) {
+		    var code = e.which;
+		    if(code == 13) {
+		        e.preventDefault();
+		    }
+		});
+		$("button[data-fieldname='process_payment']").on("keydown", function(e) {
+		    var code = e.which;
+		    if(code == 13) {
+		        e.preventDefault();
+		    }
+		});   	
 	},
 	get_value_of_rental_payment_and_late_fees:function(){
 		var me = this;
@@ -851,12 +865,14 @@ payoff_details = Class.extend({
 		var agreements = [];
 		var number_of_payments = 0;
 		$.each($(".slick-row"),function(i,d){
-			late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
-			total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
+			if(flt($($(d).children()[3]).text()) > 0 ){
+				console.log("yes")
+				late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
+				total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
+			}
 			agreements.push($($(d).children()[0]).text())
 			number_of_payments += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))
 		});
-
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
 		this.agreements = agreements;
@@ -877,8 +893,8 @@ payoff_details = Class.extend({
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.discount.input).change(function(){
+			//me.setFocusToTextBox();
 			me.init_for_commom_calculation();
-			me.setFocusToTextBox();
 		})
 		$(me.fd.bonus.input).change(function(){
 			if(flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus){
@@ -1008,6 +1024,9 @@ payoff_details = Class.extend({
 	},
 	click_on_submit:function(){
 		var me = this;
+		/*console.log(me.old_instance)
+		console.log(me.old_instance['values']['s90d_SAC_price'],"old_dialog")
+		console.log(me.old_instance['values']['s90_day_pay_Off'],"old_dialog")*/
 		me.dialog.fields_dict.submit_payment.$input.click(function(){
 			if(me.old_instance == "Process Payments" && me.number_of_payments > 0){
 				me.update_payments_records();
@@ -1040,6 +1059,7 @@ payoff_details = Class.extend({
 	update_on_payoff:function(data){
 		var me = this;
 		value = me.dialog.get_values();
+		console.log(me.old_instance,"me old_instance ")
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
 	       	args: {
@@ -1051,7 +1071,9 @@ payoff_details = Class.extend({
 	        	"values":JSON.stringify(value),
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"total_charges":cur_frm.doc.total_charges,
-              	"data":data
+              	"data":data,
+              	"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['Discounted_payment_amount'],
+              	"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['Total_payoff_amount']
 	        },
 	       	callback: function(r){
 	       		me.dialog.hide();

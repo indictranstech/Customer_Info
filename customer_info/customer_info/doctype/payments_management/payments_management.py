@@ -13,6 +13,8 @@ from frappe.utils import nowdate, getdate,add_months
 from datetime import datetime,date
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
+from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
+
 
 class PaymentsManagement(Document):
 	pass
@@ -43,7 +45,6 @@ def calculate_total_charges(customer,flag):
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		print customer_agreement.name
 		for row in customer_agreement.payments_record:
 			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) < firstDay_next_month:
 				due_payment_list.append(row.monthly_rental_amount)
@@ -65,8 +66,8 @@ def calculate_total_charges(customer,flag):
 
 
 @frappe.whitelist()
-def get_customer_agreement(customer):
-	return {
+def get_customer_agreement(customer,payment_date):
+	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
 										concade_product_name_and_category,number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
@@ -79,6 +80,17 @@ def get_customer_agreement(customer):
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
+	for entry in data['list_of_agreement']:
+		if float(entry[9]) == 0:
+			late_fees = frappe.db.sql("""select
+										CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
+										THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
+										`tabPayments Record`
+										where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+		else:
+			entry[9] = "{0:.2f}".format(entry[9])
+	return data	
 
 
 @frappe.whitelist()
@@ -256,7 +268,7 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 	for d in submitted_payments_ids:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,late_fees,"Normal Payment",merchandise_status)	
+	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
 	return "Payment Complete"
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
@@ -306,58 +318,6 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 			}) 	
 		customer_doc.save(ignore_permissions=True)	
 
-def make_payment_history(values,customer,receivables,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,late_fees,payment_type,merchandise_status,payoff_cond=None):
-	print "\n\n\n\n\n\n\n\n\n\n",merchandise_status
-	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
-	payments_history = frappe.new_doc("Payments History")
-	payments_history.cash = float(values['amount_paid_by_customer'])
-	payments_history.bank_card = float(values['bank_card'])
-	payments_history.bank_transfer = float(values['bank_transfer'])
-	payments_history.balance = float(values['balance'])
-	payments_history.bonus = float(values['bonus']) if values['bonus'] else 0
-	payments_history.discount = float(values['discount'])
-	payments_history.rental_payment = rental_payment
-	payments_history.late_fees = late_fees
-	payments_history.customer = customer
-	payments_history.receivables = float(receivables)
-	payments_history.payment_date = payment_date.date()
-	payments_history.total_charges = float(total_charges)
-	payments_history.payment_type = payment_type
-	payments_history.merchandise_status = merchandise_status
-	payments_history.payoff_cond = payoff_cond if payoff_cond else ""
-
-
-	for i in payment_ids:
-		if payments_history.payments_ids:
-			payments_history.payments_ids = payments_history.payments_ids + str(i) + ','
-		else:
-			payments_history.payments_ids = '"' + str(i) + ','
-	
-	payments_history.save(ignore_permissions = True)
-
-	
-	pmt = "Split"
-
-	if float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) > 0:
-		pmt = "Credit Card"
-	elif float(values['amount_paid_by_customer']) > 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) == 0:
-		pmt = "Cash"
-	elif float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) > 0 and float(values['bank_card']) == 0:
-		pmt = "Bank Transfer"	
-		
-
-	id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
-	
-	if len(id_list) == 1:
-		cond ="where payment_id = '{0}' ".format(id_list[0]) 
-	elif len(id_list) > 1:	
-		cond = "where payment_id in {0} ".format(id_list)  
-	
-
-	total_transaction_amount = float(rental_payment) + float(late_fees) + float(receivables)
-	frappe.db.sql("""update `tabPayments Record` 
-					set payment_history = '{0}',pmt = '{2}',total_transaction_amount = {3}
-					{1} """.format(payments_history.name,cond,pmt,total_transaction_amount))
 
 @frappe.whitelist()
 def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
@@ -380,7 +340,7 @@ def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
 	return {"submitted_payments_ids":submitted_payments_ids,"late_fees":late_fees,"rental_payment":rental_payment}
 
 @frappe.whitelist()
-def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,values,payment_date,total_charges,data):
+def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
 	now_date = datetime.now().date()
 	
 	frappe.db.sql("""update `tabPayments Record` 
@@ -416,7 +376,6 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 	values = json.loads(values)
 	data = json.loads(data)
-
 	_total_charges = 0
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -424,9 +383,11 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 		_total_charges += d["monthly_rental_amount"]
+
 	total_charges = float(total_charges) + float(_total_charges)
-	
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,data['rental_payment'],data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
+	total_amount = float(total_amount.split(" ")[0])
+	rental_payment = float(rental_payment.split(" ")[0])
+	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
 @frappe.whitelist()
@@ -527,58 +488,9 @@ def update_call_commitment_data_in_agreement(customer_agreement,date,contact_res
 					"call_commitment":all_or_individual
 					})
 				customer_agreement.save(ignore_permissions = True)
-				
-	# date = datetime.strptime(date, '%d-%m-%Y')
-	
-	# if all_or_individual == "individual" and date:
-	# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	# 	customer_agreement.update({
-	# 		"suspension_date":date,
-	# 		"contact_result": contact_result,
-	# 		"amount_of_contact_result":amount,
-	# 		"call_commitment":"Individual"
-	# 		})
-	# 	customer_agreement.save(ignore_permissions = True)
-
-	# if 	all_or_individual == "individual" and not date:
-	# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	# 	customer_agreement.update({
-	# 		"suspension_date":"",
-	# 		"contact_result": contact_result,
-	# 		"amount_of_contact_result":0,
-	# 		"call_commitment":"Individual"
-	# 		})
-	# 	customer_agreement.save(ignore_permissions = True)
-
-
-	# if all_or_individual == "all" and date:
-	# 	agreements = json.loads(customer_agreement)
-	# 	for agreement in agreements:
-	# 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	# 		customer_agreement.update({
-	# 			"suspension_date":date,
-	# 			"contact_result": contact_result,
-	# 			"amount_of_contact_result":amount,
-	# 			"call_commitment":"All"
-	# 			})
-	# 		customer_agreement.save(ignore_permissions = True)
-
-	# if all_or_individual == "all" and not date:
-	# 	agreements = json.loads(customer_agreement)
-	# 	for agreement in agreements:
-	# 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	# 		customer_agreement.update({
-	# 			"suspension_date":"",
-	# 			"contact_result": contact_result,
-	# 			"amount_of_contact_result":0,
-	# 			"call_commitment":"All"
-	# 			})
-	# 		customer_agreement.save(ignore_permissions = True)			
-	 
 
 @frappe.whitelist()
 def set_or_reset_call_commitment(customer,agreement_name,agreements):
-	print agreements,"\n\n\n\n\n\n\n"
 	now_date = datetime.now().date()
 	agreements = json.loads(agreements)
 	#if customer and not agreement_name:	
@@ -651,7 +563,7 @@ def get_payments_management(source_name, target_doc=None):
 
 @frappe.whitelist()
 def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,receivables):
-	print amount_paid_by_customer,"\n\n\n\n"
+
 	agreements = json.loads(agreements)
 
 	id_list = tuple([x.encode('UTF8') for x in list(agreements) if x])
@@ -669,54 +581,3 @@ def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,recei
 	return total
 	# if float(amount_paid_by_customer) >= float(total):
 	# 	return float(total)
-		
-
-# call from payment received report 
-@frappe.whitelist()
-def make_refund_payment(payments_ids,ph_name):
-	payments_ids = json.loads(payments_ids)
-	payment_history = frappe.get_doc("Payments History",ph_name)
-	customer = frappe.get_doc("Customer",payment_history.customer)
-	payments_id_list = []
-	agreement_list = []
-	for i in payments_ids:
-		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
-							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="" 
-							where check_box_of_submit = 1 
-							and payment_id = '{0}' """.format(i))
-		payments_id_list.append(i)
-		agreement_list.append(i.split("-P")[0])
-	agreement_list =  list(set(agreement_list))
-	if agreement_list:
-		agreement_list = [x.encode('UTF8') for x in agreement_list if x]
-	flag = "Make Refund"
-	agreement_list.sort()
-
-	merchandise_status = payment_history.merchandise_status
-	if len(merchandise_status.split(",")) > 1:
-		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
-		merchandise_status_list.sort()
-	for i,agreement in enumerate(agreement_list):
-		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		set_values_in_agreement_on_submit(customer_agreement)
-		
-		if payment_history.payment_type == "Payoff Payment":
-			payment_history.payoff_cond = ""
-			customer_agreement.agreement_status = "Open"
-			customer_agreement.merchandise_status = payment_history.merchandise_status
-			customer_agreement.save(ignore_permissions=True)
-
-		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
-			customer_agreement.agreement_status = "Open"
-			customer_agreement.agreement_closing_suspending_reason = ""
-			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]  							
-			customer_agreement.save(ignore_permissions=True)
-		
-		if payment_history.payment_type == "Normal Payment":
-			customer.bonus = set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)
-		customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
-		customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
-		customer.save(ignore_permissions=True)
-	
-	payment_history.refund = "Yes"
-	payment_history.save(ignore_permissions=True)
