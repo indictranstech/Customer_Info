@@ -16,7 +16,9 @@ def execute(filters=None):
 def get_data(filters):
 	if filters:
 		now_date = datetime.now().date()
-		result = frappe.db.sql("""select t1.due_date, DATEDIFF('{0}',t1.due_date) as difference,
+		result = frappe.db.sql("""select t1.due_date, 
+									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{0}',t1.due_date) > 3 
+									THEN DATEDIFF('{0}',t1.due_date) ELSE 0 END AS difference,
 									t1.payment_id,t1.monthly_rental_amount,t2.concade_product_name_and_category,
 									t2.customer AS customer,
 									t3.company_phone_1,t3.bonus,

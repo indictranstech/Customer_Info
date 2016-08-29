@@ -12,7 +12,7 @@ frappe.query_reports["late and future payments"] = {
         now_date = frappe.datetime.nowdate()
 	    if (dataContext["Contact Result"] && columnDef.id != "Email"){
         	concad = dataContext["Contact Result"].split(" ")
-	    	if(concad[0] == "WBI" && concad[1] < now_date) { //red
+	    	if(concad[0] == "WBI" && concad[1] < now_date && flt(dataContext["Late Days"]) > 0) { //red
 	            value = "<span style='color:#ff3300!important'>" + value + "</span>";
 	    	}
 		    if (concad[0] == "WBI" && concad[1] > now_date) { //green

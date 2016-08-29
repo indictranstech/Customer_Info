@@ -335,7 +335,7 @@ call_commit = Class.extend({
 	},
 	_set_values:function(){
 		var me = this;
-		$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
+		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 	},
@@ -354,6 +354,7 @@ call_commit = Class.extend({
 	},
 	select_contact_result:function(){
 		var me = this;
+		nowdate = frappe.datetime.nowdate()
 		$(me.fd.contact_result.input).change(function(){
 			if(me.fd.contact_result.$input.val() == "WBI"){
 				console.log("inside mycond 123")
@@ -361,9 +362,9 @@ call_commit = Class.extend({
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
 			}
 			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
-				me.dialog.fields_dict.date_picker.set_input("")
+				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();					
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
 			}
 			if(me.fd.contact_result.$input.val() == ""){
@@ -1104,6 +1105,9 @@ payoff_details = Class.extend({
 	       	callback: function(r){
        			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
 	       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+	            if(r.message){
+	            	msgprint(r.message+"\n"+"Agreement Payoff successfully")
+	            }
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
 	            }
