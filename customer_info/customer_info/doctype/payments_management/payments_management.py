@@ -81,6 +81,10 @@ def get_customer_agreement(customer,payment_date):
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
 	for entry in data['list_of_agreement']:
+		payments_left = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
+										`tabPayments Record`
+										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
+		entry[7] = payments_left
 		if float(entry[9]) == 0:
 			late_fees = frappe.db.sql("""select
 										CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
@@ -90,6 +94,7 @@ def get_customer_agreement(customer,payment_date):
 			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
 		else:
 			entry[9] = "{0:.2f}".format(entry[9])
+	
 	return data	
 
 
@@ -255,11 +260,15 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 	
 	agreements = frappe.db.sql("""{0}""".format(cond),as_list=1)
 	
+
+	completed_agreement_list = []
 	merchandise_status = ""
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+","
 		set_values_in_agreement_on_submit(customer_agreement)
+		if float(customer_agreement.payments_left) == 0:
+			completed_agreement_list.append(customer_agreement.name)	
 		flag = "Process Payment"
 	add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
 
@@ -269,7 +278,8 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
-	return "Payment Complete"
+	print "\n\n\n",completed_agreement_list,"completed_agreement_list"
+	return completed_agreement_list
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []

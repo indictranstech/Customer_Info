@@ -84,6 +84,13 @@ class CustomerAgreement(Document):
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 		list_of_payments_record = []
 		for i in range(int(self.agreement_period)):
+			if i == 0:
+				list_of_payments_record.append({
+				'no_of_payments':'Payment {0}'.format(i+1),
+				'monthly_rental_amount':self.monthly_rental_payment,
+				'due_date':self.date,
+				'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
+				})	
 			list_of_payments_record.append({
 				'no_of_payments':'Payment {0}'.format(i+1),
 				'monthly_rental_amount':self.monthly_rental_payment,
@@ -103,9 +110,10 @@ class CustomerAgreement(Document):
 	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 	    for row in self.payments_record:
 	    	if row.check_box_of_submit == 0:
-		    	row.update({
-		    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
-		    	})
+	    		if row.idx != 1:
+			    	row.update({
+			    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
+			    	})
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
