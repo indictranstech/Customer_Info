@@ -146,9 +146,9 @@ payments_received = Class.extend({
 			$.each(formatted_list_of_payment_ids, function(i, d) {
 				payment_id = d.split("/")[0].split("-P")[0],
 				payments_ids.push(d.split("/")[0])
-				late_fees += Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(flt_precision))
-				rental_payment += flt(d.split("/")[2])
-				total += Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(flt_precision)) 
+				late_fees += parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2))
+				rental_payment += parseFloat(flt(d.split("/")[2]).toFixed(2))
+				total += parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2))
 	   		});
 	   		__dict_of_payments_ids.push({"payments_id":payment_id+"-"+me.payoff_cond,
 				"payment_id_list": JSON.stringify(payments_ids.toString()),
@@ -165,10 +165,11 @@ payments_received = Class.extend({
 		   		dict_of_payments_ids.push({"payments_id":d.split("/")[0],
 					"due_date":d.split("/")[1],
 					"rental_payment":d.split("/")[2],
-					"late_fees":Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(flt_precision)),
-					"total": Number((me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(flt_precision)) 
+					"late_fees":parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
+					"total": parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
 		   		})
 		   	});
+			console.log("dict_of_payments_ids",dict_of_payments_ids)
 			return dict_of_payments_ids
 		}
 	},
@@ -194,7 +195,7 @@ payments_received = Class.extend({
 		this.dialog = new frappe.ui.Dialog({
             		title: "Refund Process",
                 	fields: [
-                   		{"fieldtype": "Select" , "fieldname": "refund" , "label": "Do You Want To Refund","options":["","Yes","No"]},
+                   		{"fieldtype": "Select" , "fieldname": "refund" , "label": "Do You Want To Refund","options":["No","Yes"],"default":"No"},
                    		{"fieldtype": "Button" , "fieldname": "refund_payment" , "label": "Refund"}
                    	],
 	       		});
