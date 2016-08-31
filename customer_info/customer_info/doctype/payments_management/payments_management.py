@@ -67,13 +67,14 @@ def calculate_total_charges(customer,flag):
 
 @frappe.whitelist()
 def get_customer_agreement(customer,payment_date):
+	#WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
 	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
 										concade_product_name_and_category,number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
 										payments_left,balance,late_fees,total_due,payments_made,
 										CASE 
-										WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
+										WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN "WBI"
 										WHEN contact_result = "Sent SMS/Email" THEN "SMS/Email" 
 										ELSE "Call/Commitment" 
 										END AS suspension_date

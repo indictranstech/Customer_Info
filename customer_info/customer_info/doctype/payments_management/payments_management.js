@@ -186,7 +186,7 @@ render_agreements = function(){
             		$.each($(".slick-row"),function(i,d){
 						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
 						if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
-							$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").trigger('click')
+							$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
 							cur_frm.set_value("customer_agreement","")
 						}
 					});

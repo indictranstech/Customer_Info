@@ -15,10 +15,10 @@ frappe.query_reports["late and future payments"] = {
 	    	if(concad[0] == "WBI" && concad[1] < now_date && flt(dataContext["Late Days"]) > 0) { //red
 	            value = "<span style='color:#ff3300!important'>" + value + "</span>";
 	    	}
-		    if (concad[0] == "WBI" && concad[1] > now_date) { //green
+		    if (concad[0] == "WBI" && concad[1] >= now_date) { //green
 	            value = "<span style='color:#2eb82e!important'>" + value + "</span>";
 		    }
-		    if (dataContext["Contact Result"] == "Sent SMS/Email") { // blue
+		    if (concad[0] + " "+concad[1] == "Sent SMS/Email") { // blue
 	            value = "<span style='color:#4db8ff!important'>" + value + "</span>";
 		    }
 	    }

@@ -83,14 +83,13 @@ class CustomerAgreement(Document):
 	def add_payments_record(self):
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 		list_of_payments_record = []
-		for i in range(int(self.agreement_period)):
-			if i == 0:
-				list_of_payments_record.append({
-				'no_of_payments':'Payment {0}'.format(i+1),
-				'monthly_rental_amount':self.monthly_rental_payment,
-				'due_date':self.date,
-				'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
-				})	
+		list_of_payments_record.append({
+		'no_of_payments':'Payment 1',
+		'monthly_rental_amount':self.monthly_rental_payment,
+		'due_date':self.date,
+		'payment_id':self.name + '-' + 'Payment 1'
+		})	
+		for i in range(1,int(self.agreement_period)):
 			list_of_payments_record.append({
 				'no_of_payments':'Payment {0}'.format(i+1),
 				'monthly_rental_amount':self.monthly_rental_payment,
