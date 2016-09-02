@@ -5,11 +5,12 @@ frappe.ui.form.on("Customer",{
             cur_frm.add_custom_button(__('Payments Management'),function(){
                 go_to_payments_management();
             });
+            $($(".btn-xs")[0]).attr("data-fieldname","payments_management")
         }
         if(frappe.route_options){
             if(frappe.route_options["from_late_and_future"]  == "yes"){
                 frappe.route_options = null;
-                $($(".btn-xs")[0]).click()
+                $("[data-fieldname='payments_management']").click()
             }
         }
     },        
