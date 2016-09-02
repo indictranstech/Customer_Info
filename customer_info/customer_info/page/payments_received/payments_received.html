@@ -57,6 +57,24 @@ max-height: 400px;
                     </div>
                 </td>
             </tr>
+                {% if (i == data.length - 1 ) { %}
+                    <tr data-toggle="collapse" data-parent="#accordion" href={{"#accordion" + parseInt(i+1) }}>
+                        <td width="6%"><b>{{total[0]["payment_date"]}}</b></td>
+                        <td width="7%">{{total[0]["customer"]}}</td>
+                        <td width="6%" class="payoff_cond">{{ total[0]["payoff_cond"] }}</td>
+                        <td width="7%" >{{total[0]["rental_payment"]}}</td>
+                        <td width="6%" >{{total[0]["late_fees"]}}</td>
+                        <td width="7%" >{{total[0]["receivables"]}}</td>
+                        <td width="6%" >{{total[0]["discount"]}}</td>
+                        <td width="7%" >{{total[0]["bonus"]}}</td>
+                        <td width="12%" >{{total[0]["total_payment_received"]}}</td>
+                        <td width="10%" >{{total[0]["bank_transfer"]}}</td>
+                        <td width="6%" >{{total[0]["cash"]}}</td>
+                        <td width="7%" >{{total[0]["bank_card"]}}</td>
+                        <td width="6%">{{total[0]["balance"]}}</td>
+                        <td width="7%"></td>
+                    </tr>
+                {% } %}
             {% } %}
         </tbody>
     </table>

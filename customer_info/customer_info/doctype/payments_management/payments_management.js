@@ -255,7 +255,9 @@ call_commit = Class.extend({
                    		{"fieldtype": "Button" , "fieldname": "reset" , "label": "Reset"},
                    		{"fieldtype": "Select" , "fieldname": "contact_result" , "label": "Contact Result","options":["","WBI","Sent SMS/Email"]},
                    		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
-                   		{"fieldtype": "Currency" , "fieldname": "amount" , "label": "Amount"}
+                   		{"fieldtype": "Currency" , "fieldname": "amount" , "label": "Amount"},
+                   		{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
+                   		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "+"}
                    	],
                    	primary_action_label: "Save",
                    	primary_action: function(){
@@ -336,6 +338,8 @@ call_commit = Class.extend({
 	_set_values:function(){
 		var me = this;
 		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
+		$(me.dialog.body).find("[data-fieldname ='comment']").show();
+		$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 	},
@@ -343,6 +347,8 @@ call_commit = Class.extend({
 		var me = this;
 		$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
 		$(me.dialog.body).find("[data-fieldname ='amount']").show();
+		$(me.dialog.body).find("[data-fieldname ='comment']").show();
+		$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 		me.dialog.fields_dict.amount.set_input(me.amount_of_contact_result)
@@ -351,6 +357,8 @@ call_commit = Class.extend({
 		var me = this;
 		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
 		$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+		$(me.dialog.body).find("[data-fieldname ='comment']").hide();
+		$(me.dialog.body).find("[data-fieldname ='add_comment']").hide();
 	},
 	select_contact_result:function(){
 		var me = this;
@@ -359,18 +367,26 @@ call_commit = Class.extend({
 			if(me.fd.contact_result.$input.val() == "WBI"){
 				console.log("inside mycond 123")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
-				$(me.dialog.body).find("[data-fieldname ='amount']").show();					
+				$(me.dialog.body).find("[data-fieldname ='amount']").show();
+				$(me.dialog.body).find("[data-fieldname ='comment']").show();
+				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();					
+				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+				$(me.dialog.body).find("[data-fieldname ='comment']").show();
+				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
+				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == ""){
 				console.log("inside hol")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
-				$(me.dialog.body).find("[data-fieldname ='amount']").hide();			
+				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
+				$(me.dialog.body).find("[data-fieldname ='comment']").hide();
+				$(me.dialog.body).find("[data-fieldname ='add_comment']").hide();			
 			}
 		})
 	},
@@ -439,6 +455,16 @@ call_commit = Class.extend({
         		render_agreements();
         	}
 	    });
+	},
+	add_comment:function(){
+		var me = this;
+		me.dialog.fields_dict.add_comment.$input.click(function() {
+			if(me.dialog.fields_dict.comment.$input.val()){
+				cur_frm.set_value("notes_on_customer_payments",me.dialog.fields_dict.comment.$input.val())
+				$('button[data-fieldname="add_notes"]').click()
+				me.dialog.fields_dict.comment.set_input("")
+			}
+		})
 	}
 });
 
@@ -486,11 +512,13 @@ Payments_Details = Class.extend({
 	},
 	common_function_for_render_templates:function(){
 		var me = this;
+		console.log(me.item,"ttttttttttttttttt")
 		frappe.call({
 			method:"customer_info.customer_info.doctype.payments_management.payments_management.get_payments_record",
 			args:{
 				"customer_agreement":me.item['id'],
-				"receivable":cur_frm.doc.receivables
+				"receivable":cur_frm.doc.receivables,
+				"late_fees":me.item['late_fees']
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
@@ -885,24 +913,39 @@ payoff_details = Class.extend({
 	init_for_trigger_of_amount_paid_by_customer:function(){
 		var me = this;	
 		$(me.fd.amount_paid_by_customer.input).change(function(){
+			if($(me.fd.amount_paid_by_customer.input).val() == ""){
+				me.dialog.set_value("amount_paid_by_customer","0.0")	
+			}
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.bank_card.input).change(function(){
+			if($(me.fd.bank_card.input).val() == ""){
+				me.dialog.set_value("bank_card","0.0")	
+			}
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.bank_transfer.input).change(function(){
+			if($(me.fd.bank_transfer.input).val() == ""){
+				me.dialog.set_value("bank_transfer","0.0")	
+			}
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.discount.input).change(function(){
 			//me.setFocusToTextBox();
+			if($(me.fd.discount.input).val() == ""){
+				me.dialog.set_value("discount","0.0")	
+			}
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.bonus.input).change(function(){
+			if($(me.fd.bonus.input).val() == ""){
+				me.dialog.set_value("bonus","0.0")	
+			}
 			if(flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus){
 				me.init_for_commom_calculation();
 			}
 			else{
-				cur_dialog.fields_dict.bonus.set_input(0.0)		
+				cur_dialog.fields_dict.bonus.set_input("0.0")		
 				msgprint (__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
 			}
 		})		

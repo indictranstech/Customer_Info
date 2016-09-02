@@ -111,8 +111,9 @@ payments_received = Class.extend({
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
+				console.log(r.message["data"],"r.message")
         	   	me.page.find(".data").empty();
-				$.each(r.message, function(i, d) {
+				$.each(r.message["data"], function(i, d) {
 					if(d["payoff_cond"]){
 						me.payoff_cond = d["payoff_cond"]
 					}
@@ -123,8 +124,8 @@ payments_received = Class.extend({
 					me.payments_ids = d["payments_ids"]
 					d["payments_ids"] = me.update_dict_by_payment_ids()
         	   	});*/
-        	   	me.data = r.message;
-        	   	html = frappe.render_template("payments_received",{"data": r.message})
+        	   	me.data = r.message["data"];
+        	   	html = frappe.render_template("payments_received",{"data": r.message["data"],"total":r.message["total"]})
 				me.page.append(html)
 				me.refund();
 			}
@@ -235,6 +236,8 @@ payments_received = Class.extend({
 			       	callback: function(r){
 			       		$('tr#'+String(me.ph_name)).hide()
 			       		me.dialog.hide();
+			       		me.render_payments_details();
+
 			    	}
 		    	});
 			}

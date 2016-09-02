@@ -22,12 +22,29 @@ frappe.query_reports["late and future payments"] = {
 	            value = "<span style='color:#4db8ff!important'>" + value + "</span>";
 		    }
 	    }
+	    if(columnDef.id == "Customer") {
+	    	console.log(dataContext,"customer customer")
+            value = "<a class='customer' customer="+dataContext['Customer']+" customer_name="+JSON.stringify(dataContext['Customer'])+" onclick='click_on_customer()'>" + value + "</a>";
+	    }
 	    if(columnDef.id == "Email") {
 	    	console.log(dataContext,"customer customer")
             value = "<a class='email_id' email="+dataContext['Email']+" customer_name="+JSON.stringify(dataContext['Customer'])+" onclick='click_on_email()'>" + value + "</a>";
 	    }
 	    return value;
 	}
+}
+
+click_on_customer = function(){
+	$(".customer").click(function(){
+		console.log($(this).attr("customer_name"))
+		frappe.route_options = {
+			"from_late_and_future": "yes"
+		};
+		frappe.set_route("Form","Customer",String($(this).attr("customer_name")));
+	})
+	//console.log(String($(".customer").attr("customer_name")))
+	//console.log($($(".btn-xs")[0]).html(),"html")
+	//console.log($("body").html())
 }
 
 click_on_email = function(){
