@@ -402,20 +402,20 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 
 @frappe.whitelist()
-def get_payments_record(customer_agreement,receivable):
+def get_payments_record(customer_agreement,receivable,late_fees):
 	return {
 	"payments_record" : frappe.db.sql("""select no_of_payments,monthly_rental_amount,
 										due_date,payment_date,payment_id,check_box,check_box_of_submit,pre_select_uncheck from `tabPayments Record` 
 										where parent = '{0}' 
 										order by due_date """.format(customer_agreement),as_dict=1),
-	"summary_records" : get_summary_records(customer_agreement,receivable),
+	"summary_records" : get_summary_records(customer_agreement,receivable,late_fees),
 	"history_record" : get_history_records(customer_agreement)
 	}
 
 
-def get_summary_records(agreement,receivable):
+def get_summary_records(agreement,receivable,late_fees):
 	agreement = frappe.get_doc("Customer Agreement",agreement)
-	late_fees = "{0:.2f}".format(agreement.late_fees)
+	late_fees = "{0:.2f}".format(flt(late_fees))
 	payments_made = "{0:.2f}".format(agreement.payments_made + float(receivable))
 	if agreement.today_plus_90_days >= datetime.now().date():
 		day_pay_Off = "{0:.2f}".format(agreement.s90d_sac_price - agreement.payments_made - float(receivable) + float(late_fees))

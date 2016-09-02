@@ -35,7 +35,7 @@ def get_payments_details(customer,from_date,to_date):
 		cond = " where refund = 'No' "
 
 	
-	return frappe.db.sql("""select payment_date,customer,payoff_cond,
+	data = frappe.db.sql("""select payment_date,customer,payoff_cond,
 								rental_payment,
 								format(1*late_fees,2) as late_fees,receivables,
 								CASE WHEN payoff_cond = "Rental Payment" 
@@ -43,8 +43,24 @@ def get_payments_details(customer,from_date,to_date):
 								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
-								order by customer,payment_date desc """.format(cond),as_dict=1)
+								order by payment_date asc """.format(cond),as_dict=1)
 
+
+	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
+								format(sum(rental_payment),2) as rental_payment,
+								format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
+								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,format(sum(bank_card),2) as bank_card,
+								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(bonus),2) as bonus
+								from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
+	total,"total"
+	total_payment_received = []
+	for i in data:
+		total_payment_received.append(i['total_payment_received'].replace(",",""))
+	total[0]["payment_date"] = "Total"
+	total[0]["customer"] = "-"
+	total[0]["payoff_cond"] = "-"
+	total[0]['total_payment_received'] = "{0:.2f}".format(sum(map(float,total_payment_received)))
+	return {"data":data,"total":total}
 
 @frappe.whitelist()
 def create_csv(data):
