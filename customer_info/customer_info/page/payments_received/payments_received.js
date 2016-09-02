@@ -154,9 +154,9 @@ payments_received = Class.extend({
 	   		__dict_of_payments_ids.push({"payments_id":payment_id+"-"+me.payoff_cond,
 				"payment_id_list": JSON.stringify(payments_ids.toString()),
 				"due_date":"-",
-				"rental_payment":rental_payment,
-				"late_fees":late_fees,
-				"total": total 
+				"rental_payment":rental_payment.toFixed(2),
+				"late_fees":late_fees.toFixed(2),
+				"total": total.toFixed(2) 
 	   		})
 			console.log("__dict_of_payments_ids",__dict_of_payments_ids)
 			return __dict_of_payments_ids
