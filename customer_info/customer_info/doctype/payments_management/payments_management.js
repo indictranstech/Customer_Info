@@ -257,7 +257,11 @@ call_commit = Class.extend({
                    		{"fieldtype": "Date" , "fieldname": "date_picker" , "label": "Date"},
                    		{"fieldtype": "Currency" , "fieldname": "amount" , "label": "Amount"},
                    		{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
-                   		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "+"}
+                   		{"fieldtype": "Section Break" , "fieldname": "section"},
+                   		{"fieldtype": "Column Break" , "fieldname": "column"},
+                   		{"fieldtype": "Column Break" , "fieldname": "column"},
+                   		{"fieldtype": "Column Break" , "fieldname": "column"},
+                   		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"}
                    	],
                    	primary_action_label: "Save",
                    	primary_action: function(){

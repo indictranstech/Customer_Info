@@ -93,7 +93,7 @@ class CustomerAgreement(Document):
 			list_of_payments_record.append({
 				'no_of_payments':'Payment {0}'.format(i+1),
 				'monthly_rental_amount':self.monthly_rental_payment,
-				'due_date':self.get_next_due_date(current_date,i),
+				'due_date':self.get_next_due_date(current_date,i-1),
 				'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
 				})
 
