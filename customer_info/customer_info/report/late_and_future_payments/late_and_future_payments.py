@@ -17,13 +17,13 @@ def get_data(filters):
 	if filters:
 		now_date = datetime.now().date()
 		result = frappe.db.sql("""select t1.due_date, 
-									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{0}',t1.due_date) > 3 
-									THEN DATEDIFF('{0}',t1.due_date) ELSE 0 END AS difference,
+									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0 
+									THEN DATEDIFF('{1}',t1.due_date) ELSE 0 END AS difference,
 									t1.payment_id,t1.monthly_rental_amount,t2.concade_product_name_and_category,
 									t2.customer AS customer,
 									t3.company_phone_1,t3.bonus,
-									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{0}',t1.due_date) > 3 
-									THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
+									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 3 
+									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
 									"a",
 									CASE WHEN t2.contact_result = "WBI"
 									THEN concat(t2.contact_result," ",t2.suspension_date," ",t2.amount_of_contact_result)

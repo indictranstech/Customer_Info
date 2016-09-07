@@ -2237,23 +2237,6 @@
   "doctype": "Property Setter", 
   "doctype_or_field": "DocType", 
   "field_name": null, 
-  "modified": "2016-09-06 17:00:22.071074", 
-  "name": "Item-read_only_onload", 
-  "property": "read_only_onload", 
-  "property_type": "Check", 
-  "value": null
- }, 
- {
-  "_assign": null, 
-  "_comments": null, 
-  "_liked_by": null, 
-  "_user_tags": null, 
-  "default_value": null, 
-  "doc_type": "Item", 
-  "docstatus": 0, 
-  "doctype": "Property Setter", 
-  "doctype_or_field": "DocType", 
-  "field_name": null, 
   "modified": "2016-09-06 17:00:22.342590", 
   "name": "Item-sort_field", 
   "property": "sort_field", 
@@ -2276,5 +2259,22 @@
   "property": "_idx", 
   "property_type": "Text", 
   "value": "[\"name_and_description_section\", \"naming_series\", \"item_code\", \"item_name\", \"product_category\", \"brand\", \"serial_number\", \"imei_number\", \"merchandise_status\", \"old_status\", \"stock_uom\", \"default_supplier\", \"default_warehouse\", \"invoice_number\", \"variant_of\", \"item_group\", \"column_break0\", \"image\", \"image_view\", \"agreement_period\", \"period\", \"old_agreement_period\", \"ratio\", \"purchase_date\", \"purchase_price_with_vat\", \"old_purchase_price_with_vat\", \"40_percentage_early_buy\", \"old_90d_sac_price\", \"s90d_sac_price\", \"is_stock_item\", \"disabled\", \"monthly_rental_payment\", \"old_monthly_rental_payment\", \"insurance_fee\", \"total\", \"section_break_11\", \"barcode\", \"description\", \"inventory\", \"end_of_life\", \"has_batch_no\", \"has_serial_no\", \"serial_no_series\", \"is_asset_item\", \"column_break1\", \"tolerance\", \"valuation_method\", \"warranty_period\", \"net_weight\", \"weight_uom\", \"reorder_section\", \"reorder_levels\", \"variants_section\", \"has_variants\", \"attributes\", \"purchase_details\", \"is_purchase_item\", \"min_order_qty\", \"lead_time_days\", \"buying_cost_center\", \"expense_account\", \"unit_of_measure_conversion\", \"uoms\", \"last_purchase_rate\", \"supplier_details\", \"delivered_by_supplier\", \"manufacturer\", \"manufacturer_part_no\", \"column_break2\", \"supplier_items\", \"sales_details\", \"is_sales_item\", \"is_service_item\", \"publish_in_hub\", \"synced_with_hub\", \"income_account\", \"selling_cost_center\", \"column_break3\", \"customer_items\", \"max_discount\", \"item_tax_section_break\", \"taxes\", \"inspection_criteria\", \"inspection_required\", \"quality_parameters\", \"manufacturing\", \"is_pro_applicable\", \"is_sub_contracted_item\", \"column_break_74\", \"default_bom\", \"customer_code\", \"website_section\", \"show_in_website\", \"page_name\", \"weightage\", \"slideshow\", \"website_image\", \"thumbnail\", \"cb72\", \"website_warehouse\", \"website_item_groups\", \"sb72\", \"copy_from_item_group\", \"website_specifications\", \"web_long_description\", \"parent_website_route\"]"
+ }, 
+ {
+  "_assign": null, 
+  "_comments": null, 
+  "_liked_by": null, 
+  "_user_tags": null, 
+  "default_value": null, 
+  "doc_type": "Item", 
+  "docstatus": 0, 
+  "doctype": "Property Setter", 
+  "doctype_or_field": "DocType", 
+  "field_name": null, 
+  "modified": "2016-09-07 11:20:14.279716", 
+  "name": "Item-read_only_onload", 
+  "property": "read_only_onload", 
+  "property_type": "Check", 
+  "value": null
  }
 ]
