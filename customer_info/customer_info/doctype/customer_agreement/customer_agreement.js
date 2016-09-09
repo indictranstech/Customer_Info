@@ -13,7 +13,7 @@ frappe.ui.form.on("Customer Agreement",{
 			cur_frm.doc.old_date = cur_frm.doc.payment_day
 			refresh_field("old_date")
 		}
-        if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal){
+        if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal && cur_frm.doc.payments_record){
             date_of_next_month_according_to_payment_day()
             frappe.call({
                 method: "change_due_dates_in_child_table",

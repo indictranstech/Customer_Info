@@ -20,6 +20,17 @@ class PaymentsManagement(Document):
 	pass
 
 @frappe.whitelist()
+def update_bonus(customer,bonus,old_bonus):
+	customer = frappe.get_doc("Customer",customer)
+	if float(bonus):
+		now_date = datetime.now().date()
+		comment = """ {0} - Bonus Modified From {1} To {2}""".format(now_date,old_bonus,bonus)
+		#frappe.throw(_("{0}").format(comment))
+		customer.add_comment("Comment",comment)
+	customer.bonus = bonus
+	customer.save(ignore_permissions=True)
+
+@frappe.whitelist()
 def calculate_total_charges(customer,flag):
 	if flag == "Customer" or flag == "Onload":
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "",
@@ -28,7 +39,7 @@ def calculate_total_charges(customer,flag):
 						and parent in (select name from `tabCustomer Agreement`
 						where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
-		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,late_fees = 0 
+		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,late_fees = 0,late_payment = 0 
 						where customer = '{0}' 
 						and agreement_status = "Open" """.format(customer))
 	
@@ -221,7 +232,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 	if customer_agreement.payments_record and customer_agreement.date:
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
-		customer_agreement.late_payments = sum(late_payments)
+		customer_agreement.total_late_payments = sum(late_payments)
+		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
 		customer_agreement.number_of_payments = len(received_payments)
 		customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
@@ -239,6 +251,15 @@ def get_next_due_date(date,i):
 	add_month_to_date = add_months(date,i)
 	return add_month_to_date
 
+
+@frappe.whitelist()
+def get_late_payment(agreements):
+	agreements = json.loads(agreements)
+	agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
+	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
+								`tabCustomer Agreement`
+								where name in {0} """.format(agreements),as_list=1)
+	return late_payment[0][0]
 
 @frappe.whitelist()
 def update_on_submit(values,customer,receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
@@ -271,7 +292,9 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 		if float(customer_agreement.payments_left) == 0:
 			completed_agreement_list.append(customer_agreement.name)	
 		flag = "Process Payment"
-	add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
+	
+	#add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
+	add_bonus_and_receivables_to_customer(customer,bonus,values['balance'],flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -296,6 +319,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.payments_made = sum(payment_made)
 		customer_agreement.number_of_payments = 0
 		customer_agreement.late_fees = 0
+		customer_agreement.late_payment = 0
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
@@ -317,8 +341,8 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 			customer_doc.save(ignore_permissions=True)
 			if float(added_bonus) > 0:
 				comment = """ {0} EUR Bonus Added """.format(added_bonus)
-				#frappe.throw(_("{0}").format(comment))
-				#customer_doc.add_comment("Comment",comment)
+				frappe.throw(_("{0}").format(comment))
+				customer_doc.add_comment("Comment",comment)
 		customer_doc.update({
 			"receivables":float(receivables)
 		}) 	
@@ -383,9 +407,11 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payoff_cond = "Early buy"
 
 	flag = "Payoff Payment"	
-	add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
-	
+	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
 	values = json.loads(values)
+	
+	add_bonus_and_receivables_to_customer(customer,0,values['balance'],flag)
+	
 	data = json.loads(data)
 	_total_charges = 0
 	payments_detalis_list = []
@@ -398,6 +424,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	total_charges = float(total_charges) + float(_total_charges)
 	total_amount = float(total_amount.split(" ")[0])
 	rental_payment = float(rental_payment.split(" ")[0])
+
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
@@ -431,14 +458,14 @@ def get_summary_records(agreement,receivable,late_fees):
 	elif agreement.today_plus_90_days < datetime.now().date():
 		balance = float(agreement.payments_left) * agreement.monthly_rental_payment
 		discount = (balance / 100) * float(agreement.early_buy_discount_percentage)
-		Total_payoff_amount = (balance - float(discount)) + float(agreement.late_payments) + agreement.late_fees - float(receivable)
+		Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + agreement.late_fees - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		format(Total_payoff_amount)
 		return {"cond":2,
 				"Receivables":"{0} EUR".format(receivable),
 				"Amount_of_payments_left":"{0} EUR".format(balance),
 				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount))),
-				"Late_payments":"{0} EUR".format(agreement.late_payments),
+				"Late_payments":"{0} EUR".format(agreement.total_late_payments),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
 				"Total_payoff_amount":"{0} EUR".format(float(Total_payoff_amount)),
 				"discount":"{0} EUR".format("{0:.2f}".format(discount)),

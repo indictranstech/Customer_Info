@@ -37,11 +37,16 @@ frappe.ui.form.on("Payments Management", {
 			render_agreements();
 		}
 	},
-	static_bonus:function(){
+	update_bonus:function(){
+		if(cur_frm.doc.static_bonus){
+			update_bonus()
+		}
+	},
+	/*static_bonus:function(){
 		if(cur_frm.doc.static_bonus){
 			cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
 		}
-	},
+	},*/
 	submit:function(){
 		if(cur_frm.doc.customer){
 			var me = "Process Payments";
@@ -102,15 +107,32 @@ get_address_of_customer = function(){
     });
 }
 
+
+update_bonus = function(){
+	frappe.call({
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
+        args: {
+          "customer": cur_frm.doc.customer,
+          "bonus":cur_frm.doc.static_bonus,
+          "old_bonus":cur_frm.doc.bonus
+        },
+        callback: function(r){
+    		cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
+    	}	
+    });
+}
+
+
+
 calculate_total_charges = function(flag){
 	frappe.call({
-			async:false,
-            method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_total_charges",
-            args: {
-              "customer": cur_frm.doc.customer,
-              "flag":flag
-            },
-            callback: function(r){
+		async:false,
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_total_charges",
+        args: {
+          "customer": cur_frm.doc.customer,
+          "flag":flag
+        },
+        callback: function(r){
             if(r.message){
               	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
            		cur_frm.doc.receivables = r.message['receivables'] == 0 ? "0":r.message['receivables'];
@@ -125,7 +147,7 @@ calculate_total_charges = function(flag){
             	cur_frm.doc.total_charges = 0.0
 	           	refresh_field('total_charges')	
             }
-        }
+    	}	
     });
 }
 
@@ -179,20 +201,20 @@ render_agreements = function(){
               "payment_date":cur_frm.doc.payment_date
             },
             callback: function(r){
-              if(r.message){
-                this.data = r.message;
-                make_grid(r.message,columns,options)
-            	if(cur_frm.doc.customer_agreement){
-            		$.each($(".slick-row"),function(i,d){
-						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
-						if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
-							$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
-							cur_frm.set_value("customer_agreement","")
-						}
-					});
-            	}
-            }
-        }
+				if(r.message){
+					this.data = r.message;
+					make_grid(r.message,columns,options)
+					if(cur_frm.doc.customer_agreement){
+						$.each($(".slick-row"),function(i,d){
+							console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
+							if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
+								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
+								cur_frm.set_value("customer_agreement","")
+							}
+						});
+					}
+				}
+			}
     });
 }
 
@@ -910,7 +932,25 @@ payoff_details = Class.extend({
        	this.late_fees = late_fees;
 		this.agreements = agreements;
 		this.number_of_payments = number_of_payments;
+		me.get_amount_of_late_payment();
 	},
+	get_amount_of_late_payment:function(){
+		var me = this;
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.get_late_payment",
+	       	args: {
+	       		"agreements":me.agreements
+	        },
+	       	callback: function(r){
+	    		if(r.message){
+	    			console.log(r.message)
+	    			me.late_payment = r.message
+	    			me.payable_by_bonus = 0
+	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment)
+	    		}
+	    	}
+	    });	
+	},	
 	setFocusToTextBox:function(){
 	    $("input[data-fieldname='amount_paid_by_customer']").focus();
 	},
@@ -942,13 +982,18 @@ payoff_details = Class.extend({
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.bonus.input).change(function(){
+			console.log(me.payable_by_bonus)
 			if($(me.fd.bonus.input).val() == ""){
 				me.dialog.set_value("bonus","0.0")	
 			}
-			if(flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus){
+			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
 				me.init_for_commom_calculation();
 			}
-			else{
+			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val())) > flt(me.payable_by_bonus)) {
+				cur_dialog.fields_dict.bonus.set_input("0.0")		
+				msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
+			}
+			if( (flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus) ){
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
 				msgprint (__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
 			}
@@ -967,8 +1012,12 @@ payoff_details = Class.extend({
 			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
 																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
-																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
 																			  + flt(cur_dialog.fields_dict.discount.$input.val())
+			/*var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
+																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
+																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
+																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
+																			  + flt(cur_dialog.fields_dict.discount.$input.val())*/
 		}
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.dialog.fields_dict.msg.$wrapper.empty()
@@ -1115,7 +1164,8 @@ payoff_details = Class.extend({
 	        	"agreement_status":"Closed",
 	        	"condition": me.old_instance.values['cond'],
 	        	"customer":cur_frm.doc.customer,
-	        	"receivables":me.add_in_receivables,
+	        	//"receivables":me.add_in_receivables,
+	        	"receivables":cur_frm.doc.receivables,
 	        	"values":JSON.stringify(value),
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"total_charges":cur_frm.doc.total_charges,
@@ -1146,7 +1196,8 @@ payoff_details = Class.extend({
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"customer":cur_frm.doc.customer,
 	        	"bonus":cur_frm.doc.bonus - flt(value.bonus),
-	        	"receivables":me.add_in_receivables,
+	        	//"receivables":me.add_in_receivables,
+              	"receivables":cur_frm.doc.receivables,
               	"total_charges":cur_frm.doc.total_charges,
 	        },
 	       	callback: function(r){
