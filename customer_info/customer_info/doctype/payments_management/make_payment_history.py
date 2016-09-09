@@ -8,7 +8,6 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 	payments_history.cash = float(values['amount_paid_by_customer'])
 	payments_history.bank_card = float(values['bank_card'])
 	payments_history.bank_transfer = float(values['bank_transfer'])
-	payments_history.balance = float(values['balance'])
 	payments_history.bonus = float(values['bonus']) if values['bonus'] else 0
 	payments_history.discount = float(values['discount'])
 	payments_history.rental_payment = rental_payment

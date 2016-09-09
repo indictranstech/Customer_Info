@@ -32,19 +32,18 @@ payments_received = Class.extend({
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
 			            <tr>\
-			                <th width='6%'>Payment Date</th>\
+			                <th width='7%'>Payment Date</th>\
 			                <th width='7%'>Customer Name</th>\
-			                <th width='6%'>Payment Type</th>\
+			                <th width='7%'>Payment Type</th>\
 			                <th width='7%'>Payment Amount</th>\
-			                <th width='6%'>Late Fees Amount</th>\
+			                <th width='7%'>Late Fees Amount</th>\
 			                <th width='7%'>Receivables Amount</th>\
-			                <th width='6%'>Discount Amount</th>\
+			                <th width='7%'>Discount Amount</th>\
 			                <th width='7%'>Bonus Amount</th>\
 			                <th width='12%'>Total Payment Received Amount</th>\
-			                <th width='10%'>Bank Transfer Amount</th>\
-			                <th width='6%'>Cash Amount</th>\
+			                <th width='11%'>Bank Transfer Amount</th>\
+			                <th width='7%'>Cash Amount</th>\
 			                <th width='7%'>Bank Card Amount</th>\
-			                <th width='6%'>Balance Amount</th>\
 			                <th width='7%'>Refund Payment</th>\
 			                <th width='2%'></th>\
 			            </tr>\
