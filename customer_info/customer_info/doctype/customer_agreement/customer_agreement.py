@@ -23,7 +23,12 @@ class CustomerAgreement(Document):
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.add_payments_record()	
 			self.check_date_diff_of_first_and_second_month_due_date()
-
+		#self.change_default_warehouse()
+			
+	def change_default_warehouse(self):
+		item = frappe.get_doc("Item",self.product)
+		item.default_warehouse = "9101 – Prekė pas klientą - BK"	
+		item.save(ignore_permissions=True)
 
 	def check_date_diff_of_first_and_second_month_due_date(self):
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -161,6 +166,7 @@ class CustomerAgreement(Document):
 	def changed_merchandise_status(self):
 		if self.merchandise_status and self.old_merchandise_status and self.merchandise_status != self.old_merchandise_status:
 			item = frappe.get_doc("Item",self.product)
+			item.default_warehouse = "9101 – Prekė pas klientą - BK"
 			item.merchandise_status = self.merchandise_status
 			item.save(ignore_permissions = True)
 			item.old_status = self.merchandise_status

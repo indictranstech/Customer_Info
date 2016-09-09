@@ -31,7 +31,7 @@ def update_bonus(customer,bonus,old_bonus):
 	customer.save(ignore_permissions=True)
 
 @frappe.whitelist()
-def calculate_total_charges(customer,flag):
+def calculate_total_charges(customer,flag,payment_date):
 	if flag == "Customer" or flag == "Onload":
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "",
 						add_bonus_to_this_payment = 0	 
@@ -45,8 +45,9 @@ def calculate_total_charges(customer,flag):
 	
 	now_date = datetime.now().date()
 	firstDay_this_month = date(now_date.year, now_date.month, 1)
-	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
+	#firstDay_next_month = date(now_date.year, now_date.month+1, 1)
 	due_payment_list = []
+	late_payment_amount = []
 
 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 									where customer = '{0}' 
@@ -56,21 +57,37 @@ def calculate_total_charges(customer,flag):
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+		# for row in customer_agreement.payments_record:
+		# 	if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) < now_date:
+		# 		due_payment_list.append(row.monthly_rental_amount)
+		# 		row.update({
+		# 			"check_box":1
+		# 		})
+		# 		row.save(ignore_permissions=True)
+		# 	if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
+		# 		due_payment_list.append(row.monthly_rental_amount)
+		# 		row.update({
+		# 			"check_box":1
+		# 		})
+		# 		row.save(ignore_permissions=True)
+		# customer_agreement.save(ignore_permissions=True)
+
+
 		for row in customer_agreement.payments_record:
-			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) < firstDay_next_month:
+			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= now_date:
 				due_payment_list.append(row.monthly_rental_amount)
-				row.update({
-					"check_box":1
-				})
-				row.save(ignore_permissions=True)
+				if date_diff(payment_date,row.due_date) > 3:
+					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
+					late_payment_amount.append(late_fee)
+
 			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
 				due_payment_list.append(row.monthly_rental_amount)
-				row.update({
-					"check_box":1
-				})
-				row.save(ignore_permissions=True)
-		customer_agreement.save(ignore_permissions=True)
+				if date_diff(payment_date,row.due_date) > 3:
+					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
+					late_payment_amount.append(late_fee)
 
+	late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
+	due_payment_list.append(float(late_payment_amount))			
 	return {"amount_of_due_payments":sum(due_payment_list),
 			"receivables":receivables,
 			"bonus":bonus}
@@ -429,12 +446,15 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	
 
 @frappe.whitelist()
-def get_payments_record(customer_agreement,receivable,late_fees):
+def get_payments_record(customer_agreement,receivable,late_fees,payment_date):
 	return {
 	"payments_record" : frappe.db.sql("""select no_of_payments,monthly_rental_amount,
-										due_date,payment_date,payment_id,check_box,check_box_of_submit,pre_select_uncheck from `tabPayments Record` 
+										due_date,payment_date,payment_id,check_box,check_box_of_submit,pre_select_uncheck,
+										CASE WHEN due_date < '{1}' AND DATEDIFF('{1}',due_date) > 3 
+										THEN (DATEDIFF('{1}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fee
+										from `tabPayments Record` 
 										where parent = '{0}' 
-										order by due_date """.format(customer_agreement),as_dict=1),
+										order by idx """.format(customer_agreement,payment_date),as_dict=1),
 	"summary_records" : get_summary_records(customer_agreement,receivable,late_fees),
 	"history_record" : get_history_records(customer_agreement)
 	}
@@ -443,7 +463,8 @@ def get_payments_record(customer_agreement,receivable,late_fees):
 def get_summary_records(agreement,receivable,late_fees):
 	agreement = frappe.get_doc("Customer Agreement",agreement)
 	late_fees = "{0:.2f}".format(flt(late_fees))
-	payments_made = "{0:.2f}".format(agreement.payments_made + float(receivable))
+	#payments_made = "{0:.2f}".format(agreement.payments_made + float(receivable))
+	payments_made = "{0:.2f}".format(agreement.payments_made)
 	if agreement.today_plus_90_days >= datetime.now().date():
 		day_pay_Off = "{0:.2f}".format(agreement.s90d_sac_price - agreement.payments_made - float(receivable) + float(late_fees))
 		return {"cond":1,
