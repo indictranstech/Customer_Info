@@ -23,11 +23,18 @@ class CustomerAgreement(Document):
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.add_payments_record()	
 			self.check_date_diff_of_first_and_second_month_due_date()
-		#self.change_default_warehouse()
+		self.change_default_warehouse()
 			
 	def change_default_warehouse(self):
+		default_warehouse = ""
+		if self.agreement_status == "Open":
+			default_warehouse = "9101 – Prekė pas klientą - BK"
+		if self.agreement_status in  ["Closed","Suspended"] and self.agreement_closing_suspending_reason in ["Return","Upgrade","Financial Difficulties","Temporary Leave"]:
+			default_warehouse = "101 - Be kredito sandėlys - BK"	
+		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["40% Offer","90d SAC","Contract Term is over"]:
+			default_warehouse = "8101 – Ištrinta, grąžinta tiekėjui, sugadinta, naudojama įmonės reikmėms, pasibaigė sutartis, išsipirko anksčiau. - BK"
 		item = frappe.get_doc("Item",self.product)
-		item.default_warehouse = "9101 – Prekė pas klientą - BK"	
+		item.default_warehouse = default_warehouse
 		item.save(ignore_permissions=True)
 
 	def check_date_diff_of_first_and_second_month_due_date(self):
@@ -166,7 +173,6 @@ class CustomerAgreement(Document):
 	def changed_merchandise_status(self):
 		if self.merchandise_status and self.old_merchandise_status and self.merchandise_status != self.old_merchandise_status:
 			item = frappe.get_doc("Item",self.product)
-			item.default_warehouse = "9101 – Prekė pas klientą - BK"
 			item.merchandise_status = self.merchandise_status
 			item.save(ignore_permissions = True)
 			item.old_status = self.merchandise_status

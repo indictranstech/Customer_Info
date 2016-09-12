@@ -1158,7 +1158,7 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log(r.message)		
+	    			console.log(r.message,"aaaaaaaaaaaa")		
 	    			me.update_on_payoff(r.message)
 	    		}
 	    	}

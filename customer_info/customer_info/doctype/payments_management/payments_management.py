@@ -272,10 +272,15 @@ def get_next_due_date(date,i):
 @frappe.whitelist()
 def get_late_payment(agreements):
 	agreements = json.loads(agreements)
-	agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
+	_condition = ""
+	if len(agreements) > 1:
+		agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
+		_condition = "where name in {0}".format(agreements)
+	if len(agreements) == 1:
+		agreements = agreements.split(",")[0]
+		_condition = "where name = '{0}'".format(agreements)
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
-								`tabCustomer Agreement`
-								where name in {0} """.format(agreements),as_list=1)
+								`tabCustomer Agreement` {0} """.format(_condition),as_list=1,debug=1)
 	return late_payment[0][0]
 
 @frappe.whitelist()
@@ -304,7 +309,7 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 	merchandise_status = ""
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+","
+		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
 			completed_agreement_list.append(customer_agreement.name)	
@@ -319,7 +324,6 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
-	print "\n\n\n",completed_agreement_list,"completed_agreement_list"
 	return completed_agreement_list
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
@@ -358,7 +362,7 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 			customer_doc.save(ignore_permissions=True)
 			if float(added_bonus) > 0:
 				comment = """ {0} EUR Bonus Added """.format(added_bonus)
-				frappe.throw(_("{0}").format(comment))
+				#frappe.throw(_("{0}").format(comment))
 				customer_doc.add_comment("Comment",comment)
 		customer_doc.update({
 			"receivables":float(receivables)
@@ -498,15 +502,15 @@ def get_history_records(customer_agreement):
 	history_record_dict = frappe.db.sql("""select payment_id,due_date,payment_date,
 											monthly_rental_amount,"balance" as balance,pmt,
 											"asso" as associate, "late" as late_days,total_transaction_amount from `tabPayments Record`
-											where parent ='{0}' and check_box_of_submit = 1 order by payment_date""".format(customer_agreement),as_dict=1)
+											where parent ='{0}' and check_box_of_submit = 1 order by idx""".format(customer_agreement),as_dict=1)
 	# balance = frappe.db.get_value("Customer Agreement",{"name":customer_agreement},"balance")
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	balance = "{0:.2f}".format(float(agreement.agreement_period) * float(agreement.monthly_rental_payment))
 	print balance,"balance"
 	for i in history_record_dict:
+		i['associate'] = frappe.session.user
 		if float(balance) > float(i["monthly_rental_amount"]):
 			i["balance"] = "{0:.2f}".format(float(balance) - float(i['monthly_rental_amount']))
-			i['associate'] = frappe.session.user
 			balance = float(balance) - float(i['monthly_rental_amount'])
 		if date_diff(i['payment_date'],i['due_date']) > 0:
 			i["late_days"] = "+" + str(date_diff(i['payment_date'],i['due_date']))
