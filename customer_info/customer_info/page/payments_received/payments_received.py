@@ -98,6 +98,7 @@ def make_refund_payment(payments_ids,ph_name):
 	customer = frappe.get_doc("Customer",payment_history.customer)
 	payments_id_list = []
 	agreement_list = []
+	merchandise_status_list= []
 	for i in payments_ids:
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
 							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="",
@@ -113,9 +114,11 @@ def make_refund_payment(payments_ids,ph_name):
 	agreement_list.sort()
 
 	merchandise_status = payment_history.merchandise_status
-	if len(merchandise_status.split(",")) > 1:
+	if merchandise_status and payment_history.payment_type == "Normal Payment":
 		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
 		merchandise_status_list.sort()
+			
+
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
@@ -124,12 +127,14 @@ def make_refund_payment(payments_ids,ph_name):
 			payment_history.payoff_cond = ""
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.merchandise_status = payment_history.merchandise_status
+			customer_agreement.agreement_closing_suspending_reason = ""
 			customer_agreement.save(ignore_permissions=True)
 
 		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.agreement_closing_suspending_reason = ""
-			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]  							
+			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]
+			customer_agreement.agreement_closing_suspending_reason = ""  							
 			customer_agreement.save(ignore_permissions=True)
 		
 		if payment_history.payment_type == "Normal Payment":

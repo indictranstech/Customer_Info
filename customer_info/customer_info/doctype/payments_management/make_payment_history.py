@@ -47,6 +47,7 @@ def make_payment_history(values,customer,receivables,payment_date,total_charges,
 		
 
 	id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
+	cond = ""	
 	if len(id_list) == 1:
 		cond ="where payment_id = '{0}' ".format(id_list[0]) 
 	elif len(id_list) > 1:	

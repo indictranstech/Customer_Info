@@ -130,7 +130,8 @@ calculate_total_charges = function(flag){
         method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_total_charges",
         args: {
           "customer": cur_frm.doc.customer,
-          "flag":flag
+          "flag":flag,
+          "payment_date":cur_frm.doc.payment_date
         },
         callback: function(r){
             if(r.message){
@@ -544,12 +545,14 @@ Payments_Details = Class.extend({
 			args:{
 				"customer_agreement":me.item['id'],
 				"receivable":cur_frm.doc.receivables,
-				"late_fees":me.item['late_fees']
+				"late_fees":me.item['late_fees'],
+				"payment_date":cur_frm.doc.payment_date
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback:function(r){
 				if(r.message && me.template_name == "common_template"){
+					console.log(r.message,"aaaaaaaaaaaaa")
 					me.rendering_data = r.message
 					me.check_pre_select = "Yes"
 					html = $(frappe.render_template("common_template",{
@@ -648,28 +651,31 @@ Payments_Details = Class.extend({
    		var date = new Date();
 		var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
 		var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+		var today = new Date();
 		var lastDay_pluse_one = new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
 	   	for(i=0;i < me.payments_record_list[0].length; i++){
-	   		var date_diff_first = frappe.datetime.get_diff(me.payments_record_list[0][i]['due_date'],firstDay)
-	   		var date_diff_last = frappe.datetime.get_diff(lastDay,me.payments_record_list[0][i]['due_date'])
+	   		//var date_diff_first = frappe.datetime.get_diff(me.payments_record_list[0][i]['due_date'],firstDay)
+	   		//var date_diff_last = frappe.datetime.get_diff(lastDay,me.payments_record_list[0][i]['due_date'])
 	   		due_date_dateformat = new Date(me.payments_record_list[0][i]['due_date'])
 	   		due_date_dateformat.setHours(00)
 	   		due_date_dateformat.setSeconds(00)
 	   		due_date_dateformat.setMinutes(00)
-	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= lastDay && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
-	   			me.payments_record_list[0][i]['check_box'] = 1
-	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
-	   			me.payments_record_list[0][i]['payment_date'] = cur_frm.doc.payment_date
-	   		}
-	   		else{
-	   			me.payments_record_list[0][i]['pre_select'] = "No"
-	   		}
 	   		if(me.payments_record_list[0][i]['check_box_of_submit'] == 0 && me.payments_record_list[0][i]['check_box'] == 1 && me.payments_record_list[0][i]['payment_date']){
 	   			me.payments_record_list[0][i]['paid'] = "Yes"	
 	   		}
 	   		else{
 	   			me.payments_record_list[0][i]['paid'] = "No"		
+	   		}
+	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= today && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
+	   			me.payments_record_list[0][i]['check_box'] = 1
+	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
+	   			me.payments_record_list[0][i]['payment_date'] = cur_frm.doc.payment_date
+	   			me.payments_record_list[0][i]['is_late_payment'] = "Yes"	   			
+	   		}
+	   		else{
+	   			me.payments_record_list[0][i]['pre_select'] = "No"
+	   			me.payments_record_list[0][i]['is_late_payment'] = "No"
 	   		}
 	   	}
 	   	return me.payments_record_list
@@ -753,37 +759,42 @@ Payments_Details = Class.extend({
 		$(me.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
 		$(me.fd.payments_record.wrapper).find('div.total_charges').append(flt((cur_frm.doc.total_charges)).toFixed(2))
 		$('input[data-from=""]').change(function() {  
-		    if ($(this).is(':checked')){
+		    if ($(this).is(':checked')) {
 		    	me.add = "Yes"
+		    	me.late_fee = $(this).attr("late-fee")
 				me.add_and_subtract_from_total_and_due_charges()
 			} 
 			else {
 				me.add = "No"
+				me.late_fee = $(this).attr("late-fee")
 				me.add_and_subtract_from_total_and_due_charges()
 			}
 		});
 		$('input[data-from="from_child_table"]').change(function() {  
 		    if ($(this).is(':checked')){
 		    	me.add = "Yes"
+		    	me.late_fee = $(this).attr("late-fee")
 				me.add_and_subtract_from_total_and_due_charges()
 			} 
 			else {
 				me.add = "No"
+				me.late_fee = $(this).attr("late-fee")
 				me.add_and_subtract_from_total_and_due_charges()
 			}
 		});
 	},
 	add_and_subtract_from_total_and_due_charges:function(){
 		var me = this;
+		console.log(me.late_fee,"late_fee")
 		var factor = me.payments_record_list[0][1].monthly_rental_amount;
 		if(me.add == "Yes"){
-			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) + parseFloat(factor)
-			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) + parseFloat(factor)
+			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) + parseFloat(factor) + flt(me.late_fee)
+			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) + parseFloat(factor) + flt(me.late_fee)
 			me.set_total_due_and_total_charges()
 		}
 		if(me.add == "No"){
-			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) - parseFloat(factor)
-			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) - parseFloat(factor)
+			me.due_payments = parseFloat($(me.dialog.body).find('div.due_payments').text()) - parseFloat(factor) - flt(me.late_fee)
+			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) - parseFloat(factor) - flt(me.late_fee)
 			me.set_total_due_and_total_charges()
 		}
 	},
@@ -1147,7 +1158,7 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log(r.message)		
+	    			console.log(r.message,"aaaaaaaaaaaa")		
 	    			me.update_on_payoff(r.message)
 	    		}
 	    	}

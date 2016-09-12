@@ -110,7 +110,7 @@ payments_received = Class.extend({
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
-				console.log(r.message["data"],"r.message")
+				//console.log(r.message["data"],"r.message")
         	   	me.page.find(".data").empty();
 				$.each(r.message["data"], function(i, d) {
 					if(d["payoff_cond"]){
@@ -135,6 +135,7 @@ payments_received = Class.extend({
 		var flt_precision = frappe.defaults.get_default("float_precision")
 		var dict_of_payments_ids = []
 		var __dict_of_payments_ids = []
+		//console.log(me.payments_ids,"2222payments_ids")
 		var formatted_list_of_payment_ids = JSON.parse("[" + me.payments_ids.slice(0,-1) + '"' + "]")[0].split(",")
 		//console.log(JSON.parse("[" + payments_ids.slice(0,-1) + '"' + "]")[0].split(","),"sssssssssaaaaaa");
 		if(me.payoff_cond == "90d SAC" || me.payoff_cond == "Early buy"){
