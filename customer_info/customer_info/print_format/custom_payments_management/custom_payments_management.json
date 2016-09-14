@@ -1,0 +1,18 @@
+{
+ "creation": "2016-09-13 14:54:30.999298", 
+ "custom_format": 1, 
+ "disabled": 0, 
+ "doc_type": "Payments Management", 
+ "docstatus": 0, 
+ "doctype": "Print Format", 
+ "font": "Default", 
+ "html": "<div class=\"row\">{{doc.customer}}</div>", 
+ "idx": 0, 
+ "modified": "2016-09-13 14:54:54.025247", 
+ "modified_by": "Administrator", 
+ "name": "Custom payments Management", 
+ "owner": "Administrator", 
+ "print_format_builder": 0, 
+ "print_format_type": "Server", 
+ "standard": "Yes"
+}
