@@ -57,22 +57,6 @@ def calculate_total_charges(customer,flag,payment_date):
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		# for row in customer_agreement.payments_record:
-		# 	if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) < now_date:
-		# 		due_payment_list.append(row.monthly_rental_amount)
-		# 		row.update({
-		# 			"check_box":1
-		# 		})
-		# 		row.save(ignore_permissions=True)
-		# 	if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
-		# 		due_payment_list.append(row.monthly_rental_amount)
-		# 		row.update({
-		# 			"check_box":1
-		# 		})
-		# 		row.save(ignore_permissions=True)
-		# customer_agreement.save(ignore_permissions=True)
-
-
 		for row in customer_agreement.payments_record:
 			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= now_date:
 				due_payment_list.append(row.monthly_rental_amount)
@@ -119,11 +103,14 @@ def get_customer_agreement(customer,payment_date):
 										CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
 										THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
 										`tabPayments Record`
-										where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+										where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)		
+			#entry[3] = len([e[0] for e in late_fees if e[0] > 0])
 			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+			entry[10] = "{0:.2f}".format(float(entry[4])+sum([e[0] for e in late_fees])) if sum([e[0] for e in late_fees]) else "0.00"
 		else:
 			entry[9] = "{0:.2f}".format(entry[9])
-	
+			entry[10] = entry[10]
+			#entry[3] = entry[3]
 	return data	
 
 
@@ -272,15 +259,16 @@ def get_next_due_date(date,i):
 @frappe.whitelist()
 def get_late_payment(agreements):
 	agreements = json.loads(agreements)
+	print agreements,"agreements","\n\n\n\n\n"
 	_condition = ""
 	if len(agreements) > 1:
 		agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
 		_condition = "where name in {0}".format(agreements)
 	if len(agreements) == 1:
-		agreements = agreements.split(",")[0]
-		_condition = "where name = '{0}'".format(agreements)
+		#agreements = agreements.split(",")[0]
+		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
-								`tabCustomer Agreement` {0} """.format(_condition),as_list=1,debug=1)
+								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
 	return late_payment[0][0]
 
 @frappe.whitelist()
@@ -413,19 +401,19 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
-			"agreement_closing_suspending_reason":"90d SAC"
+			"agreement_closing_suspending_reason":"40% Offer"
 		})
 		agreement.save(ignore_permissions=True)
-		payoff_cond = "90d SAC"
+		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
 	elif int(condition) == 1 and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
-			"agreement_closing_suspending_reason":"40% Offer"
+			"agreement_closing_suspending_reason":"90d SAC"
 		})
 		agreement.save(ignore_permissions=True)
-		payoff_cond = "Early buy"
+		payoff_cond = "90d SAC"
 
 	flag = "Payoff Payment"	
 	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
@@ -483,7 +471,7 @@ def get_summary_records(agreement,receivable,late_fees):
 	elif agreement.today_plus_90_days < datetime.now().date():
 		balance = float(agreement.payments_left) * agreement.monthly_rental_payment
 		discount = (balance / 100) * float(agreement.early_buy_discount_percentage)
-		Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + agreement.late_fees - float(receivable)
+		Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + float(late_fees) - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		format(Total_payoff_amount)
 		return {"cond":2,
@@ -506,7 +494,6 @@ def get_history_records(customer_agreement):
 	# balance = frappe.db.get_value("Customer Agreement",{"name":customer_agreement},"balance")
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	balance = "{0:.2f}".format(float(agreement.agreement_period) * float(agreement.monthly_rental_payment))
-	print balance,"balance"
 	for i in history_record_dict:
 		i['associate'] = frappe.session.user
 		if float(balance) > float(i["monthly_rental_amount"]):

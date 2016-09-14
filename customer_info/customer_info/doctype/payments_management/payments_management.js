@@ -393,10 +393,12 @@ call_commit = Class.extend({
 		$(me.fd.contact_result.input).change(function(){
 			if(me.fd.contact_result.$input.val() == "WBI"){
 				console.log("inside mycond 123")
+				console.log(me.id,me.item,"me.id")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();
 				$(me.dialog.body).find("[data-fieldname ='comment']").show();
 				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();					
+				me.dialog.fields_dict.amount.set_input(flt(me.item["total_dues"]).toFixed(2))
 				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
@@ -508,8 +510,8 @@ Payments_Details = Class.extend({
             title: "Payments And Summary Detalis",
                 fields: [
                    	{"fieldtype": "HTML" , "fieldname": "payments_record" , "label": "Relative Items"},
-                   	{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "90 day pay Off"},
-                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": "Pay Off Agreement"}
+                   	{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "Pay Off Agreement"},
+                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": "90 day pay Off"}
                    	],
                    	primary_action_label: "Add",
                    	primary_action: function(){
@@ -1087,7 +1089,8 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 				r.message = Number((flt(r.message)).toFixed(2))
-	       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && parseFloat(me.dialog.fields_dict.amount_paid_by_customer.$input.val()) >= parseFloat(r.message)){
+	       		sum_of_cash_card_transfer = flt(me.dialog.fields_dict.bank_transfer.$input.val()) + flt(me.dialog.fields_dict.bank_card.$input.val()) + flt(me.dialog.fields_dict.amount_paid_by_customer.$input.val())
+	       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer >= parseFloat(r.message)){
 		       		$('button[data-fieldname="process_payment"]').hide();
 				    $('button[data-fieldname="return_to_customer"]').hide();
 					$('button[data-fieldname="add_in_receivables"]').show();
@@ -1096,8 +1099,8 @@ payoff_details = Class.extend({
 				    me.dialog.fields_dict.msg.$wrapper.append(html)
 				    me.click_on_add_in_receivables();
 				    me.click_on_return_to_customer();
-				}	    
-		       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && parseFloat(me.dialog.fields_dict.amount_paid_by_customer.$input.val()) < parseFloat(r.message)){
+				}
+		       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer < parseFloat(r.message)){
 		       		html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative Cash should be >= "+" "+r.message+"</div>"
 	       			$('button[data-fieldname="add_in_receivables"]').hide();
 				    $('button[data-fieldname="return_to_customer"]').hide();
@@ -1119,6 +1122,8 @@ payoff_details = Class.extend({
 	click_on_return_to_customer:function(){
 		var me =this;
 		me.dialog.fields_dict.return_to_customer.$input.click(function() {
+			var val_of_cash = flt($(me.fd.amount_paid_by_customer.input).val()) - flt($(me.fd.balance.input).val())
+			cur_dialog.fields_dict.amount_paid_by_customer.set_input(val_of_cash.toFixed(2))
 			me.add_in_receivables = 0
     		me.hide_other_and_show_complete_payment();
     		me.click_on_submit();
