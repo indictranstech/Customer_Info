@@ -139,7 +139,8 @@ payments_received = Class.extend({
 		console.log(me.payments_ids,"2222payments_ids")
 		var formatted_list_of_payment_ids = JSON.parse("[" + me.payments_ids.slice(0,-1) + '"' + "]")[0].split(",")
 		//console.log(JSON.parse("[" + payments_ids.slice(0,-1) + '"' + "]")[0].split(","),"sssssssssaaaaaa");
-		if(me.payoff_cond == "90d SAC" || me.payoff_cond.split("-")[0] == "Early buy"){
+		//if(me.payoff_cond == "90d SAC" || me.payoff_cond.split("-")[0] == "Early buy"){
+		if(me.payoff_cond != "Rental Payment"){
 			late_fees = 0
 			rental_payment = 0
 			total = 0
