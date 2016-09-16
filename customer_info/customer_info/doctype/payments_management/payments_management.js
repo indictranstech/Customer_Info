@@ -580,7 +580,7 @@ Payments_Details = Class.extend({
         	   			})).appendTo(me.fd.payments_record.wrapper);
 					$(me.dialog.body).parent().find('.btn-primary').show();
 					$(me.dialog.body).find('#home'+ me.index).removeClass("tab-pane fade");
-					me.add_date_on_check();	
+					me.add_date_on_check();
 					me.increase_decrease_total_charges_and_due_payment();
 				}
 				else if(r.message && me.template_name == "summary_record"){
@@ -705,44 +705,53 @@ Payments_Details = Class.extend({
         });
         
         //console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
-        //console.log(me.row_to_update,"row_to_update")
+        console.log(me.row_to_update,"row_to_update")
         //console.log(me.row_to_uncheck,"row_to_uncheck")
-        //console.log(me.row_to_check,"row_to_check")
+        console.log(me.row_to_check,"row_to_check")
 	    //console.log(cur_frm.doc.bonus,"bonus")
-
-		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
-			var me = this
-	   		frappe.call({    
-		        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
-		        async: false,
-	           	args: {
-	           		"row_to_update":me.row_to_update,
-	           		"row_to_uncheck":me.row_to_uncheck,
-	           		"row_to_check":me.row_to_check,
-	           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
-	           		"parent":this.item['id'],
-	           		"payment_date":cur_frm.doc.payment_date
-	            },
-	           	callback: function(res){
-	        	}
-	        });
-	        frappe.call({
-		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
-		        async: false,
-	           	args: {
-	           		"customer_agreement":this.item['id'],
-	            	"frm_bonus":cur_frm.doc.bonus,
-	            	//"flag":"Payment Details",
-	            	"row_to_uncheck":me.row_to_uncheck
-	            },
-	           	callback: function(r){
-	        		cur_frm.set_value("bonus",r.message)
-	        		render_agreements()
-	            	me.update_total_charges_and_due_payments()
-	        		me.dialog.hide();
-	        	}
-	        });
-	    }
+	    var concate_array = []
+	    $.each(me.row_to_check.concat(me.row_to_update),function(i,d){
+	    	concate_array.push(flt(d.split(" ")[1]))
+	    });
+	    console.log(concate_array.sort())
+	    if (concate_array.sort().length == concate_array.sort()[concate_array.sort().length -1]){
+			if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
+				var me = this
+		   		frappe.call({    
+			        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
+			        async: false,
+		           	args: {
+		           		"row_to_update":me.row_to_update,
+		           		"row_to_uncheck":me.row_to_uncheck,
+		           		"row_to_check":me.row_to_check,
+		           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
+		           		"parent":this.item['id'],
+		           		"payment_date":cur_frm.doc.payment_date
+		            },
+		           	callback: function(res){
+		        	}
+		        });
+		        frappe.call({
+			        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
+			        async: false,
+		           	args: {
+		           		"customer_agreement":this.item['id'],
+		            	"frm_bonus":cur_frm.doc.bonus,
+		            	//"flag":"Payment Details",
+		            	"row_to_uncheck":me.row_to_uncheck
+		            },
+		           	callback: function(r){
+		        		cur_frm.set_value("bonus",r.message)
+		        		render_agreements()
+		            	me.update_total_charges_and_due_payments()
+		        		me.dialog.hide();
+		        	}
+		        });
+		    }
+		}    
+		else{
+			msgprint("Error Please Add Payment In sequence")
+		}    
 	},
 	add_date_on_check:function(){
 		$('.select').change(function() {  
@@ -760,28 +769,28 @@ Payments_Details = Class.extend({
 	    var factor = me.payments_record_list[0][1].monthly_rental_amount;		
 		$(me.fd.payments_record.wrapper).find('div.due_payments').append(flt((cur_frm.doc.amount_of_due_payments)).toFixed(2))
 		$(me.fd.payments_record.wrapper).find('div.total_charges').append(flt((cur_frm.doc.total_charges)).toFixed(2))
-		$('input[data-from=""]').change(function() {  
+		$(me.dialog.wrapper).find('input[data-from=""]').change(function() {  
 		    if ($(this).is(':checked')) {
 		    	me.add = "Yes"
 		    	me.late_fee = $(this).attr("late-fee")
-				me.add_and_subtract_from_total_and_due_charges()
+				me.add_and_subtract_from_total_and_due_charges();
 			} 
 			else {
 				me.add = "No"
 				me.late_fee = $(this).attr("late-fee")
-				me.add_and_subtract_from_total_and_due_charges()
+				me.add_and_subtract_from_total_and_due_charges();
 			}
 		});
-		$('input[data-from="from_child_table"]').change(function() {  
+		$(me.dialog.wrapper).find('input[data-from="from_child_table"]').change(function() {  
 		    if ($(this).is(':checked')){
 		    	me.add = "Yes"
 		    	me.late_fee = $(this).attr("late-fee")
-				me.add_and_subtract_from_total_and_due_charges()
+				me.add_and_subtract_from_total_and_due_charges();
 			} 
 			else {
 				me.add = "No"
 				me.late_fee = $(this).attr("late-fee")
-				me.add_and_subtract_from_total_and_due_charges()
+				me.add_and_subtract_from_total_and_due_charges();
 			}
 		});
 	},
@@ -1137,6 +1146,8 @@ payoff_details = Class.extend({
 	},
 	click_on_submit:function(){
 		var me = this;
+		console.log(me.add_in_receivables,"add_in_receivables")
+		console.log(me.rental_payment,"rental_payment")
 		/*console.log(me.old_instance)
 		console.log(me.old_instance['values']['s90d_SAC_price'],"old_dialog")
 		console.log(me.old_instance['values']['s90_day_pay_Off'],"old_dialog")*/
@@ -1182,6 +1193,7 @@ payoff_details = Class.extend({
 	        	"customer":cur_frm.doc.customer,
 	        	//"receivables":me.add_in_receivables,
 	        	"receivables":cur_frm.doc.receivables,
+	        	"add_in_receivables":me.add_in_receivables,
 	        	"values":JSON.stringify(value),
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"total_charges":cur_frm.doc.total_charges,
@@ -1213,6 +1225,7 @@ payoff_details = Class.extend({
 	        	"customer":cur_frm.doc.customer,
 	        	"bonus":cur_frm.doc.bonus - flt(value.bonus),
 	        	//"receivables":me.add_in_receivables,
+	        	"add_in_receivables":me.add_in_receivables,
               	"receivables":cur_frm.doc.receivables,
               	"total_charges":cur_frm.doc.total_charges,
 	        },

@@ -39,17 +39,17 @@ def get_payments_details(customer,from_date,to_date):
 								rental_payment,
 								format(1*late_fees,2) as late_fees,receivables,
 								CASE WHEN payoff_cond = "Rental Payment" 
-								THEN format(rental_payment+late_fees+receivables,2) ELSE format(total_payment_received,2) END AS total_payment_received,
-								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,format(bank_card,2) as bank_card,
+								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
+								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
-								order by payment_date asc """.format(cond),as_dict=1)
+								order by payment_date asc """.format(cond),as_dict=1,debug=1)
 
 
 	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
 								format(sum(rental_payment),2) as rental_payment,
 								format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
-								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,format(sum(bank_card),2) as bank_card,
+								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
 								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(bonus),2) as bonus
 								from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
 	total,"total"
@@ -85,9 +85,9 @@ def add_data(w,data):
 		for i in data:
 			row = ['',i['payment_date'], i['customer'], i['rental_payment'],i['late_fees'],i['receivables'],i['total_payment_received'],i['bank_transfer'],i['cash'],i['bank_card'],i['balance'],i['discount'],i['bonus']]
 			w.writerow(row)	
-			w.writerow(['','Payment id','Due Date','Rental Payment','Late Fees','Total'])
+			w.writerow(['','Payment id','Due Date','Rental Payment','Late Fees','Total','','Payment id','Due Date','Rental Payment','Late Fees','Total'])
 			for j in i['payments_ids']:
-				row = ['', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
+				row = ['', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total'],'', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
 				w.writerow(row)
 	return w
 	 
@@ -140,7 +140,8 @@ def make_refund_payment(payments_ids,ph_name):
 		if payment_history.payment_type == "Normal Payment":
 			customer.bonus = set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)
 		customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
-		customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
+		#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
+		customer.receivables = payment_history.receivables
 		customer.save(ignore_permissions=True)
 	
 	payment_history.refund = "Yes"

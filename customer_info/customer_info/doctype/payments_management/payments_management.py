@@ -98,7 +98,7 @@ def get_customer_agreement(customer,payment_date):
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
 		entry[7] = payments_left
-		if float(entry[9]) == 0:
+		if float(entry[3]) == 0:
 			late_fees = frappe.db.sql("""select
 										CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
 										THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
@@ -272,7 +272,7 @@ def get_late_payment(agreements):
 	return late_payment[0][0]
 
 @frappe.whitelist()
-def update_on_submit(values,customer,receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
+def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
 
 	values = json.loads(values)
 	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(customer)
@@ -304,14 +304,15 @@ def update_on_submit(values,customer,receivables,payment_date,bonus,total_charge
 		flag = "Process Payment"
 	
 	#add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
-	add_bonus_and_receivables_to_customer(customer,bonus,values['balance'],flag)
+	#add_bonus_and_receivables_to_customer(customer,bonus,values['balance'],flag)
+	add_bonus_and_receivables_to_customer(customer,bonus,add_in_receivables,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
 	for d in submitted_payments_ids:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
+	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment")	
 	return completed_agreement_list
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
@@ -384,7 +385,7 @@ def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
 	return {"submitted_payments_ids":submitted_payments_ids,"late_fees":late_fees,"rental_payment":rental_payment}
 
 @frappe.whitelist()
-def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
+def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,add_in_receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
 	now_date = datetime.now().date()
 	
 	frappe.db.sql("""update `tabPayments Record` 
@@ -419,7 +420,8 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
 	values = json.loads(values)
 	
-	add_bonus_and_receivables_to_customer(customer,0,values['balance'],flag)
+	#add_bonus_and_receivables_to_customer(customer,0,values['balance'],flag)
+	add_bonus_and_receivables_to_customer(customer,0,add_in_receivables,flag)
 	
 	data = json.loads(data)
 	_total_charges = 0
@@ -434,7 +436,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	total_amount = float(total_amount.split(" ")[0])
 	rental_payment = float(rental_payment.split(" ")[0])
 
-	make_payment_history(values,customer,receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
+	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond)	
 	
 
 @frappe.whitelist()
@@ -505,7 +507,7 @@ def get_history_records(customer_agreement):
 			i["late_days"] = 0
 		elif date_diff(i['payment_date'],i['due_date']) < 0:
 			i["late_days"] = date_diff(i['payment_date'],i['due_date'])
-	#print history_record_dict,"history_record_dict history_record_dict"		
+	print history_record_dict,"history_record_dict history_record_dict","\n\n\n\n\n\n"		
 	return history_record_dict
 
 	

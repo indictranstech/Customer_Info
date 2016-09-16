@@ -139,7 +139,8 @@ class CustomerAgreement(Document):
 	    		if row.idx != 1:
 			    	self.check_date_diff_of_first_and_second_month_due_date()
 			    	row.update({
-			    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
+			    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-2)
+			    		#"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
 			    	})
 
 	# get date after i month
