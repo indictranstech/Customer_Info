@@ -38,16 +38,13 @@ class CustomerAgreement(Document):
 		item.save(ignore_permissions=True)
 
 	def check_date_diff_of_first_and_second_month_due_date(self):
-		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-		diff_of_first_and_second_due_date = date_diff(self.get_next_due_date(current_date,0),self.date)
-		if diff_of_first_and_second_due_date >= 14 and diff_of_first_and_second_due_date <= 44: 
-			return "True"
-		if diff_of_first_and_second_due_date < 14:
-			diff = 14 - diff_of_first_and_second_due_date
-			frappe.throw(_("Increase Payment Day By {0}").format(diff))
-		if diff_of_first_and_second_due_date > 44:
-			diff = diff_of_first_and_second_due_date - 44
-			frappe.throw(_("Decrease Payment Day By {0}").format(diff))		
+		due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+		diff_of_first_and_second_due_date = date_diff(due_date_of_next_month,self.date)
+		print diff_of_first_and_second_due_date,"\n\n\n\n","diff_of_first_and_second_due_date"
+		if date_diff(due_date_of_next_month,self.date) > 44 :
+			frappe.throw("Decrease Payment Day")
+		if date_diff(due_date_of_next_month,self.date) <= 14:
+			frappe.throw("Increase Payment Day")
 
 	def after_insert(self):
 		self.comment_for_agreement_creation()
@@ -134,14 +131,13 @@ class CustomerAgreement(Document):
 	# get date after i month on changeing payment day	
 	def change_due_dates_in_child_table(self):
 	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-	    for row in self.payments_record:
-	    	if row.check_box_of_submit == 0:
-	    		if row.idx != 1:
-			    	self.check_date_diff_of_first_and_second_month_due_date()
-			    	row.update({
-			    		"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-2)
-			    		#"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
-			    	})
+	    for i,row in enumerate(self.payments_record):
+    		if row.idx > 1 and row.check_box_of_submit == 0:
+		    	self.check_date_diff_of_first_and_second_month_due_date()
+		    	row.update({
+		    		"due_date":self.get_next_due_date(due_date_of_next_month,i-1)
+		    		#"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
+		    	})
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
