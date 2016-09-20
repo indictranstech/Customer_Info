@@ -83,7 +83,7 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
             cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));    
         }    
-        if(cur_frm.doc.payment_day && cur_frm.doc.date){
+        if(cur_frm.doc.payment_day && cur_frm.doc.date && cur_frm.doc.__islocal){
             date_of_next_month_according_to_payment_day()
         }
         if(cur_frm.doc.agreement_status && cur_frm.doc.__islocal){
@@ -197,7 +197,7 @@ make_update_agreement  = function() {
 
 
 //date_of_next_month_according_to_payment_day
-date_of_next_month_according_to_payment_day = function(frm){
+/*date_of_next_month_according_to_payment_day = function(frm){
     var date_after_one_month = frappe.datetime.add_months(cur_frm.doc.date,1)
     var newDate = new Date(date_after_one_month)
     var a = parseInt(cur_frm.doc.date.substr(-2))
@@ -222,7 +222,36 @@ date_of_next_month_according_to_payment_day = function(frm){
         cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
         cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
+}*/
+date_of_next_month_according_to_payment_day = function(frm){
+    var date_after_one_month = frappe.datetime.add_months(cur_frm.doc.date,1)
+    var newDate = new Date(date_after_one_month)
+    var a = parseInt(cur_frm.doc.date.substr(-2))
+    var b = parseInt(cur_frm.doc.payment_day)
+    if(a > b){
+        var c = a - b
+        //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
+        cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,-c))
+        refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+    }
+    if(a < b){
+        var c = b - a
+        //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
+        cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,+c))
+        refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+    }
+    if(a == b){
+        cur_frm.doc.due_date_of_next_month = newDate
+        refresh_field("due_date_of_next_month")
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+    }
 }
+
 
 
 //update_due_date_in_payments_records_according_to_payment_day

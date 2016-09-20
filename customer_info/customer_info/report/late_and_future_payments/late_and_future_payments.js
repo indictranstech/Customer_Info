@@ -18,7 +18,7 @@ frappe.query_reports["late and future payments"] = {
 		    if (concad[0] == "WBI" && concad[1] >= now_date) { //green
 	            value = "<span style='color:#2eb82e!important'>" + value + "</span>";
 		    }
-		    if (concad[0] + " "+concad[1] == "Sent SMS/Email") { // blue
+		    if (concad[0] + " "+concad[1] == "Sent SMS/Email" && concad[2] == dataContext["Due Date"]) { // blue
 	            value = "<span style='color:#4db8ff!important'>" + value + "</span>";
 		    }
 	    }

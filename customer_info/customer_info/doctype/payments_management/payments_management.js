@@ -392,8 +392,6 @@ call_commit = Class.extend({
 		nowdate = frappe.datetime.nowdate()
 		$(me.fd.contact_result.input).change(function(){
 			if(me.fd.contact_result.$input.val() == "WBI"){
-				console.log("inside mycond 123")
-				console.log(me.id,me.item,"me.id")
 				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
 				$(me.dialog.body).find("[data-fieldname ='amount']").show();
 				$(me.dialog.body).find("[data-fieldname ='comment']").show();
@@ -402,9 +400,10 @@ call_commit = Class.extend({
 				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
+				console.log(me.item["current_due_date"],"current_due_date1232212")
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();					
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
 				$(me.dialog.body).find("[data-fieldname ='comment']").show();
 				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
@@ -463,7 +462,7 @@ call_commit = Class.extend({
 				id = "#" + me.id
 				$(id).attr('value', "SMS/Email");
 			}
-			me.date = date
+			me.date = date;
 			me.update_call_commitment_data_in_agreement()
 			me.dialog.hide();
 		}
@@ -653,6 +652,7 @@ Payments_Details = Class.extend({
    		var date = new Date();
 		var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
 		var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+		//var today = new Date(frappe.datetime.add_days(frappe.datetime.nowdate(),-1));
 		var today = new Date();
 		var lastDay_pluse_one = new Date(date.getFullYear(), date.getMonth() + 1, 1);
 
@@ -663,12 +663,17 @@ Payments_Details = Class.extend({
 	   		due_date_dateformat.setHours(00)
 	   		due_date_dateformat.setSeconds(00)
 	   		due_date_dateformat.setMinutes(00)
+	   		today.setHours(00)
+	   		today.setSeconds(00)
+	   		today.setMinutes(00)
 	   		if(me.payments_record_list[0][i]['check_box_of_submit'] == 0 && me.payments_record_list[0][i]['check_box'] == 1 && me.payments_record_list[0][i]['payment_date']){
 	   			me.payments_record_list[0][i]['paid'] = "Yes"	
 	   		}
 	   		else{
 	   			me.payments_record_list[0][i]['paid'] = "No"		
 	   		}
+	   		console.log(due_date_dateformat,today)
+	   		
 	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= today && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
 	   			me.payments_record_list[0][i]['check_box'] = 1
 	   			me.payments_record_list[0][i]['pre_select'] = "Yes"
@@ -714,44 +719,56 @@ Payments_Details = Class.extend({
 	    	concate_array.push(flt(d.split(" ")[1]))
 	    });
 	    console.log(concate_array.sort())
-	    if (concate_array.sort().length == concate_array.sort()[concate_array.sort().length -1]){
-			if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
-				var me = this
-		   		frappe.call({    
-			        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
-			        async: false,
-		           	args: {
-		           		"row_to_update":me.row_to_update,
-		           		"row_to_uncheck":me.row_to_uncheck,
-		           		"row_to_check":me.row_to_check,
-		           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
-		           		"parent":this.item['id'],
-		           		"payment_date":cur_frm.doc.payment_date
-		            },
-		           	callback: function(res){
-		        	}
-		        });
-		        frappe.call({
-			        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
-			        async: false,
-		           	args: {
-		           		"customer_agreement":this.item['id'],
-		            	"frm_bonus":cur_frm.doc.bonus,
-		            	//"flag":"Payment Details",
-		            	"row_to_uncheck":me.row_to_uncheck
-		            },
-		           	callback: function(r){
-		        		cur_frm.set_value("bonus",r.message)
-		        		render_agreements()
-		            	me.update_total_charges_and_due_payments()
-		        		me.dialog.hide();
-		        	}
-		        });
-		    }
-		}    
-		else{
+	    sort = concate_array.sort()
+	    if(sort.length > 1){
+	    	for(i=0;i<sort.length-1;i++){
+		    	console.log(sort[i+1],sort[i])
+		    	if(sort[i+1] - sort[i] != 1){
+		    		msgprint("Error Please Add Payment In sequence")
+		    	}
+		    	else{
+		    		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
+						var me = this
+				   		frappe.call({    
+					        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
+					        async: false,
+				           	args: {
+				           		"row_to_update":me.row_to_update,
+				           		"row_to_uncheck":me.row_to_uncheck,
+				           		"row_to_check":me.row_to_check,
+				           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
+				           		"parent":this.item['id'],
+				           		"payment_date":cur_frm.doc.payment_date
+				            },
+				           	callback: function(res){
+				        	}
+				        });
+				        frappe.call({
+					        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
+					        async: false,
+				           	args: {
+				           		"customer_agreement":this.item['id'],
+				            	"frm_bonus":cur_frm.doc.bonus,
+				            	//"flag":"Payment Details",
+				            	"row_to_uncheck":me.row_to_uncheck
+				            },
+				           	callback: function(r){
+				        		cur_frm.set_value("bonus",r.message)
+				        		render_agreements()
+				            	me.update_total_charges_and_due_payments()
+				        		me.dialog.hide();
+				        	}
+				        });
+				    }	
+		    	}
+	    	}
+	    }
+	    /*if (concate_array.sort().length == concate_array.sort()[concate_array.sort().length -1] || concate_array.sort().length == 1) {*/
+		
+		
+		/*else{
 			msgprint("Error Please Add Payment In sequence")
-		}    
+		}*/    
 	},
 	add_date_on_check:function(){
 		$('.select').change(function() {  
