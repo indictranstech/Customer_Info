@@ -24,12 +24,12 @@ def update_bonus(customer,bonus,old_bonus):
 	customer = frappe.get_doc("Customer",customer)
 	if float(bonus):
 		now_date = datetime.now().date()
-		comment = """ {0} - Bonus Modified From {1} To {2}""".format(now_date,old_bonus,bonus)
+		comment = """ Bonus Modified From {1} To {2}""".format(now_date,old_bonus,bonus)
 		#frappe.throw(_("{0}").format(comment))
-		customer.add_comment("Comment",comment)
+		#customer.add_comment("Comment",comment)
 	customer.bonus = bonus
 	customer.save(ignore_permissions=True)
-
+	return comment
 @frappe.whitelist()
 def calculate_total_charges(customer,flag,payment_date):
 	if flag == "Customer" or flag == "Onload":
@@ -39,15 +39,25 @@ def calculate_total_charges(customer,flag,payment_date):
 						and parent in (select name from `tabCustomer Agreement`
 						where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
-		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,late_fees = 0,late_payment = 0 
+		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,
+						late_payment = 0
 						where customer = '{0}' 
 						and agreement_status = "Open" """.format(customer))
+
+		frappe.db.sql("""update `tabCustomer Agreement` set 
+						late_fees = CASE WHEN late_fees_updated = "No"
+						THEN 0 ELSE late_fees END 
+						where customer = '{0}' 
+						and agreement_status = "Open" """.format(customer))
+
+		
 	
 	now_date = datetime.now().date()
 	firstDay_this_month = date(now_date.year, now_date.month, 1)
 	#firstDay_next_month = date(now_date.year, now_date.month+1, 1)
 	due_payment_list = []
 	late_payment_amount = []
+
 
 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 									where customer = '{0}' 
@@ -57,7 +67,9 @@ def calculate_total_charges(customer,flag,payment_date):
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+		late_fees_of_agreement = []
 		for row in customer_agreement.payments_record:
+
 			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= now_date:
 				due_payment_list.append(row.monthly_rental_amount)
 				row.check_box = 1
@@ -65,20 +77,32 @@ def calculate_total_charges(customer,flag,payment_date):
 				if date_diff(payment_date,row.due_date) > 3:
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
 					late_payment_amount.append(late_fee)
-
+					late_fees_of_agreement.append(late_fee)
 			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
 				due_payment_list.append(row.monthly_rental_amount)
 				row.check_box = 1
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
+					late_fees_of_agreement.append(late_fee)
 					late_payment_amount.append(late_fee)
+		if customer_agreement.late_fees_updated == "No":
+
+			print "\n\n\n\n\n","in late_fees_updated",customer_agreement.name			
+			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
 		customer_agreement.save(ignore_permissions=True)
 	late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
 	due_payment_list.append(float(late_payment_amount))			
 	return {"amount_of_due_payments":sum(due_payment_list),
 			"receivables":receivables,
 			"bonus":bonus}
+
+@frappe.whitelist()
+def update_late_fees(agreement,late_fees):
+	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+	customer_agreement.late_fees_updated = "Yes"
+	customer_agreement.late_fees = late_fees
+	customer_agreement.save(ignore_permissions=True)	
 
 
 @frappe.whitelist()
@@ -101,21 +125,22 @@ def get_customer_agreement(customer,payment_date):
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
-		late_fees = frappe.db.sql("""select
-			CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
-			THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
-			`tabPayments Record`
-			where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+		# late_fees = frappe.db.sql("""select
+		# 	CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
+		# 	THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
+		# 	`tabPayments Record`
+		# 	where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
 
 		if entry[3] == 0:
 			entry[3] = frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
 			if entry[3] > 0:
-				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ sum([e[0] for e in late_fees]) if sum([e[0] for e in late_fees]) else float(entry[4]))
+				#entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+				#entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ sum([e[0] for e in late_fees]) if sum([e[0] for e in late_fees]) else float(entry[4]))
+				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9]))
 		
-		if late_fees == 0:
-			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+		#if late_fees == 0:
 			 
 		#entry[3] = len([e[0] for e in late_fees if e[0] > 0])
 		# else:
@@ -260,7 +285,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
 		customer_agreement.number_of_payments = len(received_payments)
-		customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
+		if customer_agreement.late_fees_updated == "No":
+			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
 		customer_agreement.bonus = customer_agreement.bonus + bonus - subtract_bonus
 		customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
 	customer_agreement.save(ignore_permissions=True)
@@ -446,7 +472,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
 			"agreement_closing_suspending_reason":"90d SAC",
-			"merchandise_status":"Sold" if date_diff(payment_date,agreement.date) == 2 else merchandise_status
+			"merchandise_status":"Sold" if date_diff(payment_date,agreement.date) <= 2 else merchandise_status
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "90d SAC"

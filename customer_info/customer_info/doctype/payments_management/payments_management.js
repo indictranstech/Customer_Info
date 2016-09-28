@@ -117,8 +117,13 @@ update_bonus = function(){
           "old_bonus":cur_frm.doc.bonus
         },
         callback: function(r){
-    		cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
-    		msgprint("Bonus Updated")
+        	if(r.message){
+        		cur_frm.set_value("notes_on_customer_payments",r.message)
+				$('button[data-fieldname="add_notes"]').click();
+        		cur_frm.set_value("notes_on_customer_payments","")
+        		cur_frm.set_value("bonus",cur_frm.doc.static_bonus);
+    			msgprint("Bonus Updated");
+        	}
     	}	
     });
 }
@@ -170,6 +175,11 @@ render_agreements = function(){
 		}
 	}
 
+	var late_fees_editable = function(row, cell, value, columnDef, dataContext){
+		var id = "late_fee"+ String(row)
+		console.log(dataContext['late_fees'],"dataContext['late_fees']")
+		return "<a class='late_fees' value="+dataContext['late_fees']+">" + dataContext['late_fees'] + "</a>";
+	}
 
 	var columns = [
 	    /*{id: "serial", name: "#", field: "serial", cssClass: "cell-selection", width: 20, resizable: false, selectable: false, focusable: false },*/
@@ -182,7 +192,7 @@ render_agreements = function(){
 	    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 90,toolTip: "Next Due Date"},
 	    {id: "payments_left", name: "Payments left", field: "payments_left",width: 70,toolTip: "Payments left"},
 	    {id: "balance", name: "Balance", field: "balance",width: 70,toolTip: "Balance"},
-	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 50,toolTip: "Late Fees"},
+	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 50,toolTip: "Late Fees",formatter:late_fees_editable},
 	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 50,toolTip: "Total Dues"},
 	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50,toolTip: "Payments Made"},
 	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail,toolTip: "Detail"},
@@ -282,9 +292,82 @@ make_grid= function(data1,columns,options){
         	//new manage_suspenison(id,item)
         	new call_commit(id,item)
         }
+        if($(e.target).hasClass("late_fees")) {
+        	var id = $(e.target).attr('id')
+        	//new manage_suspenison(id,item)
+        	new edit_late_fees(id,item)
+        }
     });
 
 }
+
+
+edit_late_fees = Class.extend({
+	init:function(id,item){
+		this.item = item;
+		this.id = id;
+		this.make_late_editable();
+	},
+	make_late_editable:function(){
+		var me = this;
+		this.dialog = new frappe.ui.Dialog({
+    		title: "Contact result",
+        	fields: [
+           		{"fieldtype": "Float" , "fieldname": "late_fees" , "label": "Late Fees","precision":2},
+           		{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
+           		{"fieldtype": "Section Break" , "fieldname": "section"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"}
+           	],
+           	primary_action_label: "Update",
+           	primary_action: function(){
+                me.update_late_fees();
+            }
+   		});
+       	this.fd = this.dialog.fields_dict;
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
+       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	this.dialog.show();
+		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide()
+		this.set_late_fees();
+	},
+	set_late_fees:function(){
+		var me = this;
+		me.dialog.fields_dict.late_fees.set_input(me.item['late_fees'])	
+		me.add_comment();
+	},
+	add_comment:function(){
+		var me = this;
+		console.log("in my function")
+		me.dialog.fields_dict.add_comment.$input.click(function() {
+			if(me.dialog.fields_dict.comment.$input.val()){
+				console.log("in mybutton mybutton 11223")
+				cur_frm.set_value("notes_on_customer_payments",me.dialog.fields_dict.comment.$input.val())
+				$('button[data-fieldname="add_notes"]').click()
+				me.dialog.fields_dict.comment.set_input("")
+			}
+		})
+	},
+	update_late_fees:function(){
+		var me = this;
+		console.log(me.fd.late_fees.$input.val())		
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_late_fees",
+	        args: {
+	        	"agreement":me.item['id'],
+	        	"late_fees": flt(me.fd.late_fees.$input.val())
+	        },
+	        callback: function(r) {
+	        	me.dialog.hide();
+	        	render_agreements();
+	        }
+	    });
+	}
+})
+
 
 call_commit = Class.extend({
 	init:function(id,item){
@@ -427,7 +510,7 @@ call_commit = Class.extend({
 				console.log(me.item["current_due_date"],"current_due_date1232212")
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();					
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
 				$(me.dialog.body).find("[data-fieldname ='comment']").show();
 				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
