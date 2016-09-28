@@ -427,7 +427,7 @@ call_commit = Class.extend({
 				console.log(me.item["current_due_date"],"current_due_date1232212")
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();					
+				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
 				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
 				$(me.dialog.body).find("[data-fieldname ='comment']").show();
 				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
