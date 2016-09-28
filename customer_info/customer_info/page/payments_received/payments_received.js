@@ -141,24 +141,24 @@ payments_received = Class.extend({
 		//console.log(JSON.parse("[" + payments_ids.slice(0,-1) + '"' + "]")[0].split(","),"sssssssssaaaaaa");
 		//if(me.payoff_cond == "90d SAC" || me.payoff_cond.split("-")[0] == "Early buy"){
 		if(me.payoff_cond != "Rental Payment"){
-			late_fees = 0
+			late_fees = ""//0
 			rental_payment = 0
-			total = 0
+			total = ""//0
 			payment_id = ""
 			payments_ids = []
 			$.each(formatted_list_of_payment_ids, function(i, d) {
 				payment_id = d.split("/")[0].split("-P")[0],
-				payments_ids.push(d.split("/")[0])
-				late_fees += parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2))
-				rental_payment += parseFloat(flt(d.split("/")[2]).toFixed(2))
-				total += parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2))
+				payments_ids.push(d.split("/")[0]),
+				late_fees = "-",//parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2))
+				rental_payment = parseFloat(flt(d.split("/")[2]).toFixed(2)),
+				total = "-"//parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2))
 	   		});
 	   		__dict_of_payments_ids.push({"payments_id":payment_id+"-"+me.payoff_cond,
 				"payment_id_list": JSON.stringify(payments_ids.toString()),
 				"due_date":"-",
 				"rental_payment":rental_payment.toFixed(2),
-				"late_fees":late_fees.toFixed(2),
-				"total": total.toFixed(2) 
+				"late_fees":late_fees,//.toFixed(2),
+				"total": total//.toFixed(2) 
 	   		})
 			console.log("__dict_of_payments_ids",__dict_of_payments_ids)
 			return __dict_of_payments_ids
