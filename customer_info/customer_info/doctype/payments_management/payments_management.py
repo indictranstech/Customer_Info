@@ -98,21 +98,25 @@ def get_customer_agreement(customer,payment_date):
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
 	for entry in data['list_of_agreement']:
-		entry[3] = frappe.db.sql("""select count(payment_id) from
-										`tabPayments Record`
-										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
-
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
 		late_fees = frappe.db.sql("""select
-									CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
-									THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
-									`tabPayments Record`
-									where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)		
-		entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
-		if float(entry[3]) > 0:
-			entry[10] = "{0:.2f}".format(float(entry[4])+ sum([e[0] for e in late_fees]) if sum([e[0] for e in late_fees]) else float(entry[4])) 
+			CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
+			THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
+			`tabPayments Record`
+			where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+
+		if entry[3] == 0:
+			entry[3] = frappe.db.sql("""select count(payment_id) from
+										`tabPayments Record`
+										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
+			if entry[3] > 0:
+				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ sum([e[0] for e in late_fees]) if sum([e[0] for e in late_fees]) else float(entry[4]))
+		
+		if late_fees == 0:
+			entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
+			 
 		#entry[3] = len([e[0] for e in late_fees if e[0] > 0])
 		# else:
 		# 	entry[9] = "{0:.2f}".format(entry[9])
@@ -435,11 +439,14 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
+	
 	elif int(condition) == 1 and agreement.agreement_status == "Open":
+		print date_diff(payment_date,agreement.date),"date_diff(agreement.date,payment_date)","\n\n\n\n\n\n"
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
-			"agreement_closing_suspending_reason":"90d SAC"
+			"agreement_closing_suspending_reason":"90d SAC",
+			"merchandise_status":"Sold" if date_diff(payment_date,agreement.date) == 2 else merchandise_status
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "90d SAC"

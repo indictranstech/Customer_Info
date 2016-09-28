@@ -17,7 +17,7 @@ def get_data(filters):
 	if filters:
 		now_date = datetime.now().date()
 		result = frappe.db.sql("""select t1.due_date, 
-									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0 
+									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0
 									THEN DATEDIFF('{1}',t1.due_date) ELSE 0 END AS difference,
 									t1.payment_id,t1.monthly_rental_amount,t2.concade_product_name_and_category,
 									t2.customer AS customer,
@@ -27,8 +27,8 @@ def get_data(filters):
 									"a",
 									CASE WHEN t2.contact_result = "WBI" AND t1.due_date < t2.suspension_date
 									THEN concat(t2.contact_result," ",t2.suspension_date," ",t2.amount_of_contact_result)
-									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date = t2.suspension_date
-									THEN concat(t2.contact_result," ",t2.suspension_date) ELSE t2.contact_result END AS contact_result,
+									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date = t2.suspension_date AND t1.due_date < '{1}'
+									THEN concat(t2.contact_result," ",t2.suspension_date) ELSE " " END AS contact_result,
 									t3.company_email_id_1																		
 									from `tabPayments Record`t1,`tabCustomer Agreement`t2,
 									`tabCustomer`t3		 
@@ -36,8 +36,9 @@ def get_data(filters):
 									and t2.name in  (select name from `tabCustomer Agreement`
 													where agreement_status = "Open") 
 									and DATEDIFF('{0}',t1.due_date) >= 0
+									and t2.suspension_date < '{0}'
 									and t1.check_box_of_submit != 1
-									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1,debug=1)
+									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
 		for l in result:
 			if float(l[8]):
 				total_due = l[8] + l[3]

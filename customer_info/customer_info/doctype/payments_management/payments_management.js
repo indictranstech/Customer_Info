@@ -118,6 +118,7 @@ update_bonus = function(){
         },
         callback: function(r){
     		cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
+    		msgprint("Bonus Updated")
     	}	
     });
 }
@@ -205,14 +206,35 @@ render_agreements = function(){
 				if(r.message){
 					this.data = r.message;
 					make_grid(r.message,columns,options)
+					/*cur_frm.doc.payment_management_record = []
+					$.each($(".slick-row"),function(i,d){
+						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
+						var row = frappe.model.add_child(cur_frm.doc, "Payment Management Record", "payment_management_record");	
+						row.product = String($($(d).children()[2]).text());
+						row.late_fees = $($(d).children()[9]).text() ? flt($($(d).children()[9]).text()):0
+						row.rental_payment = flt($($(d).children()[4]).text());
+						row.no_of_late_days = i;
+						row.total = flt($($(d).children()[4]).text()) + flt($($(d).children()[9]).text())
+					});
+					refresh_field("payment_management_record");*/
+
 					if(cur_frm.doc.customer_agreement){
 						$.each($(".slick-row"),function(i,d){
 							console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
+							/*var row = frappe.model.add_child(cur_frm.doc, "Payment Management Record", "payment_management_record");	
+							row.product = String($($(d).children()[2]).text());
+							row.late_fees = flt($($(d).children()[9]).text());
+							row.rental_payment = flt($($(d).children()[4]).text());
+							row.no_of_late_days = flt($($(d).children()[4]).text());*/
 							if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
 								cur_frm.set_value("customer_agreement","")
 							}
 						});
+						//refresh_field("payment_management_record");
+						/*$.each(r.message, function(i, d) {
+                           
+                       });*/
 					}
 				}
 			}
@@ -369,6 +391,7 @@ call_commit = Class.extend({
 		$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
+		me.add_comment();
 	},
 	set_values:function(){
 		var me = this;
@@ -379,6 +402,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 		me.dialog.fields_dict.amount.set_input(me.amount_of_contact_result)
+		me.add_comment();
 	},
 	before_select_contact_result:function(){
 		var me = this;
@@ -486,9 +510,11 @@ call_commit = Class.extend({
 	},
 	add_comment:function(){
 		var me = this;
+		console.log("in my function")
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments",me.dialog.fields_dict.comment.$input.val())
+				console.log("in mybutton mybutton 11223")
+				cur_frm.set_value("notes_on_customer_payments", "CC:"+" "+me.dialog.fields_dict.comment.$input.val())
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -714,61 +740,74 @@ Payments_Details = Class.extend({
         //console.log(me.row_to_uncheck,"row_to_uncheck")
         console.log(me.row_to_check,"row_to_check")
 	    //console.log(cur_frm.doc.bonus,"bonus")
-	    var concate_array = []
-	    $.each(me.row_to_check.concat(me.row_to_update),function(i,d){
-	    	concate_array.push(flt(d.split(" ")[1]))
+	    var add_list = []
+	    console.log((me.dialog.$wrapper).find(".select"),"me 12321132111")
+	    $.each((me.dialog.$wrapper).find(".select"),function(i,d){
+	    	if ($(d).is(':checked')){
+	    		add_list.push($(d).attr("value").split(" ")[1])
+	    	}
 	    });
-	    console.log(concate_array.sort())
-	    sort = concate_array.sort()
-	    if(sort.length > 1){
-	    	for(i=0;i<sort.length-1;i++){
-		    	console.log(sort[i+1],sort[i])
-		    	if(sort[i+1] - sort[i] != 1){
+	    var checking_sequence = ""
+	    console.log(add_list,"add_list")
+	    if(add_list.length > 1){
+	    	for(i=0;i<add_list.length-1;i++){
+		    	console.log(add_list[i+1],add_list[i])
+		    	if(flt(add_list[i+1]) - flt(add_list[i]) != 1){
 		    		msgprint("Error Please Add Payment In sequence")
-		    	}
-		    	else{
-		    		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
-						var me = this
-				   		frappe.call({    
-					        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
-					        async: false,
-				           	args: {
-				           		"row_to_update":me.row_to_update,
-				           		"row_to_uncheck":me.row_to_uncheck,
-				           		"row_to_check":me.row_to_check,
-				           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
-				           		"parent":this.item['id'],
-				           		"payment_date":cur_frm.doc.payment_date
-				            },
-				           	callback: function(res){
-				        	}
-				        });
-				        frappe.call({
-					        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
-					        async: false,
-				           	args: {
-				           		"customer_agreement":this.item['id'],
-				            	"frm_bonus":cur_frm.doc.bonus,
-				            	//"flag":"Payment Details",
-				            	"row_to_uncheck":me.row_to_uncheck
-				            },
-				           	callback: function(r){
-				        		cur_frm.set_value("bonus",r.message)
-				        		render_agreements()
-				            	me.update_total_charges_and_due_payments()
-				        		me.dialog.hide();
-				        	}
-				        });
-				    }	
+		    		checking_sequence = "false"
+		    		break;
 		    	}
 	    	}
 	    }
-	    /*if (concate_array.sort().length == concate_array.sort()[concate_array.sort().length -1] || concate_array.sort().length == 1) {*/
-		
-		
-		/*else{
-			msgprint("Error Please Add Payment In sequence")
-		}*/    
+	    console.log("checking_sequence",checking_sequence)
+	    if(checking_sequence == ""){
+	    	me.common_function_for_add_checkbox();
+	    }
+	    if(add_list.length == 1 && add_list[0] == "1"){
+		    me.common_function_for_add_checkbox();
+	    }
+	    if(add_list.length == 1 && add_list[0] != "1"){
+	    	msgprint("Error Please Add Payment In sequence")
+	    }
+	    if(me.row_to_check.concat(me.row_to_update).length == 0){
+	    	msgprint("Please Any Payment")
+	    }
+	},
+	common_function_for_add_checkbox:function(){
+		var me = this;
+		if(me.row_to_update.length > 0 || me.row_to_uncheck.length > 0 || me.row_to_check.length > 0){
+			var me = this
+	   		frappe.call({    
+		        method: "customer_info.customer_info.doctype.payments_management.payments_management.temporary_payments_update_to_child_table_of_customer_agreement",
+		        async: false,
+	           	args: {
+	           		"row_to_update":me.row_to_update,
+	           		"row_to_uncheck":me.row_to_uncheck,
+	           		"row_to_check":me.row_to_check,
+	           		"row_to_pre_select_uncheck":me.row_to_pre_select_uncheck,
+	           		"parent":this.item['id'],
+	           		"payment_date":cur_frm.doc.payment_date
+	            },
+	           	callback: function(res){
+	        	}
+	        });
+	        frappe.call({
+		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
+		        async: false,
+	           	args: {
+	           		"customer_agreement":this.item['id'],
+	            	"frm_bonus":cur_frm.doc.bonus,
+	            	//"flag":"Payment Details",
+	            	"row_to_uncheck":me.row_to_uncheck
+	            },
+	           	callback: function(r){
+	        		cur_frm.set_value("bonus",r.message)
+	        		render_agreements()
+	            	me.update_total_charges_and_due_payments()
+	        		me.dialog.hide();
+	        	}
+	        });
+	    }
 	},
 	add_date_on_check:function(){
 		$('.select').change(function() {  
@@ -959,10 +998,11 @@ payoff_details = Class.extend({
 		var agreements = [];
 		var number_of_payments = 0;
 		$.each($(".slick-row"),function(i,d){
+			console.log(Number((flt($($(d).children()[9]).text())).toFixed(flt_precision)), Number((flt($($(d).children()[10]).text())).toFixed(flt_precision)))
 			if(flt($($(d).children()[3]).text()) > 0 ){
-				console.log("yes")
 				late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
 				total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
+				
 			}
 			agreements.push($($(d).children()[0]).text())
 			number_of_payments += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))
@@ -982,7 +1022,7 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log(r.message)
+	    			console.log("late_payment",r.message)
 	    			me.late_payment = r.message
 	    			me.payable_by_bonus = 0
 	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment)
@@ -1042,21 +1082,24 @@ payoff_details = Class.extend({
 		var me = this;
 		me.hide_button();
 		if(me.old_instance != "Process Payments"){
+			console.log("in if")
 			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																				  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
 																				  + flt(cur_dialog.fields_dict.discount.$input.val())
 																				  + flt(me.val_balance)
+			console.log("bal", val_of_balance)
 		}
 		else{
-			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
-																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
-																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
-																			  + flt(cur_dialog.fields_dict.discount.$input.val())
 			/*var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
 																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
-																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
 																			  + flt(cur_dialog.fields_dict.discount.$input.val())*/
+			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
+																			  + flt(cur_dialog.fields_dict.bank_card.$input.val())
+																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
+																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
+																			  + flt(cur_dialog.fields_dict.discount.$input.val())
+			console.log("in else - bal", val_of_balance)
 		}
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.dialog.fields_dict.msg.$wrapper.empty()
