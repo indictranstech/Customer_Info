@@ -417,7 +417,8 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 		customer_doc.save(ignore_permissions=True)
 	elif flag == "Payoff Payment":
 		customer_doc.update({
-				"receivables":float(customer_doc.receivables) + float(receivables)
+			"receivables":float(receivables)	
+			#"receivables":float(customer_doc.receivables) + float(receivables)
 			}) 	
 		customer_doc.save(ignore_permissions=True)	
 
