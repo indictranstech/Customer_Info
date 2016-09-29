@@ -87,8 +87,6 @@ def calculate_total_charges(customer,flag,payment_date):
 					late_fees_of_agreement.append(late_fee)
 					late_payment_amount.append(late_fee)
 		if customer_agreement.late_fees_updated == "No":
-
-			print "\n\n\n\n\n","in late_fees_updated",customer_agreement.name			
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
 		customer_agreement.save(ignore_permissions=True)
 	late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
@@ -250,24 +248,15 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 
-		for row in customer_agreement.payments_record:
-			if row.check_box == 0 and row.idx > 1:
-				customer_agreement.current_due_date = row.due_date
-				customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
-				break
-			if row.check_box == 0 and row.idx == 1:
-				customer_agreement.current_due_date = customer_agreement.date
-				customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
-				break	
 		# for row in customer_agreement.payments_record:
-		# 	if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
+		# 	if row.check_box == 0 and row.idx > 1:
 		# 		customer_agreement.current_due_date = row.due_date
-		# 		customer_agreement.next_due_date = get_next_due_date(customer_agreement.current_due_date,1)
+		# 		customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 		# 		break
-		# 	elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
-		# 		customer_agreement.current_due_date = row.due_date
-		# 		customer_agreement.next_due_date = row.due_date	
-		# 		break		
+		# 	if row.check_box == 0 and row.idx == 1:
+		# 		customer_agreement.current_due_date = customer_agreement.date
+		# 		customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
+		# 		break
 
 	received_payments = map(float,received_payments)
 	
@@ -368,14 +357,18 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			if row.check_box_of_submit == 1:
 				payment_made.append(row.monthly_rental_amount)				
 		for row in customer_agreement.payments_record:
-			if row.check_box == 0 and row.idx > 1:
+			if row.check_box == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
 				customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 				break
 			if row.check_box == 0 and row.idx == 1:
 				customer_agreement.current_due_date = customer_agreement.date
 				customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
-				break		
+				break
+			if row.check_box == 0 and row.idx == len(customer_agreement.payments_record):
+				customer_agreement.current_due_date = row.due_date
+				customer_agreement.next_due_date = row.due_date
+				break			
 			# if row.idx == 1:
 			# 	customer_agreement.current_due_date = customer_agreement.date
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
@@ -417,8 +410,9 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 		customer_doc.save(ignore_permissions=True)
 	elif flag == "Payoff Payment":
 		customer_doc.update({
-				"receivables":float(customer_doc.receivables) + float(receivables)
-			}) 	
+			"receivables":float(receivables)
+			#"receivables":float(customer_doc.receivables) + float(receivables)
+		}) 	
 		customer_doc.save(ignore_permissions=True)	
 
 
