@@ -88,6 +88,10 @@ frappe.ui.form.on("Item", {
             cur_frm.doc.total = cur_frm.doc.monthly_rental_payment
             refresh_field("total")
         }
+        if (cur_frm.doc.__islocal){
+            cur_frm.set_value("sold_date",frappe.datetime.nowdate())
+            cur_frm.set_value("old_sold_date",frappe.datetime.nowdate())
+        }
         cur_frm.doc.stock_uom = "Unit"
         refresh_field("stock_uom")
     },

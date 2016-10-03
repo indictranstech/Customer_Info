@@ -122,15 +122,22 @@ def make_refund_payment(payments_ids,ph_name):
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
+		item_doc = frappe.get_doc("Item",customer_agreement.product)
 		
 		if payment_history.payment_type == "Payoff Payment":
 			payment_history.payoff_cond = ""
+			item_doc.sold_date = item_doc.old_sold_date
+			item_doc.old_sold_date = item_doc.old_sold_date
+			item_doc.save(ignore_permissions=True)
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.merchandise_status = payment_history.merchandise_status
 			customer_agreement.agreement_closing_suspending_reason = ""
 			customer_agreement.save(ignore_permissions=True)
 
 		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
+			item_doc.sold_date = item_doc.old_sold_date
+			item_doc.old_sold_date = item_doc.old_sold_date
+			item_doc.save(ignore_permissions=True)
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.agreement_closing_suspending_reason = ""
 			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]
