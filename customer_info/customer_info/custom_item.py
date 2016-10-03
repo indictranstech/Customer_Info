@@ -37,4 +37,4 @@ def product_status_change(self,method):
 
 	if status or agreement or vat or sac or monthly_rental:
 		comment = """<p>{0}</p> <p>{1}</p> <p>{2}</p> <p>{3}</p> <p>{4}</p>""".format(status,agreement,vat,sac,monthly_rental)
-		#self.add_comment("Comment", comment)					
+		self.add_comment("Comment", comment)					

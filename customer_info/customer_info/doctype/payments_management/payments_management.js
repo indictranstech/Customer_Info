@@ -1105,7 +1105,7 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log("late_payment",r.message)
+	    			console.log("late_payment",r.message,"me.rental_payment",me.rental_payment)
 	    			me.late_payment = r.message
 	    			me.payable_by_bonus = 0
 	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment)

@@ -10,7 +10,7 @@ import json
 from frappe import _
 from frappe.utils import date_diff
 from frappe.utils import flt, get_datetime, get_time, getdate
-from frappe.utils import nowdate, getdate,add_months
+from frappe.utils import nowdate, getdate,add_months,add_days
 from frappe.utils import now_datetime
 from datetime import datetime, timedelta,date
 from frappe.model.document import Document
@@ -24,6 +24,29 @@ class CustomerAgreement(Document):
 			self.add_payments_record()	
 			self.check_date_diff_of_first_and_second_month_due_date()
 		self.change_default_warehouse()
+		self.change_sold_date_of_item()
+
+	def change_sold_date_of_item(self):
+		item = frappe.get_doc("Item",self.product)
+		if self.agreement_status == "Open":
+			sold_date = datetime.now()
+			old_sold_date = item.sold_date
+		elif self.merchandise_status == "Sold":
+			sold_date = datetime.now()
+			old_sold_date = item.sold_date
+		elif self.merchandise_status == "Stolen":
+			sold_date = datetime.now()
+			old_sold_date = item.sold_date	
+		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["40% Offer","90d SAC"]:
+			sold_date = datetime.now()
+			old_sold_date = item.sold_date
+		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Contract Term is over" and self.merchandise_status == "Agreement over":	
+			sold_date = datetime.now()
+			old_sold_date = item.sold_date
+		
+		item.sold_date = sold_date
+		item.old_sold_date = old_sold_date
+		item.save(ignore_permissions=True) 	
 			
 	def change_default_warehouse(self):
 		default_warehouse = ""

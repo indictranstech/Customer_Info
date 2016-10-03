@@ -304,6 +304,7 @@ def get_late_payment(agreements):
 		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
 								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
+	print late_payment[0][0],"\n\n\n\n\n\n\n\n","late_payment"
 	return late_payment[0][0]
 
 @frappe.whitelist()
