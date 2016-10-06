@@ -2,15 +2,16 @@
         <table class="table table-bordered table-condensed" id="header-fixed" style="margin-bottom: 0px;">
             <thead>
               <tr>
-                <td align="center" width="11%"><b>Payment Id</b></td>
-                <td align="center" width="11%"><b>Payment Date</b></td>
-                <td align="center" width="11%"><b>Due Date</b></td>
-                <td align="center" width="11%"><b>Days Late</b></td>
-                <td align="center" width="11%"><b>Amount</b></td>
-                <td align="center" width="11%"><b>Balance</b></td>
-                <td align="center" width="11%"><b>PMT From</b></td>
-                <td align="center" width="10%"><b>Total Transaction Amount</b></td>
-                <td align="center" width="11%"><b>Associate</b></td>
+                <td align="center" width="8%"><b>Payment Id</b></td>
+                <td align="center" width="9%"><b>Payment Date</b></td>
+                <td align="center" width="9%"><b>Due Date</b></td>
+                <td align="center" width="9%"><b>Days Late</b></td>
+                <td align="center" width="9%"><b>Amount</b></td>
+                <td align="center" width="9%"><b>Balance</b></td>
+                <td align="center" width="9%"><b>PMT From</b></td>
+                <td align="center" width="9%"><b>Total Transaction Amount</b></td>
+                <td align="center" width="9%"><b>Total Calculated Payment Amount</b></td>
+                <td align="center" width="9%"><b>Associate</b></td>
                 <td align="center" width="2%"></td>
               </tr>
             </thead>
@@ -21,15 +22,16 @@
                 {% if (history.length) { %}
                     {% for(var i=0, l=history.length; i < l; i++) { %}
                             <tr>
-                                <td align="center" width="11%">{{ history[i].payment_id }}</td>
-                                <td align="center" width="11%">{{ history[i].payment_date }}</td>
-                                <td align="center" width="11%">{{ history[i].due_date }}</td>
-                                <td align="center" width="11%">{{ history[i].late_days }}</td>
-                                <td align="center" width="11%">{{ history[i].monthly_rental_amount }}</td>
-                                <td align="center" width="11%">{{ history[i].balance }}</td>
-                                <td align="center" width="11%">{{ history[i].pmt }}</td>
-                                <td align="center" width="10%">{{ history[i].total_transaction_amount }}</td>
-                                <td align="center" width="11%">{{ history[i].associate }}</td>
+                                <td align="center" width="8%">{{ history[i].payment_id }}</td>
+                                <td align="center" width="9%">{{ history[i].payment_date }}</td>
+                                <td align="center" width="9%">{{ history[i].due_date }}</td>
+                                <td align="center" width="9%">{{ history[i].late_days }}</td>
+                                <td align="center" width="9%">{{ history[i].monthly_rental_amount }}</td>
+                                <td align="center" width="9%">{{ history[i].balance }}</td>
+                                <td align="center" width="9%">{{ history[i].pmt }}</td>
+                                <td align="center" width="9%">{{ history[i].total_transaction_amount }}</td>
+                                <td align="center" width="9%">{{ history[i].total_calculated_payment_amount }}</td>
+                                <td align="center" width="9%">{{ history[i].associate }}</td>
                             </tr>
                     {% } %}
                 {% } %} 

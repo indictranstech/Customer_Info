@@ -97,6 +97,7 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_period && cur_frm.doc.__islocal){
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
+            cur_frm.set_value("discounted_payments_left",cur_frm.doc.agreement_period)
         }
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
