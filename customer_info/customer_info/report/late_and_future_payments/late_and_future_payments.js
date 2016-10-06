@@ -21,7 +21,7 @@ frappe.query_reports["late and future payments"] = {
 		    	//green
 	            value = "<span style='color:#2eb82e!important'>" + value + "</span>";
 		    }
-		    if (concad[0] + " "+concad[1] == "Sent SMS/Email" && concad[2] == dataContext["Due Date"]) { 
+		    if (concad[0] + " "+concad[1] == "Sent SMS/Email" && concad[2] > dataContext["Due Date"]) { 
 		    	// blue
 	            value = "<span style='color:#4db8ff!important'>" + value + "</span>";
 		    }

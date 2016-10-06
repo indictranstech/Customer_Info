@@ -41,7 +41,7 @@ def get_payments_details(customer,from_date,to_date):
 								CASE WHEN payoff_cond = "Rental Payment" 
 								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 								format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
-								balance,format(discount, 2) as discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
+								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids
 								from `tabPayments History` {0}
 								order by payment_date asc """.format(cond),as_dict=1,debug=1)
 
@@ -50,7 +50,7 @@ def get_payments_details(customer,from_date,to_date):
 								format(sum(rental_payment),2) as rental_payment,
 								format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
 								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
-								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(bonus),2) as bonus
+								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
 								from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
 	total,"total"
 	total_payment_received = []

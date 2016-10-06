@@ -2,7 +2,7 @@ import datetime
 from datetime import datetime,date
 import frappe
 
-def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,payoff_cond=None):
+def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,payoff_cond=None,discount_amount=None):
 	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(values['amount_paid_by_customer'])
@@ -10,6 +10,7 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 	payments_history.bank_transfer = float(values['bank_transfer'])
 	payments_history.bonus = float(values['bonus']) if values['bonus'] else 0
 	payments_history.discount = float(values['discount'])
+	payments_history.campaign_discount = float(discount_amount)
 	payments_history.rental_payment = rental_payment
 	payments_history.late_fees = late_fees
 	payments_history.customer = customer
@@ -32,11 +33,16 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 	payments_history.save(ignore_permissions = True)
 
 
+	# if payment_type == "Payoff":
+	# 	total_transaction_amount = float(total_amount)
+	# else:
+	# 	total_transaction_amount = float(rental_payment) + float(late_fees) -float(receivables)-float(values['bonus'])-float(values['discount'])
+	bonus = float(values['bonus']) if values['bonus'] else 0
+	total_transaction_amount = float(values['amount_paid_by_customer']) + float(values['bank_card']) + float(values['bank_transfer'])
 	if payment_type == "Payoff":
-		total_transaction_amount = float(total_amount)
-	else:
-		total_transaction_amount = float(rental_payment) + float(late_fees) -float(receivables)-float(values['bonus'])-float(values['discount'])
-	
+		total_calculated_payment_amount = float(total_amount)
+	else:	
+		total_calculated_payment_amount = float(rental_payment)+float(late_fees)-float(receivables)-float(bonus)- float(values['discount'])
 	pmt = "Split"
 
 	if float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) > 0:
@@ -55,5 +61,5 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 		cond = "where payment_id in {0} ".format(id_list)  	
 	
 	frappe.db.sql("""update `tabPayments Record` 
-					set payment_history = '{0}',pmt = '{2}',total_transaction_amount = {3}
-					{1} """.format(payments_history.name,cond,pmt,total_transaction_amount))
+					set payment_history = '{0}',pmt = '{2}',total_transaction_amount = '{3}'
+					{1} """.format(payments_history.name,cond,pmt,str(total_transaction_amount)+"/"+str(total_calculated_payment_amount)))

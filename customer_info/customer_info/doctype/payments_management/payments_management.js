@@ -181,6 +181,12 @@ render_agreements = function(){
 		return "<a class='late_fees' value="+dataContext['late_fees']+">" + dataContext['late_fees'] + "</a>";
 	}
 
+	var campaign_discount = function(row, cell, value, columnDef, dataContext){
+		var id = "campaign_discount"+ String(row)
+		console.log(dataContext['campaign_discount'],"dataContext['campaign_discount']")
+		return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
+	}
+
 	var columns = [
 	    /*{id: "serial", name: "#", field: "serial", cssClass: "cell-selection", width: 20, resizable: false, selectable: false, focusable: false },*/
 	    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 80,toolTip: "Agreement No"},
@@ -194,6 +200,7 @@ render_agreements = function(){
 	    {id: "balance", name: "Balance", field: "balance",width: 70,toolTip: "Balance"},
 	    {id: "late_fees", name: "Late Fees", field: "late_fees",width: 50,toolTip: "Late Fees",formatter:late_fees_editable},
 	    {id: "total_dues", name: "Total Dues", field: "total_dues",width: 50,toolTip: "Total Dues"},
+	    {id: "Campaign discount", name: "Campaign discount", field: "campaign_discount",width: 50,toolTip: "Campaign discount",formatter:campaign_discount},
 	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50,toolTip: "Payments Made"},
 	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail,toolTip: "Detail"},
 	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension,toolTip: "Call/Commitment"}
@@ -271,7 +278,8 @@ make_grid= function(data1,columns,options){
             late_fees: data1.list_of_agreement[i][9],
             total_dues: data1.list_of_agreement[i][10],
             payments_made: data1.list_of_agreement[i][11],
-            suspenison: data1.list_of_agreement[i][12]
+            suspenison: data1.list_of_agreement[i][12],
+            campaign_discount: data1.list_of_agreement[i][13],
         };
     }
 
@@ -297,10 +305,71 @@ make_grid= function(data1,columns,options){
         	//new manage_suspenison(id,item)
         	new edit_late_fees(id,item)
         }
+        if($(e.target).hasClass("campaign_discount")) {
+        	var id = $(e.target).attr('id')
+        	//new manage_suspenison(id,item)
+        	new edit_campaign_discount(id,item)
+        }
     });
 
 }
 
+
+edit_campaign_discount = Class.extend({
+	init:function(id,item){
+		this.item = item;
+		this.id = id;
+		this.make_campaign_discount_edit();
+	},
+	make_campaign_discount_edit:function(){
+		var me = this;
+		console.log(me.item["campaign_discount"])
+		var options_list = ["0"]
+		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
+			//me.item["campaign_discount"].split("-")[1]
+			for(i=1;i<=flt(me.item["payments_left"]);i++){
+				options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
+			}
+			console.log(options_list,"options_list")
+		}	
+		this.dialog = new frappe.ui.Dialog({
+    		title: "Contact result",
+        	fields: [
+           		{"fieldtype": "Select" ,"fieldname": "campaign_discount" ,"options":options_list.join("\n") ,"label": "Campaign Discount"},
+           	],
+           	primary_action_label: "Update",
+           	primary_action: function(){
+                me.update_campaign_discount();
+            }
+   		});
+       	this.fd = this.dialog.fields_dict;
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
+       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	this.dialog.show();
+		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
+	},
+	update_campaign_discount:function(){
+		var me = this;
+		console.log(me.fd.campaign_discount.$input.val())		
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_campaign_discount",
+	        args: {
+	        	"agreement":me.item['id'],
+	        	"campaign_discount": flt(me.fd.campaign_discount.$input.val())
+	        },
+	        callback: function(r) {
+	        	if(r.message){
+	        		cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments - flt(me.fd.campaign_discount.$input.val()))
+	    			cur_frm.set_value("total_charges",cur_frm.doc.total_charges - flt(me.fd.campaign_discount.$input.val()))    	
+	        	}
+	        	me.dialog.hide();
+	        	//calculate_total_charges("Campaign Discount");
+	        	render_agreements();
+	        }
+	    });
+	}	
+})
 
 edit_late_fees = Class.extend({
 	init:function(id,item){
@@ -597,7 +666,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments", "CC:"+" "+me.dialog.fields_dict.comment.$input.val())
+				cur_frm.set_value("notes_on_customer_payments", "CC:"+" "+me.dialog.fields_dict.comment.$input.val())+"("+me.item['id']+")"
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}

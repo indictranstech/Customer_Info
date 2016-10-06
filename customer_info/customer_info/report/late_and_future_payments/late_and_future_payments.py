@@ -27,7 +27,7 @@ def get_data(filters):
 									"a",
 									CASE WHEN t2.contact_result = "WBI" AND t1.due_date < t2.suspension_date
 									THEN concat(t2.contact_result," ",t2.suspension_date," ",t2.amount_of_contact_result)
-									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date = t2.suspension_date AND t1.due_date < '{1}'
+									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date < t2.suspension_date AND t1.due_date < '{1}'
 									THEN concat(t2.contact_result," ",t2.suspension_date) ELSE " " END AS contact_result,
 									t3.company_email_id_1																		
 									from `tabPayments Record`t1,`tabCustomer Agreement`t2,
