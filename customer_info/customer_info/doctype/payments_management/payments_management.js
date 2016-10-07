@@ -118,7 +118,7 @@ update_bonus = function(){
         },
         callback: function(r){
         	if(r.message){
-        		cur_frm.set_value("notes_on_customer_payments",r.message)
+        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] -"+r.message)
 				$('button[data-fieldname="add_notes"]').click();
         		cur_frm.set_value("notes_on_customer_payments","")
         		cur_frm.set_value("bonus",cur_frm.doc.static_bonus);
@@ -383,16 +383,17 @@ edit_late_fees = Class.extend({
     		title: "Contact result",
         	fields: [
            		{"fieldtype": "Float" , "fieldname": "late_fees" , "label": "Late Fees","precision":2},
-           		{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
+           		//{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
            		{"fieldtype": "Section Break" , "fieldname": "section"},
            		{"fieldtype": "Column Break" , "fieldname": "column"},
            		{"fieldtype": "Column Break" , "fieldname": "column"},
            		{"fieldtype": "Column Break" , "fieldname": "column"},
-           		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"}
+           		//{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"}
            	],
            	primary_action_label: "Update",
            	primary_action: function(){
-                me.update_late_fees();
+            		me.add_comment();
+                //me.update_late_fees();
             }
    		});
        	this.fd = this.dialog.fields_dict;
@@ -406,19 +407,24 @@ edit_late_fees = Class.extend({
 	set_late_fees:function(){
 		var me = this;
 		me.dialog.fields_dict.late_fees.set_input(me.item['late_fees'])	
-		me.add_comment();
+		//me.add_comment();
 	},
 	add_comment:function(){
 		var me = this;
 		console.log("in my function")
-		me.dialog.fields_dict.add_comment.$input.click(function() {
-			if(me.dialog.fields_dict.comment.$input.val()){
+		//me.dialog.fields_dict.add_comment.$input.click(function() {
+			if(flt(me.dialog.fields_dict.late_fees.$input.val()) > 0){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments",me.dialog.fields_dict.comment.$input.val())
+				comment =  "["+user+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
+				cur_frm.set_value("notes_on_customer_payments",comment)
 				$('button[data-fieldname="add_notes"]').click()
-				me.dialog.fields_dict.comment.set_input("")
+				//me.dialog.fields_dict.comment.set_input("")
+				me.update_late_fees();
 			}
-		})
+			else{
+				me.dialog.hide();
+			}
+		//})
 	},
 	update_late_fees:function(){
 		var me = this;
@@ -666,7 +672,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments", "CC:"+" "+me.dialog.fields_dict.comment.$input.val())+"("+me.item['id']+")"
+				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"]-"+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val())+"("+me.item['id']+")"
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}

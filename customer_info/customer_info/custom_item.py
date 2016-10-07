@@ -2,13 +2,14 @@ from __future__ import unicode_literals
 import frappe
 import datetime
 import frappe.defaults
+from datetime import datetime,date
 from frappe.utils import date_diff
 from frappe.model.document import Document
 
 
 @frappe.whitelist(allow_guest = True)
 def product_status_change(self,method):
-	now = datetime.datetime.now()
+	now = datetime.now()
 	date = now.strftime("%d-%m-%Y")
 	status = ""
 	vat = ""
@@ -38,3 +39,9 @@ def product_status_change(self,method):
 	if status or agreement or vat or sac or monthly_rental:
 		comment = """<p>{0}</p> <p>{1}</p> <p>{2}</p> <p>{3}</p> <p>{4}</p>""".format(status,agreement,vat,sac,monthly_rental)
 		self.add_comment("Comment", comment)					
+
+
+@frappe.whitelist(allow_guest = True)
+def add_comment_for_customer_creation(self,method):
+	comment = """Customer {0} is made on the {1}  """.format(self.name,datetime.now().date())
+	self.add_comment("Comment",comment)
