@@ -21,8 +21,8 @@ class CustomerAgreement(Document):
 		self.naming()
 		self.comment_for_agreement_status_change()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
-			self.add_payments_record()	
 			self.check_date_diff_of_first_and_second_month_due_date()
+			self.add_payments_record()	
 		self.change_default_warehouse()
 		self.change_sold_date_of_item()
 
@@ -63,11 +63,13 @@ class CustomerAgreement(Document):
 	def check_date_diff_of_first_and_second_month_due_date(self):
 		due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 		diff_of_first_and_second_due_date = date_diff(due_date_of_next_month,self.date)
-		print diff_of_first_and_second_due_date,"\n\n\n\n","diff_of_first_and_second_due_date"
+		#print diff_of_first_and_second_due_date,"\n\n\n\n","diff_of_first_and_second_due_date"
 		if date_diff(due_date_of_next_month,self.date) > 44 :
-			frappe.throw("Decrease Payment Day")
+			self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,-1))+"T00:00:00.000Z"
+			#frappe.throw("Decrease Payment Day")
 		if date_diff(due_date_of_next_month,self.date) <= 14:
-			frappe.throw("Increase Payment Day")
+			self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,1))+"T00:00:00.000Z"
+			#frappe.throw("Increase Payment Day")
 
 	def after_insert(self):
 		self.comment_for_agreement_creation()
@@ -128,7 +130,9 @@ class CustomerAgreement(Document):
 
 	# add row in child table	
 	def add_payments_record(self):
+		print self.due_date_of_next_month,type(self.due_date_of_next_month),"self.due_date_of_next_month","\n\n\n\n\n"
 		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+		print current_date,"current_date","\n\n\n\n\n\n"
 		list_of_payments_record = []
 		list_of_payments_record.append({
 		'no_of_payments':'Payment 1',
@@ -153,10 +157,11 @@ class CustomerAgreement(Document):
 
 	# get date after i month on changeing payment day	
 	def change_due_dates_in_child_table(self):
+	    self.check_date_diff_of_first_and_second_month_due_date()
 	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
 	    for i,row in enumerate(self.payments_record):
     		if row.idx > 1 and row.check_box_of_submit == 0:
-		    	self.check_date_diff_of_first_and_second_month_due_date()
+		    	#self.check_date_diff_of_first_and_second_month_due_date()
 		    	row.update({
 		    		"due_date":self.get_next_due_date(due_date_of_next_month,i-1)
 		    		#"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)

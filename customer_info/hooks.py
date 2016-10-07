@@ -85,6 +85,9 @@ doc_events = {
 	"Item": {
 		"on_update": "customer_info.customer_info.custom_item.product_status_change"
 	},
+	"Customer":{
+		"after_insert":"customer_info.customer_info.custom_item.add_comment_for_customer_creation"
+	},
 	"Product Category": {
 		"validate": "customer_info.customer_info.doctype.product_category.product_category.new_item_group"
 	}	
