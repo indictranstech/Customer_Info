@@ -26,20 +26,17 @@ frappe.ui.form.on("Payments Management", {
 		</table>");
 		if(cur_frm.doc.customer){
 			calculate_total_charges("Onload");
+			get_bonus_link();
 			get_address_of_customer()
 			render_agreements();
 		}
 	},
 	customer:function(){
 		if(cur_frm.doc.customer){
+			get_bonus_link()
 			calculate_total_charges("Customer");
 			get_address_of_customer();			
 			render_agreements();
-		}
-	},
-	update_bonus:function(){
-		if(cur_frm.doc.static_bonus){
-			update_bonus()
 		}
 	},
 	/*static_bonus:function(){
@@ -87,6 +84,17 @@ frappe.ui.form.on("Payments Management", {
 })
 
 
+get_bonus_link = function(){
+	$('[data-fieldname="bonus_link"]').empty();
+	html = "<b>Bonus </b><a class='bonus_link' value="+cur_frm.doc.static_bonus+">" + cur_frm.doc.static_bonus + "</a>"
+	$('[data-fieldname="bonus_link"]').append(html);
+	bonus = cur_frm.doc.static_bonus
+	$('a.bonus_link').click(function(){			
+		new edit_bonus(bonus)
+	})
+}
+
+
 get_address_of_customer = function(){
 	cur_frm.set_value("full_address","")
 	frappe.call({
@@ -106,29 +114,6 @@ get_address_of_customer = function(){
      	}  	
     });
 }
-
-
-update_bonus = function(){
-	frappe.call({
-        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
-        args: {
-          "customer": cur_frm.doc.customer,
-          "bonus":cur_frm.doc.static_bonus,
-          "old_bonus":cur_frm.doc.bonus
-        },
-        callback: function(r){
-        	if(r.message){
-        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] -"+r.message)
-				$('button[data-fieldname="add_notes"]').click();
-        		cur_frm.set_value("notes_on_customer_payments","")
-        		cur_frm.set_value("bonus",cur_frm.doc.static_bonus);
-    			msgprint("Bonus Updated");
-        	}
-    	}	
-    });
-}
-
-
 
 calculate_total_charges = function(flag){
 	frappe.call({
@@ -184,7 +169,12 @@ render_agreements = function(){
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
 		console.log(dataContext['campaign_discount'],"dataContext['campaign_discount']")
-		return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
+		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
+			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[1] + "</a>";
+		}
+		else{
+			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
+		}
 	}
 
 	var columns = [
@@ -315,6 +305,70 @@ make_grid= function(data1,columns,options){
 }
 
 
+
+edit_bonus = Class.extend({
+	init:function(bonus){
+		this.bonus = bonus;
+		this.show_dialog();
+	},
+	show_dialog:function(){
+		var me = this;
+		this.dialog = new frappe.ui.Dialog({
+    		title: "Update Bonus",
+        	fields: [
+           		{"fieldtype": "Float" , "fieldname": "bonus" , "label": "Bonus","precision":2},
+           		{"fieldtype": "Section Break" , "fieldname": "section"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Button" , "fieldname": "update_bonus" , "label": "Update Bonus"}
+           	],
+           	/*primary_action_label: "Update",
+           	primary_action: function(){
+            		me.update_bonus();
+            }*/
+   		});
+       	this.fd = this.dialog.fields_dict;
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
+       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	this.dialog.$wrapper.find('[data-dismiss="modal"]').hide()
+       	this.set_value_of_bonus();
+	},
+	set_value_of_bonus:function(){
+		var me = this;
+		me.dialog.fields_dict.bonus.set_input(me.bonus)
+		me.dialog.show();
+		me.update_bonus();
+	},
+	update_bonus:function(){
+		var me = this;
+		me.dialog.fields_dict.update_bonus.$input.click(function() {
+			console.log(me.dialog.fields_dict.bonus.$input.val(),"bonus value")
+			frappe.call({
+		        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
+		        args: {
+		          "customer": cur_frm.doc.customer,
+		          "bonus":flt(me.dialog.fields_dict.bonus.$input.val()),
+		          "old_bonus":cur_frm.doc.bonus
+		        },
+		        callback: function(r){
+		        	if(r.message){
+		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] -"+r.message)
+						$('button[data-fieldname="add_notes"]').click();
+		        		cur_frm.set_value("notes_on_customer_payments","")
+		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
+		        		cur_frm.set_value("bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
+		    			msgprint("Bonus Updated");
+		    			me.dialog.hide();
+		    			get_bonus_link();
+		        	}
+		    	}	
+    		});
+		})
+	}
+});	
+
 edit_campaign_discount = Class.extend({
 	init:function(id,item){
 		this.item = item;
@@ -327,7 +381,7 @@ edit_campaign_discount = Class.extend({
 		var options_list = ["0"]
 		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
-			for(i=1;i<=flt(me.item["payments_left"]);i++){
+			for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
 				options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
 			}
 			console.log(options_list,"options_list")
@@ -336,6 +390,8 @@ edit_campaign_discount = Class.extend({
     		title: "Contact result",
         	fields: [
            		{"fieldtype": "Select" ,"fieldname": "campaign_discount" ,"options":options_list.join("\n") ,"label": "Campaign Discount"},
+           		{"fieldtype": "Float" ,"fieldname": "due_amount","label": "Due Amount","precision":2},
+           		{"fieldtype": "Float" ,"fieldname": "total_charges_amount","label": "Total Charges Amount","precision":2}
            	],
            	primary_action_label: "Update",
            	primary_action: function(){
@@ -347,7 +403,18 @@ edit_campaign_discount = Class.extend({
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
+       	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
+       	this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
+       	this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
+		this.campaign_discount();
+	},
+	campaign_discount:function(){
+		var me = this;
+		$(me.dialog.fields_dict.campaign_discount.input).change(function(){
+			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+		})
 	},
 	update_campaign_discount:function(){
 		var me = this;
@@ -360,8 +427,8 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
-	        		cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments - flt(me.fd.campaign_discount.$input.val()))
-	    			cur_frm.set_value("total_charges",cur_frm.doc.total_charges - flt(me.fd.campaign_discount.$input.val()))    	
+	        		cur_frm.set_value("amount_of_due_payments",flt(me.fd.due_amount.$input.val()))
+	    			cur_frm.set_value("total_charges",flt(me.fd.total_charges_amount.$input.val()))    	
 	        	}
 	        	me.dialog.hide();
 	        	//calculate_total_charges("Campaign Discount");
@@ -672,7 +739,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"]-"+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val())+"("+me.item['id']+")"
+				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"]-"+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+"("+me.item['id']+")")
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -1180,10 +1247,11 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log("late_payment",r.message,"me.rental_payment",me.rental_payment)
-	    			me.late_payment = r.message
+	    			console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment)
+	    			me.late_payment = r.message["late_payment"]
+	    			me.first_payment = r.message["first_payment"]
 	    			me.payable_by_bonus = 0
-	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment)
+	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment) - flt(r.message["first_payment"])
 	    		}
 	    	}
 	    });	

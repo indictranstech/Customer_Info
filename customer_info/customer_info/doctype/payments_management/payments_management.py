@@ -130,7 +130,7 @@ def get_customer_agreement(customer,payment_date):
 										WHEN contact_result = "Sent SMS/Email" THEN "SMS/Email" 
 										ELSE "Call/Commitment" 
 										END AS suspension_date,
-										concat(format(discount,2),"-",format(campaign_discount,2)) as discounted_payments_left
+										concat(format(discount,2),"-",format(campaign_discount,2),"-",format(discounted_payments_left,2),"-",discount_updated) as discounted_payments_left
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
@@ -311,18 +311,23 @@ def get_next_due_date(date,i):
 @frappe.whitelist()
 def get_late_payment(agreements):
 	agreements = json.loads(agreements)
-	print agreements,"agreements","\n\n\n\n\n"
 	_condition = ""
 	if len(agreements) > 1:
 		agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
 		_condition = "where name in {0}".format(agreements)
+		first_payment = []
+		for i in agreements:
+			customer_agreement = frappe.get_doc("Customer Agreement",i)
+			for row in customer_agreement.payments_record:
+				if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1:
+					first_payment.append(row.monthly_rental_amount)
+					
 	if len(agreements) == 1:
 		#agreements = agreements.split(",")[0]
 		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
 								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
-	print late_payment[0][0],"\n\n\n\n\n\n\n\n","late_payment"
-	return late_payment[0][0]
+	return {"late_payment":late_payment[0][0],"first_payment":sum(first_payment)}
 
 @frappe.whitelist()
 def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
@@ -351,6 +356,10 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	discount_amount = 0
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+		item_doc = frappe.get_doc("Item",customer_agreement.product)
+		item_doc.old_sold_date = item_doc.sold_date
+		item_doc.sold_date = payment_date
+		item_doc.save(ignore_permissions=True)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		if customer_agreement.discount_updated == "Yes":
 			discount_amount += customer_agreement.campaign_discount
@@ -404,7 +413,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.late_payment = 0
 		customer_agreement.discount_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
-		customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		#customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
 	#customer_agreement.save(ignore_permissions=True)
@@ -471,6 +480,10 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	frappe.db.commit()
 	
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
+	item_doc = frappe.get_doc("Item",agreement.product)
+	item_doc.old_sold_date = item_doc.sold_date
+	item_doc.sold_date = payment_date
+	item_doc.save(ignore_permissions=True)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
 	if int(condition) == 2 and agreement.agreement_status == "Open":
