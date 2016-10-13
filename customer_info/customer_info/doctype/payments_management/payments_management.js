@@ -85,9 +85,14 @@ frappe.ui.form.on("Payments Management", {
 
 
 get_bonus_link = function(){
+	console.log("callback from payoff_details")
 	$('[data-fieldname="bonus_link"]').empty();
-	html = "<b>Bonus </b><a class='bonus_link' value="+cur_frm.doc.static_bonus+">" + cur_frm.doc.static_bonus + "</a>"
-	$('[data-fieldname="bonus_link"]').append(html);
+	html = '<div class="row">\
+            <label class="control-label" style="margin-left: 16px;">Bonus</label></div>\
+            <div class="row">\
+            <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus + '</a>\
+            </div>'
+	$(cur_frm.fields_dict.bonus_link.wrapper).html(html);
 	bonus = cur_frm.doc.static_bonus
 	$('a.bonus_link').click(function(){			
 		new edit_bonus(bonus)
@@ -317,8 +322,9 @@ edit_bonus = Class.extend({
     		title: "Update Bonus",
         	fields: [
            		{"fieldtype": "Float" , "fieldname": "bonus" , "label": "Bonus","precision":2},
+           		{"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
            		{"fieldtype": "Section Break" , "fieldname": "section"},
-           		{"fieldtype": "Column Break" , "fieldname": "column"},
+           		{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"},
            		{"fieldtype": "Column Break" , "fieldname": "column"},
            		{"fieldtype": "Column Break" , "fieldname": "column"},
            		{"fieldtype": "Button" , "fieldname": "update_bonus" , "label": "Update Bonus"}
@@ -332,7 +338,7 @@ edit_bonus = Class.extend({
        	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
-       	this.dialog.$wrapper.find('[data-dismiss="modal"]').hide()
+       	//this.dialog.$wrapper.find('[data-dismiss="modal"]').hide()
        	this.set_value_of_bonus();
 	},
 	set_value_of_bonus:function(){
@@ -340,6 +346,18 @@ edit_bonus = Class.extend({
 		me.dialog.fields_dict.bonus.set_input(me.bonus)
 		me.dialog.show();
 		me.update_bonus();
+		me.add_comment();
+	},
+	add_comment:function(){
+		var me = this;
+		console.log("in my function")
+		me.dialog.fields_dict.add_comment.$input.click(function() {
+			if(me.dialog.fields_dict.comment.$input.val()){
+				cur_frm.set_value("notes_on_customer_payments"," "+me.dialog.fields_dict.comment.$input.val())
+				$('button[data-fieldname="add_notes"]').click();
+				me.dialog.fields_dict.comment.set_input("")
+			}
+		})
 	},
 	update_bonus:function(){
 		var me = this;
@@ -354,7 +372,7 @@ edit_bonus = Class.extend({
 		        },
 		        callback: function(r){
 		        	if(r.message){
-		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] -"+r.message)
+		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] "+r.message)
 						$('button[data-fieldname="add_notes"]').click();
 		        		cur_frm.set_value("notes_on_customer_payments","")
 		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
@@ -404,8 +422,8 @@ edit_campaign_discount = Class.extend({
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
        	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
-       	this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
-       	this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
+       	this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
+       	this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
 		this.campaign_discount();
 	},
@@ -739,7 +757,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"]-"+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+"("+me.item['id']+")")
+				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+"("+me.item['id']+")")
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -1341,7 +1359,7 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.process_payment.$input.click(function() {
 			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) >= 0 ){
        			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
-       			html = "<div class='row'>There Is "+me.dialog.fields_dict.balance.$input.val()+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			html = "<div class='row'>There Is "+(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()))+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        			$('button[data-fieldname="process_payment"]').hide();
@@ -1373,43 +1391,48 @@ payoff_details = Class.extend({
 	calculate_underpayment:function(){
 		var me = this;
 		value = me.dialog.get_values();
-		console.log(value.amount_paid_by_customer,"values")
-		frappe.call({
-	        method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_underpayment",
-	       	args: {
-	       		"agreements":me.agreements,
-	        	"payment_date":cur_frm.doc.payment_date,
-	        	"amount_paid_by_customer":value.amount_paid_by_customer,
-	        	"receivables":cur_frm.doc.receivables
-	        },
-	       	callback: function(r){
-				r.message = Number((flt(r.message)).toFixed(2))
-	       		sum_of_cash_card_transfer = flt(me.dialog.fields_dict.bank_transfer.$input.val()) + flt(me.dialog.fields_dict.bank_card.$input.val()) + flt(me.dialog.fields_dict.amount_paid_by_customer.$input.val())
-	       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer >= parseFloat(r.message)){
-		       		$('button[data-fieldname="process_payment"]').hide();
-				    $('button[data-fieldname="return_to_customer"]').hide();
-					$('button[data-fieldname="add_in_receivables"]').show();
-					html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+r.message+" add in receivables</div>"
-				    me.dialog.fields_dict.msg.$wrapper.empty()
-				    me.dialog.fields_dict.msg.$wrapper.append(html)
-				    me.click_on_add_in_receivables();
-				    me.click_on_return_to_customer();
-				}
-		       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer < parseFloat(r.message)){
-		       		html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative Cash should be >= "+" "+r.message+"</div>"
-	       			$('button[data-fieldname="add_in_receivables"]').hide();
-				    $('button[data-fieldname="return_to_customer"]').hide();
-	       			me.dialog.fields_dict.msg.$wrapper.empty()
-	       			me.dialog.fields_dict.msg.$wrapper.append(html)
-		       	}	
-	    	}
-	    });
+		if (flt(value.bonus) > 0){
+			frappe.throw(__("No Bonus For Partial Payment"));
+		}
+		else{
+			console.log(value.amount_paid_by_customer,"values")
+			frappe.call({
+		        method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_underpayment",
+		       	args: {
+		       		"agreements":me.agreements,
+		        	"payment_date":cur_frm.doc.payment_date,
+		        	"amount_paid_by_customer":value.amount_paid_by_customer,
+		        	"receivables":cur_frm.doc.receivables
+		        },
+		       	callback: function(r){
+					r.message = Number((flt(r.message)).toFixed(2))
+		       		sum_of_cash_card_transfer = flt(me.dialog.fields_dict.bank_transfer.$input.val()) + flt(me.dialog.fields_dict.bank_card.$input.val()) + flt(me.dialog.fields_dict.amount_paid_by_customer.$input.val())
+		       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer >= parseFloat(r.message)){
+			       		$('button[data-fieldname="process_payment"]').hide();
+					    $('button[data-fieldname="return_to_customer"]').hide();
+						$('button[data-fieldname="add_in_receivables"]').show();
+						html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" add in receivables</div>"
+					    me.dialog.fields_dict.msg.$wrapper.empty()
+					    me.dialog.fields_dict.msg.$wrapper.append(html)
+					    me.click_on_add_in_receivables();
+					    me.click_on_return_to_customer();
+					}
+			       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer < parseFloat(r.message)){
+			       		html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative Cash should be >= "+" "+r.message+"</div>"
+		       			$('button[data-fieldname="add_in_receivables"]').hide();
+					    $('button[data-fieldname="return_to_customer"]').hide();
+		       			me.dialog.fields_dict.msg.$wrapper.empty()
+		       			me.dialog.fields_dict.msg.$wrapper.append(html)
+			       	}	
+		    	}
+		    });
+		}
 	},
 	click_on_add_in_receivables:function(){
 		var me = this;
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
-			me.add_in_receivables = value.balance;
+			me.add_in_receivables = value.balance - value.bonus;
 			me.hide_other_and_show_complete_payment();
 			me.click_on_submit();
 		})
@@ -1527,6 +1550,7 @@ payoff_details = Class.extend({
 	            if(flt(me.add_in_receivables) > 0){
 	            	cur_frm.set_value("receivables",flt(me.add_in_receivables))	
 	            }
+	            get_bonus_link();
 	        	render_agreements();
 	        	calculate_total_charges("Process Payment");
 	    		me.dialog.hide();
