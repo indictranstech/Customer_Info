@@ -27,6 +27,8 @@ class CustomerAgreement(Document):
 		self.change_sold_date_of_item()
 
 	def change_sold_date_of_item(self):
+		sold_date = ""
+		old_sold_date = ""
 		item = frappe.get_doc("Item",self.product)
 		if self.agreement_status == "Open":
 			sold_date = datetime.now()

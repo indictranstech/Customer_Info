@@ -22,7 +22,7 @@ class PaymentsManagement(Document):
 @frappe.whitelist()
 def update_bonus(customer,bonus,old_bonus):
 	customer = frappe.get_doc("Customer",customer)
-	if float(bonus):
+	if float(bonus) >= 0:
 		now_date = datetime.now().date()
 		comment = """ Bonus Modified From {1} To {2}""".format(now_date,old_bonus,bonus)
 		#frappe.throw(_("{0}").format(comment))
@@ -70,6 +70,7 @@ def calculate_total_charges(customer,flag,payment_date):
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		late_fees_of_agreement = []
+		late_payments_rental_payment = []
 		for row in customer_agreement.payments_record:
 
 			if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= now_date:
@@ -86,16 +87,20 @@ def calculate_total_charges(customer,flag,payment_date):
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
-					late_fees_of_agreement.append(late_fee)
-					late_payment_amount.append(late_fee)
+					late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
+					late_payment_amount.append(late_fee) # for adding late fees of all agreements
+					late_payments_rental_payment(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
+
+		customer_agreement.late_payment = sum(late_payments_rental_payment)	# 	updating by addition of rental payment of late payment of agreement
+			
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
 		#if customer_agreement.discount_updated == "Yes":
 		#	discount.append(customer_agreement.discount)
 		customer_agreement.save(ignore_permissions=True)
-	late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
+	#late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
 	#iscount = "{0:.2f}".format(sum(discount))
-	due_payment_list.append(float(late_payment_amount))
+	due_payment_list.append(float("{0:.2f}".format(sum(late_payment_amount))))
 	#due_payment_list.append(float(discount))	
 	return {"amount_of_due_payments":sum(due_payment_list), #- float(discount),
 			"receivables":receivables,
@@ -312,10 +317,10 @@ def get_next_due_date(date,i):
 def get_late_payment(agreements):
 	agreements = json.loads(agreements)
 	_condition = ""
+	first_payment = []
 	if len(agreements) > 1:
 		agreements = tuple([x.encode('UTF8') for x in list(agreements) if x])
 		_condition = "where name in {0}".format(agreements)
-		first_payment = []
 		for i in agreements:
 			customer_agreement = frappe.get_doc("Customer Agreement",i)
 			for row in customer_agreement.payments_record:
@@ -327,6 +332,7 @@ def get_late_payment(agreements):
 		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
 								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
+	print late_payment,"late_payment","\n\n\n\n\n"
 	return {"late_payment":late_payment[0][0],"first_payment":sum(first_payment)}
 
 @frappe.whitelist()
@@ -427,15 +433,15 @@ def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
 	customer_doc = frappe.get_doc("Customer",customer)
 	if flag == "Process Payment":
 		if bonus > 0 and customer_doc.customer_group == "Individual":
-			added_bonus = float(bonus) - customer_doc.bonus
+			#added_bonus = float(bonus) - customer_doc.bonus
 			customer_doc.update({
 				"bonus":float(bonus)
 			})
 			customer_doc.save(ignore_permissions=True)
-			if float(added_bonus) > 0:
-				comment = """ {0} EUR Bonus Added """.format(added_bonus)
+			#if float(added_bonus) > 0:
+				#comment = """ {0} EUR Bonus Added """.format(added_bonus)
 				#frappe.throw(_("{0}").format(comment))
-				customer_doc.add_comment("Comment",comment)
+				#customer_doc.add_comment("Comment",comment)
 		customer_doc.update({
 			"receivables":float(receivables)
 		}) 	
@@ -592,8 +598,8 @@ def get_history_records(customer_agreement):
 	for i in history_record_dict:
 		i['associate'] = frappe.session.user
 		total_transaction_amount = i["total_transaction_amount"]
-		i["total_transaction_amount"] = total_transaction_amount.split("/")[0]
-		i["total_calculated_payment_amount"] = total_transaction_amount.split("/")[1]
+		i["total_transaction_amount"] = total_transaction_amount.split("/")[0] if total_transaction_amount else 0
+		i["total_calculated_payment_amount"] = total_transaction_amount.split("/")[1]  if total_transaction_amount else 0
 		if float(balance) > float(i["monthly_rental_amount"]):
 			i["balance"] = "{0:.2f}".format(float(balance) - float(i['monthly_rental_amount']))
 			balance = float(balance) - float(i['monthly_rental_amount'])
