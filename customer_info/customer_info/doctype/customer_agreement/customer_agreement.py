@@ -222,6 +222,18 @@ class CustomerAgreement(Document):
 		self.add_comment("Comment",comment)
 
 
+
+def reset_contact_result_of_sent_sms():
+	now_date = datetime.now().date()
+	customer_agreement = frappe.get_all("Customer Agreement", fields=["name"],filters={"agreement_status": "Open","contact_result":"Sent SMS/Email"})
+	#print customer_agreement,"customer_agreement","\n\n\n\n\n\n"
+	for agreement in customer_agreement:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+		if agreement_doc.suspension_date <= now_date:
+			agreement_doc.contact_result = ""
+			agreement_doc.suspension_date = ""
+		agreement_doc.save(ignore_permissions=True)	
+
 # def payments_done_by_scheduler():
 # 	print "in update_payments_child_table"
 # 	now_date = datetime.now().date()

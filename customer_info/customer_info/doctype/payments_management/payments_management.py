@@ -81,6 +81,7 @@ def calculate_total_charges(customer,flag,payment_date):
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
 					late_payment_amount.append(late_fee)
 					late_fees_of_agreement.append(late_fee)
+					late_payments_rental_payment.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
 				due_payment_list.append(row.monthly_rental_amount)
 				row.check_box = 1
@@ -89,8 +90,9 @@ def calculate_total_charges(customer,flag,payment_date):
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
 					late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
 					late_payment_amount.append(late_fee) # for adding late fees of all agreements
-					late_payments_rental_payment(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
+					late_payments_rental_payment.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 
+		print late_payments_rental_payment,"late_payments_rental_payment","\n\n\n\n\n\n\n"				
 		customer_agreement.late_payment = sum(late_payments_rental_payment)	# 	updating by addition of rental payment of late payment of agreement
 			
 		if customer_agreement.late_fees_updated == "No":
@@ -294,6 +296,9 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
 		customer_agreement.number_of_payments = len(received_payments)
+		customer_agreement.early_payments_bonus = len(add_bonus_of_one_eur)*1 # update early payment bonus
+		customer_agreement.payment_on_time_bonus = len(add_bonus_of_two_eur)*2 # update on time payment bonus
+		
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
 		customer_agreement.bonus = customer_agreement.bonus + bonus - subtract_bonus
@@ -336,7 +341,7 @@ def get_late_payment(agreements):
 	return {"late_payment":late_payment[0][0],"first_payment":sum(first_payment)}
 
 @frappe.whitelist()
-def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,total_charges,rental_payment,late_fees):
+def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,manual_bonus,used_bonus,total_charges,rental_payment,late_fees):
 
 	values = json.loads(values)
 	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(customer)
@@ -376,7 +381,7 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	print discount_amount,"\n\n\n\n","discount_amount"
 	#add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
 	#add_bonus_and_receivables_to_customer(customer,bonus,values['balance'],flag)
-	add_bonus_and_receivables_to_customer(customer,bonus,add_in_receivables,flag)
+	add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus,add_in_receivables,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -429,13 +434,15 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.merchandise_status = "Agreement over"
 	customer_agreement.save(ignore_permissions=True)		
 
-def add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag):
+def add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus,receivables,flag):
 	customer_doc = frappe.get_doc("Customer",customer)
 	if flag == "Process Payment":
 		if bonus > 0 and customer_doc.customer_group == "Individual":
 			#added_bonus = float(bonus) - customer_doc.bonus
 			customer_doc.update({
-				"bonus":float(bonus)
+				"bonus":float(bonus),
+				"assign_manual_bonus":manual_bonus,
+				"used_bonus":used_bonus
 			})
 			customer_doc.save(ignore_permissions=True)
 			#if float(added_bonus) > 0:
@@ -519,7 +526,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	values = json.loads(values)
 	
 	#add_bonus_and_receivables_to_customer(customer,0,values['balance'],flag)
-	add_bonus_and_receivables_to_customer(customer,0,add_in_receivables,flag)
+	add_bonus_and_receivables_to_customer(customer,0,0,0,add_in_receivables,flag)
 	
 	data = json.loads(data)
 	_total_charges = 0

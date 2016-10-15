@@ -98,6 +98,7 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
             cur_frm.set_value("discounted_payments_left",cur_frm.doc.agreement_period)
+            cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
         }
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
@@ -112,7 +113,6 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }
         if(cur_frm.doc.__islocal){
-            cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
             if(cur_frm.doc.customer_group == "Individual"){    
                 frappe.call({
                     async:false,
@@ -125,6 +125,7 @@ frappe.ui.form.on("Customer Agreement",{
                     callback: function(res){
                         if (res && res.message){
                             cur_frm.set_value("bonus",20)
+                            cur_frm.set_value("new_agreement_bonus",20)
                         }
                     }   
                 });
