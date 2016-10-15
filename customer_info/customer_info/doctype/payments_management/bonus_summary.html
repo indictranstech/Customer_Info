@@ -1,0 +1,34 @@
+
+<div class="row">
+        <div class="col-xs-6"></div>
+        <div class="col-xs-6">
+            <p><b>Total bonus accumulated:</b> {{ total_bonus_accumulated }}  Eur</p>
+            <p><b>Bonus used:</b> {{ used_bonus }}  Eur</p>
+            <p><b>Active bonus:</b> {{  active_bonus }}  Eur</p>
+            <br>
+            <p><b>Assign Manually:</b> {{ assign_manual_bonus }} Eur</p>
+        </div>
+</div> 
+
+<div class="row">   
+        <table class="table table-bordered" style="margin-bottom: 0px;">
+            <thead>
+              <tr>
+                <td><b>Agreement No</b></td>
+                <td><b>New Agreement</b></td>
+                <td><b>Early payment</b></td>
+                <td><b>Payment on time</b></td>
+              </tr>
+            </thead>
+            {% if (bonus.length) { %}
+                    {% for(var i=0, l=bonus.length; i < l; i++) { %}
+                            <tr>
+                                <td>{{ bonus[i].name }}</td>
+                                <td>{{ bonus[i].new_agreement_bonus }}</td>
+                                <td>{{ bonus[i].early_payments_bonus }}</td>
+                                <td>{{ bonus[i].payment_on_time_bonus }}</td>
+                            </tr>
+                    {% } %}
+                {% } %} 
+        </table>    
+    </div>   

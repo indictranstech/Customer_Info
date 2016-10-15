@@ -96,14 +96,14 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	"daily": {
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler"
-	}
+	"daily": [
+		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms"		
+	]
 }
 
 # scheduler_events = {
 # 	"all": [
-# 		"customer_info.tasks.all"
+# 		"customer_info.tasks.all",
 # 	],
 # 	"daily": [
 # 		"customer_info.tasks.daily"

@@ -7,6 +7,8 @@ cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
 cur_frm.add_fetch('customer','bonus','bonus')
 cur_frm.add_fetch('customer','bonus','static_bonus')
 cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
+cur_frm.add_fetch('customer','assign_manual_bonus','assign_manual_bonus')
+cur_frm.add_fetch('customer','used_bonus','used_bonus')
 
 var index = 0
 frappe.ui.form.on("Payments Management", {
@@ -44,6 +46,10 @@ frappe.ui.form.on("Payments Management", {
 			cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
 		}
 	},*/
+	bonus_summary:function(){
+		console.log("in bonus_summary")
+		new bonus_summary()
+	},
 	submit:function(){
 		if(cur_frm.doc.customer){
 			var me = "Process Payments";
@@ -310,6 +316,67 @@ make_grid= function(data1,columns,options){
 }
 
 
+bonus_summary = Class.extend({
+	init:function(){
+		this.show_dialog();
+	},
+	show_dialog:function(){
+		this.dialog = new frappe.ui.Dialog({
+    		title: "Bonus Summary",
+        	fields: [
+           		{"fieldtype": "HTML" , "fieldname": "bonus_summary"},
+           	]
+   		});
+       	this.fd = this.dialog.fields_dict;
+       	this.render_bonus_summary();
+	},
+	render_bonus_summary:function(){
+		var me = this;
+		me.get_bonus_details()
+	},
+	get_bonus_details:function(){
+		var me =this;
+		frappe.call({    
+			method: "frappe.client.get_list",
+		   	args: {
+		    	doctype: "Customer Agreement",
+		       	fields: ["name","new_agreement_bonus","early_payments_bonus","payment_on_time_bonus"],
+		       	filters: {"agreement_status":"Open","customer":cur_frm.doc.customer},
+			},
+			callback: function(r){
+				console.log(r.message,"e.message get_bonus_details")
+				if(r.message){
+					total_bonus = {"name":"Total",
+									"early_payments_bonus":0,
+									"payment_on_time_bonus":0,
+									"new_agreement_bonus":0
+								}
+					$.each(r.message,function(i,d){
+						total_bonus["name"] = "Total"
+						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
+						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
+						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"] 
+					})
+					r.message.push(total_bonus)
+					me.dialog.show();
+					console.log(r.message[r.message.length -1])
+					var total_bonus_accumulated = r.message[r.message.length -1]["early_payments_bonus"] 
+												+ r.message[r.message.length -1]["new_agreement_bonus"] 
+												+ r.message[r.message.length -1]["payment_on_time_bonus"] 
+												+ cur_frm.doc.assign_manual_bonus
+					html = $(frappe.render_template("bonus_summary",{
+						"bonus":r.message,
+						"total_bonus_accumulated":total_bonus_accumulated,
+						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus,
+						"used_bonus":cur_frm.doc.used_bonus,
+						"active_bonus":flt(total_bonus_accumulated) - cur_frm.doc.used_bonus
+					})).appendTo(me.fd.bonus_summary.wrapper);
+				}
+			}
+		})	
+	}
+})
+
 
 edit_bonus = Class.extend({
 	init:function(bonus){
@@ -375,6 +442,7 @@ edit_bonus = Class.extend({
 		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] "+r.message)
 						$('button[data-fieldname="add_notes"]').click();
 		        		cur_frm.set_value("notes_on_customer_payments","")
+		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - cur_frm.doc.bonus))
 		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
 		        		cur_frm.set_value("bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
 		    			msgprint("Bonus Updated");
@@ -1310,6 +1378,7 @@ payoff_details = Class.extend({
 				me.dialog.set_value("bonus","0.0")	
 			}
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
+				cur_frm.set_value("used_bonus",flt($(me.fd.bonus.input).val()))
 				me.init_for_commom_calculation();
 			}
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val())) > flt(me.payable_by_bonus)) {
@@ -1533,6 +1602,8 @@ payoff_details = Class.extend({
 	        	"payment_date":cur_frm.doc.payment_date,
 	        	"customer":cur_frm.doc.customer,
 	        	"bonus":cur_frm.doc.bonus - flt(value.bonus),
+	        	"manual_bonus":cur_frm.doc.assign_manual_bonus,
+	        	"used_bonus":cur_frm.doc.used_bonus,
 	        	//"receivables":me.add_in_receivables,
 	        	"add_in_receivables":me.add_in_receivables,
               	"receivables":cur_frm.doc.receivables,
