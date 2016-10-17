@@ -242,28 +242,28 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				submitable_payments.append(row.idx)
 			
 			if customer_agreement.customer_group == "Individual" and flag != "Payoff":
-				if row.payment_date and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0:
+				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0:
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_date and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0:
+				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0:
 					add_bonus_of_two_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
 						})
 					row.save(ignore_permissions = True)
 				
-				if row.payment_id in row_to_uncheck and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
+				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
 					remove_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':0
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_id in row_to_uncheck and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
+				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
 					remove_bonus_of_two_eur.append(row.idx)	
 					row.update({
 						'add_bonus_to_this_payment':0
@@ -290,14 +290,17 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 	subtract_bonus = len(remove_bonus_of_one_eur)*1 + len(remove_bonus_of_two_eur)*2
 
+	print "\n\n\n\n\n",subtract_bonus,"subtract_bonus"
+
+
 	if customer_agreement.payments_record and customer_agreement.date:
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
 		customer_agreement.total_late_payments = sum(late_payments)
 		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
 		customer_agreement.number_of_payments = len(received_payments)
-		customer_agreement.early_payments_bonus = len(add_bonus_of_one_eur)*1 # update early payment bonus
-		customer_agreement.payment_on_time_bonus = len(add_bonus_of_two_eur)*2 # update on time payment bonus
+		customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + (len(add_bonus_of_one_eur)*1 - len(remove_bonus_of_one_eur)*1)  # update early payment bonus
+		customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  (len(add_bonus_of_two_eur)*2 - len(remove_bonus_of_two_eur)*2) # update on time payment bonus
 		
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
@@ -441,8 +444,8 @@ def add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus
 			#added_bonus = float(bonus) - customer_doc.bonus
 			customer_doc.update({
 				"bonus":float(bonus),
-				"assign_manual_bonus":manual_bonus,
-				"used_bonus":used_bonus
+				"assign_manual_bonus":float(customer_doc.assign_manual_bonus) + float(manual_bonus),
+				"used_bonus":float(customer_doc.used_bonus) + float(used_bonus)
 			})
 			customer_doc.save(ignore_permissions=True)
 			#if float(added_bonus) > 0:

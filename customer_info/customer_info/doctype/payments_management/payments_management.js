@@ -442,9 +442,9 @@ edit_bonus = Class.extend({
 		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] "+r.message)
 						$('button[data-fieldname="add_notes"]').click();
 		        		cur_frm.set_value("notes_on_customer_payments","")
-		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - cur_frm.doc.bonus))
+		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)))
 		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
-		        		cur_frm.set_value("bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
+		        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(me.dialog.fields_dict.bonus.$input.val()));
 		    			msgprint("Bonus Updated");
 		    			me.dialog.hide();
 		    			get_bonus_link();

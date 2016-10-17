@@ -112,7 +112,7 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.product_category && cur_frm.doc.product){
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }
-        if(cur_frm.doc.__islocal){
+        if(cur_frm.doc.__islocal){ //add bonus of new agreement
             if(cur_frm.doc.customer_group == "Individual"){    
                 frappe.call({
                     async:false,
@@ -129,7 +129,7 @@ frappe.ui.form.on("Customer Agreement",{
                         }
                     }   
                 });
-                frappe.call({
+                /*frappe.call({
                     async:false,
                     method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
                     args: {
@@ -138,7 +138,7 @@ frappe.ui.form.on("Customer Agreement",{
                     },
                     callback: function(res){
                     }   
-                });
+                });*/
             }
         }         
     },
