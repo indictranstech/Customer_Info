@@ -94,7 +94,7 @@ get_bonus_link = function(){
 	console.log("callback from payoff_details")
 	$('[data-fieldname="bonus_link"]').empty();
 	html = '<div class="row">\
-            <label class="control-label" style="margin-left: 16px;">Bonus</label></div>\
+            <label class="control-label" style="margin-left: 16px;">Bonus (we can used)</label></div>\
             <div class="row">\
             <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus + '</a>\
             </div>'
@@ -337,11 +337,15 @@ bonus_summary = Class.extend({
 	get_bonus_details:function(){
 		var me =this;
 		frappe.call({    
-			method: "frappe.client.get_list",
-		   	args: {
+			//method: "frappe.client.get_list",
+		   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_details",
+		   	/*args: {
 		    	doctype: "Customer Agreement",
 		       	fields: ["name","new_agreement_bonus","early_payments_bonus","payment_on_time_bonus"],
 		       	filters: {"agreement_status":"Open","customer":cur_frm.doc.customer},
+			},*/
+			args: {
+				"customer":	cur_frm.doc.customer
 			},
 			callback: function(r){
 				console.log(r.message,"e.message get_bonus_details")
@@ -444,7 +448,7 @@ edit_bonus = Class.extend({
 		        		cur_frm.set_value("notes_on_customer_payments","")
 		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)))
 		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
-		        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(me.dialog.fields_dict.bonus.$input.val()));
+		        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(cur_frm.doc.assign_manual_bonus));
 		    			msgprint("Bonus Updated");
 		    			me.dialog.hide();
 		    			get_bonus_link();
@@ -489,9 +493,12 @@ edit_campaign_discount = Class.extend({
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
-       	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
-       	this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
-       	this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
+       	//this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
+       	//this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
+       	//this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
+       	this.dialog.fields_dict.campaign_discount.set_input(0)
+       	me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
 		this.campaign_discount();
 	},
@@ -1117,7 +1124,7 @@ Payments_Details = Class.extend({
 	            	me.update_total_charges_and_due_payments()
 	        		me.dialog.hide();
 	        	}
-	        });
+	        });	
 	    }
 	},
 	add_date_on_check:function(){
@@ -1378,12 +1385,12 @@ payoff_details = Class.extend({
 				me.dialog.set_value("bonus","0.0")	
 			}
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
-				cur_frm.set_value("used_bonus",flt($(me.fd.bonus.input).val()))
 				me.init_for_commom_calculation();
 			}
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val())) > flt(me.payable_by_bonus)) {
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
-				msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
+				//msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
+				msgprint(__("Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
 			}
 			if( (flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus) ){
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
@@ -1603,7 +1610,7 @@ payoff_details = Class.extend({
 	        	"customer":cur_frm.doc.customer,
 	        	"bonus":cur_frm.doc.bonus - flt(value.bonus),
 	        	"manual_bonus":cur_frm.doc.assign_manual_bonus,
-	        	"used_bonus":cur_frm.doc.used_bonus,
+	        	"used_bonus":flt(value.bonus),
 	        	//"receivables":me.add_in_receivables,
 	        	"add_in_receivables":me.add_in_receivables,
               	"receivables":cur_frm.doc.receivables,
@@ -1612,6 +1619,7 @@ payoff_details = Class.extend({
 	       	callback: function(r){
        			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
 	       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+	       		cur_frm.set_value("used_bonus",flt(value.bonus))
 	            if(r.message){
 	            	msgprint(r.message+"\n"+"Agreement Payoff successfully")
 	            }

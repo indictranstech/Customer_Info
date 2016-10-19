@@ -33,16 +33,14 @@ class CustomerAgreement(Document):
 		if self.agreement_status == "Open":
 			sold_date = datetime.now()
 			old_sold_date = item.sold_date
-		elif self.merchandise_status == "Sold":
+		
+		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
+			print "inside payoff","\n\n\n\n\n\n"
 			sold_date = datetime.now()
 			old_sold_date = item.sold_date
-		elif self.merchandise_status == "Stolen":
-			sold_date = datetime.now()
-			old_sold_date = item.sold_date	
-		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["40% Offer","90d SAC"]:
-			sold_date = datetime.now()
-			old_sold_date = item.sold_date
+		
 		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Contract Term is over" and self.merchandise_status == "Agreement over":	
+			print "agreement over","\n\n\n\n\n\n"
 			sold_date = datetime.now()
 			old_sold_date = item.sold_date
 		
@@ -416,8 +414,8 @@ def set_bonus_in_customer(customer,bonus):
 	customer.update({
 		"bonus":total_bonus
 	})
-	if float(bonus) > 0:
-		comment = """ {0} EUR Bonus Added """.format(bonus)
-		customer.add_comment("Comment",comment)
+	#if float(bonus) > 0:
+		#comment = """ {0} EUR Bonus Added """.format(bonus)
+		#customer.add_comment("Comment",comment)
 	customer.save(ignore_permissions=True)
 

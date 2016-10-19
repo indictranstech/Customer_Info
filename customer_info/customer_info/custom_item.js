@@ -56,6 +56,9 @@ frappe.ui.form.on("Item", {
             cur_frm.doc.old_status = cur_frm.doc.merchandise_status
             refresh_field("old_status")
         }
+        if(!cur_frm.doc.__islocal && cur_frm.doc.merchandise_status == "Stolen"){
+            cur_frm.set_value("sold_date",frappe.datetime.nowdate())
+        }
     },
     s90d_sac_price: function(frm){
         if(cur_frm.doc.s90d_sac_price && cur_frm.doc.__islocal){

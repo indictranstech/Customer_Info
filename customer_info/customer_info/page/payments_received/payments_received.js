@@ -240,7 +240,6 @@ payments_received = Class.extend({
 			       		$('tr#'+String(me.ph_name)).hide()
 			       		me.dialog.hide();
 			       		me.render_payments_details();
-
 			    	}
 		    	});
 			}

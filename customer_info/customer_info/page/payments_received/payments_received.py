@@ -119,6 +119,8 @@ def make_refund_payment(payments_ids,ph_name):
 		merchandise_status_list.sort()
 			
 
+
+	refund_bonus = []	
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		set_values_in_agreement_on_submit(customer_agreement)
@@ -135,7 +137,6 @@ def make_refund_payment(payments_ids,ph_name):
 			customer_agreement.save(ignore_permissions=True)
 
 		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
-			print "inside 1","\n\n\n\n\n\n"
 			item_doc.sold_date = item_doc.old_sold_date
 			item_doc.old_sold_date = item_doc.old_sold_date
 			item_doc.save(ignore_permissions=True)
@@ -150,13 +151,15 @@ def make_refund_payment(payments_ids,ph_name):
 			# item_doc.sold_date = item_doc.old_sold_date
 			# item_doc.old_sold_date = item_doc.old_sold_date
 			# item_doc.save(ignore_permissions=True)
-			refund_bonus = float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list))
-			customer.bonus = float(payment_history.bonus) + refund_bonus
-			customer.used_bonus = float(customer.used_bonus) - float(customer.used_bonus)
-		customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
-		#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
-		customer.receivables = payment_history.receivables
-		customer.save(ignore_permissions=True)
+			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
+
+	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
+	customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
+	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
+
+	#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
+	customer.receivables = payment_history.receivables
+	customer.save(ignore_permissions=True)
 	
 	payment_history.refund = "Yes"
 	payment_history.save(ignore_permissions=True)	
