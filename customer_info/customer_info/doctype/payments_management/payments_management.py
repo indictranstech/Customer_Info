@@ -18,6 +18,34 @@ from customer_info.customer_info.doctype.payments_management.make_payment_histor
 
 class PaymentsManagement(Document):
 	pass
+@frappe.whitelist()
+def get_bonus_details(customer):
+	"""
+	update early_payments_bonus and payment_on_time_bonus
+
+	"""
+	for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
+					 filters={"agreement_status":"Open","customer":customer})]:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
+		agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
+			(select  CASE WHEN add_bonus_to_this_payment = 1 
+			AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
+			AS bonus 
+			from `tabPayments Record` where parent = "{0}")I
+			""".format(agreement['name']),as_list=1)[0][0]
+		agreement_doc.payment_on_time_bonus = frappe.db.sql("""select sum(I.BONUS) from
+			(select  CASE WHEN add_bonus_to_this_payment = 1 
+			AND payment_date = due_date THEN add_bonus_to_this_payment * 1 ELSE 0 END 
+			AS bonus 
+			from `tabPayments Record` where parent = "{0}")I
+			""".format(agreement['name']),as_list=1)[0][0]		
+		agreement_doc.save(ignore_permissions=True)
+
+	return frappe.db.get_values("Customer Agreement",{"agreement_status":"Open",\
+								"customer":customer},["name","new_agreement_bonus",\
+								"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
+
+
 
 @frappe.whitelist()
 def update_bonus(customer,bonus,old_bonus):
@@ -370,15 +398,15 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	discount_amount = 0
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		item_doc = frappe.get_doc("Item",customer_agreement.product)
-		item_doc.old_sold_date = item_doc.sold_date
-		item_doc.sold_date = payment_date
-		item_doc.save(ignore_permissions=True)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		if customer_agreement.discount_updated == "Yes":
 			discount_amount += customer_agreement.campaign_discount
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
+			# item_doc = frappe.get_doc("Item",customer_agreement.product)
+			# item_doc.old_sold_date = item_doc.sold_date
+			# item_doc.sold_date = payment_date
+			# item_doc.save(ignore_permissions=True)
 			completed_agreement_list.append(customer_agreement.name)	
 		flag = "Process Payment"
 	print discount_amount,"\n\n\n\n","discount_amount"
@@ -496,10 +524,10 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	frappe.db.commit()
 	
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	item_doc = frappe.get_doc("Item",agreement.product)
-	item_doc.old_sold_date = item_doc.sold_date
-	item_doc.sold_date = payment_date
-	item_doc.save(ignore_permissions=True)
+	# item_doc = frappe.get_doc("Item",agreement.product)
+	# item_doc.old_sold_date = item_doc.sold_date
+	# item_doc.sold_date = payment_date
+	# item_doc.save(ignore_permissions=True)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
 	if int(condition) == 2 and agreement.agreement_status == "Open":

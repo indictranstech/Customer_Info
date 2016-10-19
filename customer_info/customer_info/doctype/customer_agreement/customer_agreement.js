@@ -129,7 +129,7 @@ frappe.ui.form.on("Customer Agreement",{
                         }
                     }   
                 });
-                /*frappe.call({
+                frappe.call({
                     async:false,
                     method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
                     args: {
@@ -138,7 +138,7 @@ frappe.ui.form.on("Customer Agreement",{
                     },
                     callback: function(res){
                     }   
-                });*/
+                });
             }
         }         
     },
