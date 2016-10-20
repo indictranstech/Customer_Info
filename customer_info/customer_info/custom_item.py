@@ -38,10 +38,17 @@ def product_status_change(self,method):
 
 	if status or agreement or vat or sac or monthly_rental:
 		comment = """<p>{0}</p> <p>{1}</p> <p>{2}</p> <p>{3}</p> <p>{4}</p>""".format(status,agreement,vat,sac,monthly_rental)
-		self.add_comment("Comment", comment)					
+		#self.add_comment("Comment", comment)					
 
 
 @frappe.whitelist(allow_guest = True)
 def add_comment_for_customer_creation(self,method):
 	comment = """Customer {0} is made on the {1}  """.format(self.name,datetime.now().date())
 	self.add_comment("Comment",comment)
+
+@frappe.whitelist(allow_guest = True)
+def add_comment_for_change_receivables(self,method):
+	if self.old_receivables != self.receivables:
+		comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
+		self.add_comment("Comment",comment)
+		self.old_receivables = self.receivables
