@@ -148,9 +148,6 @@ def make_refund_payment(payments_ids,ph_name):
 		
 		if payment_history.payment_type == "Normal Payment":
 			print "inside 2","\n\n\n\n\n\n"
-			# item_doc.sold_date = item_doc.old_sold_date
-			# item_doc.old_sold_date = item_doc.old_sold_date
-			# item_doc.save(ignore_permissions=True)
 			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
 
 	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
@@ -159,6 +156,7 @@ def make_refund_payment(payments_ids,ph_name):
 
 	#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
 	customer.receivables = payment_history.receivables
+	customer.old_receivables = payment_history.receivables
 	customer.save(ignore_permissions=True)
 	
 	payment_history.refund = "Yes"

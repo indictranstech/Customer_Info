@@ -94,7 +94,7 @@ get_bonus_link = function(){
 	console.log("callback from payoff_details")
 	$('[data-fieldname="bonus_link"]').empty();
 	html = '<div class="row">\
-            <label class="control-label" style="margin-left: 16px;">Bonus (we can used)</label></div>\
+            <label class="control-label" style="margin-left: 16px;">Active Bonus</label></div>\
             <div class="row">\
             <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus + '</a>\
             </div>'
@@ -443,7 +443,7 @@ edit_bonus = Class.extend({
 		        },
 		        callback: function(r){
 		        	if(r.message){
-		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+" ] "+r.message)
+		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+"] "+r.message)
 						$('button[data-fieldname="add_notes"]').click();
 		        		cur_frm.set_value("notes_on_customer_payments","")
 		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)))
@@ -493,20 +493,44 @@ edit_campaign_discount = Class.extend({
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
-       	//this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
+       	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
        	//this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
        	//this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
-       	this.dialog.fields_dict.campaign_discount.set_input(0)
-       	me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       	//this.dialog.fields_dict.campaign_discount.set_input(0)
+       	/*if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
+       		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+		}
+		else{
+			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
+       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
+		}*/
+		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
+       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
 		this.campaign_discount();
 	},
 	campaign_discount:function(){
 		var me = this;
+		/*
+			campaign discount should be preselected if given then that given campaign_discount
+			if again select due will not deduct 
+		*/
 		$(me.dialog.fields_dict.campaign_discount.input).change(function(){
-			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+			if(flt(me.item["campaign_discount"].split("-")[1]) > 0){
+				if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
+					me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+	       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+				}
+			}
+			else if(flt(me.item["campaign_discount"].split("-")[1]) == 0){
+				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+			}
+			else if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0) {
+				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+			}
 		})
 	},
 	update_campaign_discount:function(){
@@ -832,7 +856,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				console.log("in mybutton mybutton 11223")
-				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+"("+me.item['id']+")")
+				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
 				$('button[data-fieldname="add_notes"]').click()
 				me.dialog.fields_dict.comment.set_input("")
 			}

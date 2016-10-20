@@ -403,10 +403,6 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 			discount_amount += customer_agreement.campaign_discount
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
-			# item_doc = frappe.get_doc("Item",customer_agreement.product)
-			# item_doc.old_sold_date = item_doc.sold_date
-			# item_doc.sold_date = payment_date
-			# item_doc.save(ignore_permissions=True)
 			completed_agreement_list.append(customer_agreement.name)	
 		flag = "Process Payment"
 	print discount_amount,"\n\n\n\n","discount_amount"
@@ -481,12 +477,14 @@ def add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus
 				#frappe.throw(_("{0}").format(comment))
 				#customer_doc.add_comment("Comment",comment)
 		customer_doc.update({
-			"receivables":float(receivables)
+			"receivables":float(receivables),
+			"old_receivables":float(receivables)
 		}) 	
 		customer_doc.save(ignore_permissions=True)
 	elif flag == "Payoff Payment":
 		customer_doc.update({
-			"receivables":float(receivables)	
+			"receivables":float(receivables),
+			"old_receivables":float(receivables)	
 			#"receivables":float(customer_doc.receivables) + float(receivables)
 		})
 		customer_doc.save(ignore_permissions=True)	
@@ -524,10 +522,6 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	frappe.db.commit()
 	
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	# item_doc = frappe.get_doc("Item",agreement.product)
-	# item_doc.old_sold_date = item_doc.sold_date
-	# item_doc.sold_date = payment_date
-	# item_doc.save(ignore_permissions=True)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
 	if int(condition) == 2 and agreement.agreement_status == "Open":

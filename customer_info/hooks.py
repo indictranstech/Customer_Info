@@ -86,7 +86,8 @@ doc_events = {
 		"on_update": "customer_info.customer_info.custom_item.product_status_change"
 	},
 	"Customer":{
-		"after_insert":"customer_info.customer_info.custom_item.add_comment_for_customer_creation"
+		"after_insert":"customer_info.customer_info.custom_item.add_comment_for_customer_creation",
+		"validate":"customer_info.customer_info.custom_item.add_comment_for_change_receivables"
 	},
 	"Product Category": {
 		"validate": "customer_info.customer_info.doctype.product_category.product_category.new_item_group"
@@ -96,7 +97,7 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	"all": [
+	"daily": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms"		
 	]
 }

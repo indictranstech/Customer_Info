@@ -27,14 +27,18 @@ class CustomerAgreement(Document):
 		self.change_sold_date_of_item()
 
 	def change_sold_date_of_item(self):
-		sold_date = ""
+		"""
+			change solde date when agreement is closed and agreement_closing_suspending_reason 
+			in ["40% Offer","90d SAC"] or Contract Term is over
+		"""
+ 		sold_date = ""
 		old_sold_date = ""
 		item = frappe.get_doc("Item",self.product)
-		if self.agreement_status == "Open":
-			sold_date = datetime.now()
-			old_sold_date = item.sold_date
+		# if self.agreement_status == "Open":
+		# 	sold_date = datetime.now()
+		# 	old_sold_date = item.sold_date
 		
-		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
+		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
 			print "inside payoff","\n\n\n\n\n\n"
 			sold_date = datetime.now()
 			old_sold_date = item.sold_date
@@ -73,6 +77,12 @@ class CustomerAgreement(Document):
 
 	def after_insert(self):
 		self.comment_for_agreement_creation()
+		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
+
+	def change_sold_date_on_agreement_creation(self):
+		item = frappe.get_doc("Item",self.product)
+		item.sold_date = datetime.now()
+		item.save(ignore_permissions=True) 			
 
 	def on_update(self):
 		self.payment_date_comment()
