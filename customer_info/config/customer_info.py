@@ -62,6 +62,14 @@ def get_data():
 					"description": _("Record of Received Payment"),
 					"doctype": "Payments History",
 					"icon": "icon-bar-chart",
+				},
+				{
+					"type": "report",
+					"name": "items inventory movement",
+					"label": _("Items inventory movement"),
+					"description": _("items inventory movement"),
+					"doctype": "Item",
+					"icon": "icon-bar-chart",
 				}
 			]
 		},

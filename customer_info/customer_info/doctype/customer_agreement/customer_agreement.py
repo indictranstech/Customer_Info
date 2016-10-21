@@ -18,39 +18,31 @@ from frappe.model.mapper import get_mapped_doc
 
 class CustomerAgreement(Document):	 
 	def validate(self):
+		self.change_sold_date_of_item()
 		self.naming()
 		self.comment_for_agreement_status_change()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
 			self.check_date_diff_of_first_and_second_month_due_date()
 			self.add_payments_record()	
 		self.change_default_warehouse()
-		self.change_sold_date_of_item()
 
 	def change_sold_date_of_item(self):
 		"""
 			change solde date when agreement is closed and agreement_closing_suspending_reason 
 			in ["40% Offer","90d SAC"] or Contract Term is over
 		"""
- 		sold_date = ""
-		old_sold_date = ""
 		item = frappe.get_doc("Item",self.product)
-		# if self.agreement_status == "Open":
-		# 	sold_date = datetime.now()
-		# 	old_sold_date = item.sold_date
-		
 		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
 			print "inside payoff","\n\n\n\n\n\n"
-			sold_date = datetime.now()
-			old_sold_date = item.sold_date
+			item.old_sold_date = item.sold_date
+			item.sold_date = datetime.now()
 		
 		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Contract Term is over" and self.merchandise_status == "Agreement over":	
 			print "agreement over","\n\n\n\n\n\n"
-			sold_date = datetime.now()
-			old_sold_date = item.sold_date
-		
-		item.sold_date = sold_date
-		item.old_sold_date = old_sold_date
-		item.save(ignore_permissions=True) 	
+			item.old_sold_date = item.sold_date
+			item.sold_date = datetime.now()
+			
+		item.save(ignore_permissions=True)	
 			
 	def change_default_warehouse(self):
 		default_warehouse = ""
@@ -81,6 +73,7 @@ class CustomerAgreement(Document):
 
 	def change_sold_date_on_agreement_creation(self):
 		item = frappe.get_doc("Item",self.product)
+		item.old_sold_date = item.sold_date
 		item.sold_date = datetime.now()
 		item.save(ignore_permissions=True) 			
 
