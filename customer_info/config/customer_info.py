@@ -65,10 +65,11 @@ def get_data():
 				},
 				{
 					"type": "report",
+					"is_query_report": True,
 					"name": "items inventory movement",
 					"label": _("Items inventory movement"),
 					"description": _("items inventory movement"),
-					"doctype": "Item",
+					"doctype": "Customer Agreement",
 					"icon": "icon-bar-chart",
 				}
 			]
