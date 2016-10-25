@@ -56,7 +56,7 @@ frappe.ui.form.on("Payments Management", {
 			new payoff_details(me)
 		}
 		else{
-			msgprint("Select Customer First")
+			frappe.throw("Select Customer First")
 		}
 	},
 	call_commitment:function(frm){
@@ -66,7 +66,7 @@ frappe.ui.form.on("Payments Management", {
 			new call_commit(id,item)	
 	    }
 	    else{
-			msgprint("Select Customer First")
+			frappe.throw("Select Customer First")
 		}    
 	},
 	add_notes:function(frm){
@@ -180,12 +180,13 @@ render_agreements = function(){
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
 		console.log(dataContext['campaign_discount'],"dataContext['campaign_discount']")
-		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
+		return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[1] + "</a>";
+		/*if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[1] + "</a>";
 		}
 		else{
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
-		}
+		}*/
 	}
 
 	var columns = [
@@ -497,16 +498,17 @@ edit_campaign_discount = Class.extend({
        	//this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
        	//this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
        	//this.dialog.fields_dict.campaign_discount.set_input(0)
-       	/*if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
-       		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       	
+		/*if(String(me.item["campaign_discount"].split("-")[3]) == "Yes"){
+			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
+       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))	
 		}
 		else{
 			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
-       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
+	       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		}*/
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
-       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
+	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
 		this.campaign_discount();
 	},
@@ -517,20 +519,25 @@ edit_campaign_discount = Class.extend({
 			if again select due will not deduct 
 		*/
 		$(me.dialog.fields_dict.campaign_discount.input).change(function(){
-			if(flt(me.item["campaign_discount"].split("-")[1]) > 0){
+			//if(flt(me.item["campaign_discount"].split("-")[1]) > 0){
 				if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
 					me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
 	       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
 				}
-			}
-			else if(flt(me.item["campaign_discount"].split("-")[1]) == 0){
+				if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0){
+					me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
+       				me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))	
+				}
+			//}
+			console.log((flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0),"(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0)")
+			/*else if(flt(me.item["campaign_discount"].split("-")[1]) == 0){
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
        			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
 			}
 			else if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0) {
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
        			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-			}
+			}*/
 		})
 	},
 	update_campaign_discount:function(){
@@ -1095,7 +1102,7 @@ Payments_Details = Class.extend({
 	    	for(i=0;i<add_list.length-1;i++){
 		    	console.log(add_list[i+1],add_list[i])
 		    	if(flt(add_list[i+1]) - flt(add_list[i]) != 1){
-		    		msgprint("Error Please Add Payment In sequence")
+		    		frappe.throw("Error Please Add Payment In sequence")
 		    		checking_sequence = "false"
 		    		break;
 		    	}
@@ -1109,10 +1116,10 @@ Payments_Details = Class.extend({
 		    me.common_function_for_add_checkbox();
 	    }
 	    if(add_list.length == 1 && add_list[0] != "1"){
-	    	msgprint("Error Please Add Payment In sequence")
+	    	frappe.throw("Error Please Add Payment In sequence")
 	    }
 	    if(me.row_to_check.concat(me.row_to_update).length == 0){
-	    	msgprint("Please Any Payment")
+	    	frappe.throw("Please Any Payment")
 	    }
 	},
 	common_function_for_add_checkbox:function(){
@@ -1360,15 +1367,22 @@ payoff_details = Class.extend({
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.get_late_payment",
 	       	args: {
-	       		"agreements":me.agreements
+	       		"agreements":me.agreements,
+	       		"payment_date":cur_frm.doc.payment_date
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment)
+	    			console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment,r.message["first_payment"])
+	    			console.log(flt(me.late_payment) + flt(r.message["first_payment"]),"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	    			me.late_payment = r.message["late_payment"]
 	    			me.first_payment = r.message["first_payment"]
-	    			me.payable_by_bonus = 0
-	    			me.payable_by_bonus = flt(me.rental_payment) - flt(me.late_payment) - flt(r.message["first_payment"])
+	    			me.payable_by_bonus = flt(me.late_payment) + flt(r.message["first_payment"])
+	    			if(flt(me.payable_by_bonus) == flt((me.rental_payment).toFixed(2))){
+	    				me.payable_by_bonus = flt((me.rental_payment).toFixed(2)) - flt(me.late_payment) - flt(r.message["first_payment"])
+	    			}
+	    			else{
+	    				me.payable_by_bonus = cur_frm.doc.static_bonus
+	    			}
 	    		}
 	    	}
 	    });	
@@ -1414,11 +1428,11 @@ payoff_details = Class.extend({
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val())) > flt(me.payable_by_bonus)) {
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
 				//msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
-				msgprint(__("Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
+				frappe.throw(__("Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
 			}
 			if( (flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus) ){
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
-				msgprint (__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
+				frappe.throw(__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
 			}
 		})		
 	},
@@ -1565,7 +1579,7 @@ payoff_details = Class.extend({
 				me.update_payments_records();
 			}
 			else if(me.old_instance == "Process Payments" && me.number_of_payments == 0){
-				msgprint("Please Add Any Payment")
+				frappe.throw("Please Add Any Payment")
 			}
 			else{
 				me.payoff_submit();	

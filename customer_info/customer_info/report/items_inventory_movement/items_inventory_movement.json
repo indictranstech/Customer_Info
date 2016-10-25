@@ -7,13 +7,13 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2016-10-22 10:35:08.092081", 
+ "modified": "2016-10-25 13:13:16.465007", 
  "modified_by": "Administrator", 
  "module": "Customer Info", 
  "name": "items inventory movement", 
  "owner": "Administrator", 
- "query": "SELECT\nitem.default_warehouse  as \"Warehouse:Link/Warehouse:120\",\nitem.default_supplier as \"Supplier:Link/Supplier:120\",\nitem.invoice_number  as \"Invoice numbere::120\",\nitem.product_category as \"Product Category:Link/Product Category:120\",\nitem.brand as \"Product Model:Link/Brand:120\",\nitem.serial_number as \"Serial number::120\",\nitem.imei_number as \"IMEI number::120\",\nitem.purchase_price_with_vat as \"Purchase price with vat:Float:120\",\nitem.vat_rate as \"Vat:Float:120\",\nitem.purchase_date as \"Purchase Date:Date:120\",\nitem.sold_date as \"Sold Date:Date:120\",\nitem.merchandise_status as \"Merchandise status::120\",\nagreement.name as \"Customer Agreement:Link/Customer Agreement:120\",\nagreement.customer as \"Customer:Link/Customer:120\"\n\n\nFROM `tabItem` item,`tabCustomer Agreement` agreement \n\nWHERE item.name = agreement.product", 
+ "query": "SELECT\nitem.default_warehouse  as \"Warehouse:Link/Warehouse:120\",\nitem.default_supplier as \"Supplier:Link/Supplier:120\",\nitem.invoice_number  as \"Invoice numbere::120\",\nitem.product_category as \"Product Category:Link/Product Category:120\",\nitem.brand as \"Product Model:Link/Brand:120\",\nitem.serial_number as \"Serial number::120\",\nitem.imei_number as \"IMEI number::120\",\nformat(item.purchase_price_with_vat,2) as \"Purchase price with VAT:Float:120\",\nformat(item.purchase_price_with_vat/((item.vat_rate)/100+1),2) as \"Purchase price without VAT:Float:120\",\nitem.purchase_date as \"Purchase Date:Date:120\",\nitem.sold_date as \"Sold Date:Date:120\",\nitem.merchandise_status as \"Merchandise status::120\",\nagreement.name as \"Customer Agreement:Link/Customer Agreement:120\",\nagreement.customer as \"Customer:Link/Customer:120\",\n(select content from `tabCommunication` where reference_doctype = \"Item\" order by creation desc limit 1) as \"Last Comment:Data:100\"\n\n\nFROM `tabItem` item,`tabCustomer Agreement` agreement\n\nWHERE item.name = agreement.product", 
  "ref_doctype": "Customer Agreement", 
  "report_name": "items inventory movement", 
- "report_type": "Query Report"
+ "report_type": "Script Report"
 }
