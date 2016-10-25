@@ -25,6 +25,7 @@ class CustomerAgreement(Document):
 			self.check_date_diff_of_first_and_second_month_due_date()
 			self.add_payments_record()	
 		self.change_default_warehouse()
+		self.changed_merchandise_status_according_to_agreement_status()
 
 	def change_sold_date_of_item(self):
 		"""
@@ -43,6 +44,19 @@ class CustomerAgreement(Document):
 			item.sold_date = datetime.now()
 			
 		item.save(ignore_permissions=True)	
+
+	"""
+		change merchandise_status according to agreement_status
+	"""	
+	def changed_merchandise_status_according_to_agreement_status(self):	
+		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Return":
+			self.merchandise_status = "Used"
+		if self.agreement_status == "Suspended":
+			self.merchandise_status = "Suspended"
+		if self.agreement_closing_suspending_reason == "Fraud/Stolen":
+			self.merchandise_status = "Stolen"			
+
+
 			
 	def change_default_warehouse(self):
 		default_warehouse = ""
@@ -81,6 +95,7 @@ class CustomerAgreement(Document):
 		self.payment_date_comment()
 		self.get_agreement_closed_date()
 		self.changed_merchandise_status()
+
 
 	# For Naming	
 	def naming(self):	
@@ -210,6 +225,7 @@ class CustomerAgreement(Document):
 			# "old_status": item.merchandise_status
 			# })
 		self.old_merchandise_status = self.merchandise_status
+
 
 	# add comment on changing of agreement status		
 	def comment_for_agreement_status_change(self):

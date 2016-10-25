@@ -50,9 +50,9 @@ def get_data():
 				{
 					"type": "report",
 					"is_query_report": True,
-					"name": "late and future payments",
-					"label": _("Late And Future Payments"),
-					"description": _("Record of late and future Payment"),
+					"name": "Future payments",
+					"label": _("Future payments"),
+					"description": _("Record of future Payment"),
 					"doctype": "Customer Agreement",
 				},
 				{

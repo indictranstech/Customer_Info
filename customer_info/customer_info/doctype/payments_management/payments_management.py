@@ -86,7 +86,7 @@ def calculate_total_charges(customer,flag,payment_date):
 	#firstDay_next_month = date(now_date.year, now_date.month+1, 1)
 	due_payment_list = []
 	late_payment_amount = []
-	#discount = []
+	discount = []
 
 
 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
@@ -125,14 +125,13 @@ def calculate_total_charges(customer,flag,payment_date):
 			
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
-		#if customer_agreement.discount_updated == "Yes":
-		#	discount.append(customer_agreement.discount)
+		if customer_agreement.discount_updated == "Yes":
+			discount.append(customer_agreement.campaign_discount)
+
 		customer_agreement.save(ignore_permissions=True)
-	#late_payment_amount =  "{0:.2f}".format(sum(late_payment_amount))
-	#iscount = "{0:.2f}".format(sum(discount))
+	discount_amount_of_agreements = "{0:.2f}".format(sum(discount))
 	due_payment_list.append(float("{0:.2f}".format(sum(late_payment_amount))))
-	#due_payment_list.append(float(discount))	
-	return {"amount_of_due_payments":sum(due_payment_list), #- float(discount),
+	return {"amount_of_due_payments":sum(due_payment_list) - float(discount_amount_of_agreements), # diduct campaign discount of all agreements
 			"receivables":receivables,
 			"bonus":bonus}
 
@@ -350,7 +349,7 @@ def get_next_due_date(date,i):
 
 
 @frappe.whitelist()
-def get_late_payment(agreements):
+def get_late_payment(agreements,payment_date):
 	agreements = json.loads(agreements)
 	_condition = ""
 	first_payment = []
@@ -360,14 +359,19 @@ def get_late_payment(agreements):
 		for i in agreements:
 			customer_agreement = frappe.get_doc("Customer Agreement",i)
 			for row in customer_agreement.payments_record:
-				if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1:
+				if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1 and getdate(row.due_date) >= getdate(payment_date):
 					first_payment.append(row.monthly_rental_amount)
 					
 	if len(agreements) == 1:
 		#agreements = agreements.split(",")[0]
+		customer_agreement = frappe.get_doc("Customer Agreement",agreements[0])
+		for row in customer_agreement.payments_record:
+			if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1 and getdate(row.due_date) >= getdate(payment_date):
+				first_payment.append(row.monthly_rental_amount)
 		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
 								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
+
 	print late_payment,"late_payment","\n\n\n\n\n"
 	return {"late_payment":late_payment[0][0],"first_payment":sum(first_payment)}
 
