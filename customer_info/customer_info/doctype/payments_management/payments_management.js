@@ -1655,8 +1655,13 @@ payoff_details = Class.extend({
               	"total_charges":cur_frm.doc.total_charges,
 	        },
 	       	callback: function(r){
-       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
-	       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+	       		if(flt(value.bonus) == cur_frm.doc.bonus){
+	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
+	       		}
+	       		else{
+	       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
+		       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+	       		}
 	       		cur_frm.set_value("used_bonus",flt(value.bonus))
 	            if(r.message){
 	            	msgprint(r.message+"\n"+"Agreement Payoff successfully")

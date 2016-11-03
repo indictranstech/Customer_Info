@@ -40,7 +40,7 @@ def get_data(filters):
 									WHEN t2.suspension_date THEN t2.suspension_date < '{0}'
 									ELSE 1=1 END
 									and t1.check_box_of_submit != 1
-									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1,debug=1)
+									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
 		for l in result:
 			if float(l[8]):
 				total_due = l[8] + l[3]
@@ -53,6 +53,8 @@ def get_data(filters):
 			l[7] = "{0:.2f}".format(float(l[7]))
 
 		return result
+	else:
+		return []	
 
 def get_colums():
 	columns = [("Due Date") + ":Date:80"] + [("Late Days") + ":Int:70"] + \

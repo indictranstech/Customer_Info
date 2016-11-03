@@ -91,6 +91,9 @@ doc_events = {
 	},
 	"Product Category": {
 		"validate": "customer_info.customer_info.doctype.product_category.product_category.new_item_group"
+	},
+	"Brand":{
+		"before_insert":"customer_info.customer_info.doctype.product_category.product_category.make_category_and_brand_name"	
 	}	
 }
 # Scheduled Tasks

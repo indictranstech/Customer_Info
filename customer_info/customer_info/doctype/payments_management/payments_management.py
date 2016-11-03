@@ -532,7 +532,8 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
-			"agreement_closing_suspending_reason":"40% Offer"
+			"agreement_closing_suspending_reason":"40% Offer",
+			"merchandise_status":"40% Early buy"
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
@@ -544,7 +545,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
 			"agreement_closing_suspending_reason":"90d SAC",
-			"merchandise_status":"Sold" if date_diff(payment_date,agreement.date) <= 2 else merchandise_status
+			"merchandise_status":"Sold" if date_diff(payment_date,agreement.date) <= 2 else "90d SAC"
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "90d SAC"

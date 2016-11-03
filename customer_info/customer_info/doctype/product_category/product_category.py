@@ -21,8 +21,19 @@ def new_item_group(self,method):
 		group.save(ignore_permissions = True)
 		return "True"
 
+@frappe.whitelist(allow_guest = True)	
+def make_category_and_brand_name(self,method):
+	brand_name = frappe.db.get_value("Brand Name",{"name":self.brand_name},"name")
+	if not brand_name:
+		brand_name = frappe.new_doc("Brand Name")
+		brand_name.brand_name = self.brand_name
+		brand_name.save(ignore_permissions=True)
+
+
 @frappe.whitelist()
 def get_category_name(name):
 	name_list = frappe.db.sql("""select category_name from `tabProduct Category`""",as_list=1)
 	if name in [e[0] for e in name_list]:
 		return "Product Category of name '{0}' Already Exist".format(name)
+
+
