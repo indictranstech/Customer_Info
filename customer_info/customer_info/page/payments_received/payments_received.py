@@ -132,6 +132,7 @@ def make_refund_payment(payments_ids,ph_name):
 			item_doc.old_sold_date = item_doc.old_sold_date
 			item_doc.save(ignore_permissions=True)
 			customer_agreement.agreement_status = "Open"
+			customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
 			customer_agreement.merchandise_status = payment_history.merchandise_status
 			customer_agreement.agreement_closing_suspending_reason = ""
 			customer_agreement.save(ignore_permissions=True)
@@ -143,10 +144,11 @@ def make_refund_payment(payments_ids,ph_name):
 			item_doc.save(ignore_permissions=True)
 			customer_agreement.agreement_status = "Open"
 			customer_agreement.agreement_closing_suspending_reason = ""
+			customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
 			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]
 			customer_agreement.agreement_closing_suspending_reason = ""  							
 			customer_agreement.save(ignore_permissions=True)
-		
+
 		if payment_history.payment_type == "Normal Payment":
 			print "inside 2","\n\n\n\n\n\n"
 			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))

@@ -17,8 +17,7 @@ def get_data(filters):
 	now_date = datetime.now().date()
 	if filters:
 		result = frappe.db.sql("""select t1.due_date,t2.customer,t1.payment_id,
-								CASE WHEN t1.idx = 1 
-								THEN t3.receivables ELSE 0 END AS receivables,
+								t3.receivables,
 								t1.monthly_rental_amount,
 								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3 
 								THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
@@ -30,19 +29,24 @@ def get_data(filters):
 												where agreement_status = "Open")
 								and t1.check_box_of_submit != 1
 								{1}
-								order by t1.due_date""" .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1,debug=1)
+								order by t2.customer""" .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
 
 		total = ["","",""]
 		receivables = 0
 		monthly_rental_amount = 0
 		total_due = 0
 		late_fees = 0
+		customer_list = []
 		for l in result:
 			late_fees += float(l[5])
-			receivables += float(l[3])
 			monthly_rental_amount += float(l[4])
 			total_due += (float(l[5]) + float(l[4]))
 			l[6] = float(l[5]) + float(l[4])
+			if l[1] in customer_list:
+				l[3] = 0
+			else:
+				customer_list.append(l[1])	
+			receivables += float(l[3])
 			if float(l[3]) == 0: # for display purpose
 				l[3] = ""
 
@@ -54,7 +58,7 @@ def get_data(filters):
 		return result
 
 	else:
-		result = ""	
+		return []	
 
 
 def get_condtion(from_date,to_date):
@@ -74,7 +78,8 @@ def get_condtion(from_date,to_date):
 
 
 def get_colums():
-	columns = [("Payment Date") + ":Date:100"] + [("Customer") + ":Link/Customer:100"] + \
+	print "future_payments columns"
+	columns = [("Due Date") + ":Date:100"] + [("Customer") + ":Link/Customer:100"] + \
 			  [("Payment Id") + ":Data:170"] + \
 			  [("Receivables") + ":Float:90"] + \
 			  [("Rental Payment") + ":Float:100"] + [("Late Fees") + ":Float:80"] + \

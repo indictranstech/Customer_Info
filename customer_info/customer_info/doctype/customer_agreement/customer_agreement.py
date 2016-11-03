@@ -34,12 +34,10 @@ class CustomerAgreement(Document):
 		"""
 		item = frappe.get_doc("Item",self.product)
 		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
-			print "inside payoff","\n\n\n\n\n\n"
 			item.old_sold_date = item.sold_date
 			item.sold_date = datetime.now()
 		
 		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Contract Term is over" and self.merchandise_status == "Agreement over":	
-			print "agreement over","\n\n\n\n\n\n"
 			item.old_sold_date = item.sold_date
 			item.sold_date = datetime.now()
 			
