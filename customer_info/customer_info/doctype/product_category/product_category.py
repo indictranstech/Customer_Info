@@ -24,10 +24,12 @@ def new_item_group(self,method):
 @frappe.whitelist(allow_guest = True)	
 def make_category_and_brand_name(self,method):
 	brand_name = frappe.db.get_value("Brand Name",{"name":self.brand_name},"name")
+	print "in my cond ",brand_name
 	if not brand_name:
-		brand_name = frappe.new_doc("Brand Name")
-		brand_name.brand_name = self.brand_name
-		brand_name.save(ignore_permissions=True)
+		print "in if cond","\n\n\n\n\n\n\n\n\n"
+		brand_name_doc = frappe.new_doc("Brand Name")
+		brand_name_doc.brand_name = self.brand_name
+		brand_name_doc.save(ignore_permissions=True)
 
 
 @frappe.whitelist()

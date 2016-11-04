@@ -1,6 +1,6 @@
 {
  "allow_copy": 0, 
- "allow_import": 0, 
+ "allow_import": 1, 
  "allow_rename": 0, 
  "autoname": "field:brand_name", 
  "creation": "2016-04-11 13:28:57.159435", 
@@ -43,7 +43,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2016-04-11 13:28:57.159435", 
+ "modified": "2016-11-04 14:55:33.929123", 
  "modified_by": "Administrator", 
  "module": "Customer Info", 
  "name": "Brand Name", 

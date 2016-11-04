@@ -627,8 +627,11 @@ edit_late_fees = Class.extend({
 	        	"late_fees": flt(me.fd.late_fees.$input.val())
 	        },
 	        callback: function(r) {
+	        	cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments+flt(me.fd.late_fees.$input.val()))
+	        	cur_frm.set_value("total_charges",cur_frm.doc.total_charges+flt(me.fd.late_fees.$input.val()))
 	        	me.dialog.hide();
 	        	render_agreements();
+	        	//calculate_total_charges("Customer");
 	        }
 	    });
 	}
@@ -1109,13 +1112,13 @@ Payments_Details = Class.extend({
 	    	}
 	    }
 	    console.log("checking_sequence",checking_sequence)
-	    if(checking_sequence == ""){
+	    /*if(checking_sequence == ""){
 	    	me.common_function_for_add_checkbox();
-	    }
-	    if(add_list.length == 1 && add_list[0] == "1"){
+	    }*/
+	    if(add_list.length >= 1 && add_list[0] == "1"){
 		    me.common_function_for_add_checkbox();
 	    }
-	    if(add_list.length == 1 && add_list[0] != "1"){
+	    if(add_list.length >= 1 && add_list[0] != "1"){
 	    	frappe.throw("Error Please Add Payment In sequence")
 	    }
 	    if(me.row_to_check.concat(me.row_to_update).length == 0){
@@ -1372,17 +1375,22 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment,r.message["first_payment"])
-	    			console.log(flt(me.late_payment) + flt(r.message["first_payment"]),"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	    			//console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment,"first_payment",r.message["first_payment"])
+	    			//console.log(flt(me.late_payment) + flt(r.message["first_payment"]),"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	    			me.late_payment = r.message["late_payment"]
 	    			me.first_payment = r.message["first_payment"]
 	    			me.payable_by_bonus = flt(me.late_payment) + flt(r.message["first_payment"])
-	    			if(flt(me.payable_by_bonus) == flt((me.rental_payment).toFixed(2))){
+	    			console.log("payable_by_bonus",me.payable_by_bonus,"aaaaaaaa")
+	    			console.log("me.rental_payment",me.rental_payment)
+	    			if(flt(me.payable_by_bonus) >= flt((me.rental_payment).toFixed(2))){
+	    				console.log("gereter")
 	    				me.payable_by_bonus = flt((me.rental_payment).toFixed(2)) - flt(me.late_payment) - flt(r.message["first_payment"])
 	    			}
-	    			else{
+	    			else if(flt(me.payable_by_bonus) < flt((me.rental_payment).toFixed(2))){
+	    				console.log("less")
 	    				me.payable_by_bonus = cur_frm.doc.static_bonus
 	    			}
+	    			console.log("payable_by_bonus",me.payable_by_bonus,"aaaa1111aaaa")
 	    		}
 	    	}
 	    });	
@@ -1473,7 +1481,7 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.process_payment.$input.click(function() {
 			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) >= 0 ){
        			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
-       			html = "<div class='row'>There Is "+(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()))+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			html = "<div class='row'>There Is "+(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val())) < 0 ? (flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val())):0+" eur in balance Put It Into Receivables OR Give Change</div>"
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        			$('button[data-fieldname="process_payment"]').hide();
@@ -1547,8 +1555,12 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
 			me.add_in_receivables = value.balance - value.bonus;
+			if(flt(me.add_in_receivables) + flt(value.bonus) >= 0){
+				me.add_in_receivables = 0	
+			}
 			me.hide_other_and_show_complete_payment();
 			me.click_on_submit();
+			console.log(me.add_in_receivables,"add_in_receivables")
 		})
 	},
 	click_on_return_to_customer:function(){
