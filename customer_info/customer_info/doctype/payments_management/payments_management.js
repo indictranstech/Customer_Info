@@ -425,7 +425,7 @@ edit_bonus = Class.extend({
 		console.log("in my function")
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments"," "+me.dialog.fields_dict.comment.$input.val())
+				cur_frm.set_value("notes_on_customer_payments","["+user+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
 				$('button[data-fieldname="add_notes"]').click();
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -469,18 +469,18 @@ edit_campaign_discount = Class.extend({
 	make_campaign_discount_edit:function(){
 		var me = this;
 		console.log(me.item["campaign_discount"])
-		var options_list = ["0"]
+		me.options_list = ["0"]
 		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
 			for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
-				options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
+				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
 			}
-			console.log(options_list,"options_list")
+			console.log(me.options_list,"options_list")
 		}	
 		this.dialog = new frappe.ui.Dialog({
     		title: "Contact result",
         	fields: [
-           		{"fieldtype": "Select" ,"fieldname": "campaign_discount" ,"options":options_list.join("\n") ,"label": "Campaign Discount"},
+           		{"fieldtype": "Select" ,"fieldname": "campaign_discount" ,"options":me.options_list.join("\n") ,"label": "Campaign Discount"},
            		{"fieldtype": "Float" ,"fieldname": "due_amount","label": "Due Amount","precision":2},
            		{"fieldtype": "Float" ,"fieldname": "total_charges_amount","label": "Total Charges Amount","precision":2}
            	],
@@ -495,18 +495,6 @@ edit_campaign_discount = Class.extend({
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
        	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
-       	//this.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
-       	//this.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))
-       	//this.dialog.fields_dict.campaign_discount.set_input(0)
-       	
-		/*if(String(me.item["campaign_discount"].split("-")[3]) == "Yes"){
-			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.item["campaign_discount"].split("-")[1]))
-       		me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.item["campaign_discount"].split("-")[1]))	
-		}
-		else{
-			me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
-	       	me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
-		}*/
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
@@ -519,25 +507,18 @@ edit_campaign_discount = Class.extend({
 			if again select due will not deduct 
 		*/
 		$(me.dialog.fields_dict.campaign_discount.input).change(function(){
-			//if(flt(me.item["campaign_discount"].split("-")[1]) > 0){
-				if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
-					me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-	       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-				}
-				if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0){
-					me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-       				me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))	
-				}
-			//}
-			console.log((flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0),"(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0)")
-			/*else if(flt(me.item["campaign_discount"].split("-")[1]) == 0){
+			/*if (inList(me.options_list, flt(me.item["campaign_discount"].split("-")[1]))){
+				console.log("iside my list 1111111",flt(me.item["campaign_discount"].split("-")[1]))
+				me.options_list = []
+			}*/  			
+			if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
        			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
 			}
-			else if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0) {
+			if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) == 0){
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-       			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
-			}*/
+   				me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))	
+			}
 		})
 	},
 	update_campaign_discount:function(){
@@ -1379,6 +1360,7 @@ payoff_details = Class.extend({
 	    			//console.log(flt(me.late_payment) + flt(r.message["first_payment"]),"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	    			me.late_payment = r.message["late_payment"]
 	    			me.first_payment = r.message["first_payment"]
+	    			console.log(flt(r.message["first_payment"]),"ddddddddddd111")
 	    			me.payable_by_bonus = flt(me.late_payment) + flt(r.message["first_payment"])
 	    			console.log("payable_by_bonus",me.payable_by_bonus,"aaaaaaaa")
 	    			console.log("me.rental_payment",me.rental_payment)
@@ -1438,7 +1420,7 @@ payoff_details = Class.extend({
 				//msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
 				frappe.throw(__("Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
 			}
-			if( (flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus) ){
+			if(flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus){
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
 				frappe.throw(__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
 			}
@@ -1481,9 +1463,15 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.process_payment.$input.click(function() {
 			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) >= 0 ){
        			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
-       			html = "<div class='row'>There Is "+(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val())) < 0 ? (flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val())):0+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			console.log(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()),"dssssssssssssssss")
+       			if(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()) > 0){
+       				html_msg = "<div class='row'>There Is "+ (flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()))+" eur in balance Put It Into Receivables OR Give Change</div>"	
+       			}
+       			else{
+       				html_msg = "<div class='row'>There Is "+0+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			}
        			me.dialog.fields_dict.msg.$wrapper.empty()
-       			me.dialog.fields_dict.msg.$wrapper.append(html)
+       			me.dialog.fields_dict.msg.$wrapper.append(html_msg)
        			$('button[data-fieldname="process_payment"]').hide();
 				$('button[data-fieldname="add_in_receivables"]').show();
 			    $('button[data-fieldname="return_to_customer"]').show();
@@ -1555,7 +1543,7 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
 			me.add_in_receivables = value.balance - value.bonus;
-			if(flt(me.add_in_receivables) + flt(value.bonus) >= 0){
+			if(flt(me.add_in_receivables) + flt(value.bonus) >= 0 && flt(value.bonus) > 0){
 				me.add_in_receivables = 0	
 			}
 			me.hide_other_and_show_complete_payment();
@@ -1667,8 +1655,9 @@ payoff_details = Class.extend({
               	"total_charges":cur_frm.doc.total_charges,
 	        },
 	       	callback: function(r){
-	       		if(flt(value.bonus) == cur_frm.doc.bonus){
-	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus)
+	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
+	       		if(flt(value.bonus) == cur_frm.doc.total_charges){	
+	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
 	       		}
 	       		else{
 	       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
