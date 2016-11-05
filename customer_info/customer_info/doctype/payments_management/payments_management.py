@@ -446,20 +446,19 @@ def get_late_payment(agreements,payment_date):
 		for i in agreements:
 			customer_agreement = frappe.get_doc("Customer Agreement",i)
 			for row in customer_agreement.payments_record:
-				if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1 and getdate(row.due_date) >= getdate(payment_date):
+				if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1:# and getdate(row.due_date) >= getdate(payment_date):
 					first_payment.append(row.monthly_rental_amount)
 					
 	if len(agreements) == 1:
 		#agreements = agreements.split(",")[0]
 		customer_agreement = frappe.get_doc("Customer Agreement",agreements[0])
 		for row in customer_agreement.payments_record:
-			if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1 and getdate(row.due_date) >= getdate(payment_date):
+			if row.check_box == 1 and row.check_box_of_submit == 0 and row.idx == 1:# and getdate(row.due_date) >= getdate(payment_date):
 				first_payment.append(row.monthly_rental_amount)
 		_condition = "where name = '{0}'".format(agreements[0])
 	late_payment = frappe.db.sql("""select format(sum(late_payment),2) from 
 								`tabCustomer Agreement` {0} """.format(_condition),as_list=1)
 
-	print late_payment,"late_payment","\n\n\n\n\n"
 	return {"late_payment":late_payment[0][0],"first_payment":sum(first_payment)}
 
 @frappe.whitelist()

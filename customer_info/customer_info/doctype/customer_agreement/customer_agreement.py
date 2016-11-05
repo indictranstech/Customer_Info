@@ -64,6 +64,8 @@ class CustomerAgreement(Document):
 			default_warehouse = "101 - Be kredito sandėlys - BK"	
 		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["40% Offer","90d SAC","Contract Term is over"]:
 			default_warehouse = "8101 – Ištrinta, grąžinta tiekėjui, sugadinta, naudojama įmonės reikmėms, pasibaigė sutartis, išsipirko anksčiau. - BK"
+		if self.agreement_status == "Closed" and self.merchandise_status == "Stolen" and self.agreement_closing_suspending_reason == "Fraud/Stolen":
+			default_warehouse = "9101 – Prekė pas klientą - BK"
 		item = frappe.get_doc("Item",self.product)
 		item.default_warehouse = default_warehouse
 		item.save(ignore_permissions=True)

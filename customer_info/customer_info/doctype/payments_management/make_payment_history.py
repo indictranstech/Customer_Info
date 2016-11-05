@@ -51,7 +51,8 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 		pmt = "Cash"
 	elif float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) > 0 and float(values['bank_card']) == 0:
 		pmt = "Bank Transfer"	
-		
+	elif float(values['amount_paid_by_customer']) == 0 and float(values['bank_transfer']) == 0 and float(values['bank_card']) == 0 and float(values['discount']) == 0:
+		pmt = "Bonus"		
 
 	id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
 	cond = ""	
