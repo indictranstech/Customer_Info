@@ -152,8 +152,9 @@ def make_refund_payment(payments_ids,ph_name):
 		if payment_history.payment_type == "Normal Payment":
 			print "inside 2","\n\n\n\n\n\n"
 			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
-
-	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
+	print refund_bonus,"refund_bonus","\n\n\n\n\n"		
+	#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
+	customer.bonus = sum(refund_bonus) + float(payment_history.bonus)
 	customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
 	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 
