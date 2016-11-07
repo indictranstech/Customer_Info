@@ -18,6 +18,7 @@ from customer_info.customer_info.doctype.payments_management.make_payment_histor
 
 class PaymentsManagement(Document):
 	pass
+
 @frappe.whitelist()
 def get_bonus_details(customer):
 	"""
@@ -27,6 +28,8 @@ def get_bonus_details(customer):
 	for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
 					 filters={"agreement_status":"Open","customer":customer})]:
 		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
+		print frappe.db.sql("""select payment_id from `tabPayments Record` 
+			where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
 		agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
 			(select  CASE WHEN add_bonus_to_this_payment = 1 
 			AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
@@ -259,28 +262,20 @@ def get_customer_agreement(customer,payment_date):
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
-		# late_fees = frappe.db.sql("""select
-		# 	CASE WHEN due_date < '{0}' AND DATEDIFF('{0}',due_date) > 3 
-		# 	THEN (DATEDIFF('{0}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fees from
-		# 	`tabPayments Record`
-		# 	where parent = '{1}' and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)
+		
 
 		if entry[3] == 0:
 			entry[3] = frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
 			if entry[3] > 0:
-				#entry[9] = "{0:.2f}".format(sum([e[0] for e in late_fees]))
-				#entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ sum([e[0] for e in late_fees]) if sum([e[0] for e in late_fees]) else float(entry[4]))
 				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9]))
-		
-		#if late_fees == 0:
-			 
-		#entry[3] = len([e[0] for e in late_fees if e[0] > 0])
-		# else:
-		# 	entry[9] = "{0:.2f}".format(entry[9])
-		# 	entry[10] = entry[10]
-		# 	entry[3] = entry[3]
+			else:	
+				entry[10] = "{0:.2f}".format(float(entry[9]))
+
+		if float(entry[3]) > 0:
+			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9]))
+
 	return data	
 
 
@@ -356,28 +351,28 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				submitable_payments.append(row.idx)
 			
 			if customer_agreement.customer_group == "Individual" and flag != "Payoff":
-				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0:
+				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0:
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0:
+				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0:
 					add_bonus_of_two_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
 						})
 					row.save(ignore_permissions = True)
 				
-				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
+				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
 					remove_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':0
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1:
+				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
 					remove_bonus_of_two_eur.append(row.idx)	
 					row.update({
 						'add_bonus_to_this_payment':0
@@ -467,13 +462,34 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	values = json.loads(values)
 	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(customer)
 
-	submitted_payments_ids = frappe.db.sql("""select payment_id,due_date,
+
+
+
+	submitted_payments_ids_info = frappe.db.sql("""select payment_id,due_date,
 							payment_date,monthly_rental_amount from `tabPayments Record` where 
 							parent in {0}
 							and check_box = 1 
 							and check_box_of_submit = 0 
 							and payment_date = '{1}' order by idx """.format(cond,payment_date),as_dict=1)
 	
+	# checking  all payment done by bonus then update payments record
+
+	if float(values['amount_paid_by_customer']) == 0 and float(values['bank_card']) == 0 and float(values['bank_transfer']) == 0 and\
+		float(values['discount']) == 0:
+		print "in if condition 12345"
+		submitted_payments_ids = []
+		for d in submitted_payments_ids_info:	
+			submitted_payments_ids.append(d["payment_id"])
+
+		submitted_payments_ids = tuple([x.encode('UTF8') for x in submitted_payments_ids if x])	
+		if len(submitted_payments_ids) > 1:
+			condi = "where payment_id in {0}".format(submitted_payments_ids)
+		elif len(submitted_payments_ids) == 1:
+			condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
+		frappe.db.sql("""update `tabPayments Record` 
+						set add_bonus_to_this_payment = 0
+						{0} and add_bonus_to_this_payment=1""".format(condi),debug=1)	
+
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1
 						where check_box = 1 and check_box_of_submit = 0
@@ -502,10 +518,11 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 
 	payments_detalis_list = []
 	payment_ids_list = []
-	for d in submitted_payments_ids:	
+	for d in submitted_payments_ids_info:
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
 	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment",discount_amount)	
+	
 	return completed_agreement_list
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):

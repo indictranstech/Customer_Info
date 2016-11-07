@@ -154,7 +154,7 @@ calculate_total_charges = function(flag){
     });
 }
 
-render_agreements = function(){
+render_agreements = function(flag){
 	var grid;
 
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
@@ -225,6 +225,15 @@ render_agreements = function(){
 				if(r.message){
 					this.data = r.message;
 					make_grid(r.message,columns,options)
+					if(flag == "from_late_fees"){
+						var total_due_amount = 0
+			        	$.each($(".slick-row"),function(i,d){
+							total_due_amount += flt($($(d).children()[10]).text())
+						});
+						console.log(total_due_amount,"total_due_amount")
+						cur_frm.set_value("amount_of_due_payments",flt(total_due_amount) > 0 ? flt(total_due_amount):"0.00")
+			     		cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)) > 0 ? flt(total_due_amount)-flt(cur_frm.doc.receivables):"0.00")      		
+					}
 					/*cur_frm.doc.payment_management_record = []
 					$.each($(".slick-row"),function(i,d){
 						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
@@ -348,8 +357,10 @@ bonus_summary = Class.extend({
 			args: {
 				"customer":	cur_frm.doc.customer
 			},
+			freeze: true,
+			freeze_message: __("Please Wait..."),
 			callback: function(r){
-				console.log(r.message,"e.message get_bonus_details")
+				//console.log(r.message,"e.message get_bonus_details")
 				if(r.message){
 					total_bonus = {"name":"Total",
 									"early_payments_bonus":0,
@@ -490,14 +501,14 @@ edit_campaign_discount = Class.extend({
             }
    		});
        	this.fd = this.dialog.fields_dict;
-       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "500px");
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
-       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	//this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+		//$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
        	this.dialog.show();
        	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
-		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
 		this.campaign_discount();
 	},
 	campaign_discount:function(){
@@ -569,11 +580,11 @@ edit_late_fees = Class.extend({
             }
    		});
        	this.fd = this.dialog.fields_dict;
-       	this.dialog.$wrapper.find('.modal-dialog').css("width", "350px");
+       	this.dialog.$wrapper.find('.modal-dialog').css("width", "500px");
        	this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
-       	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
+       	//this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
-		$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide()
+		//$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide()
 		this.set_late_fees();
 	},
 	set_late_fees:function(){
@@ -585,7 +596,7 @@ edit_late_fees = Class.extend({
 		var me = this;
 		console.log("in my function")
 		//me.dialog.fields_dict.add_comment.$input.click(function() {
-			if(flt(me.dialog.fields_dict.late_fees.$input.val()) > 0){
+			if(flt(me.dialog.fields_dict.late_fees.$input.val()) >= 0){
 				console.log("in mybutton mybutton 11223")
 				comment =  "["+user+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
 				cur_frm.set_value("notes_on_customer_payments",comment)
@@ -608,10 +619,8 @@ edit_late_fees = Class.extend({
 	        	"late_fees": flt(me.fd.late_fees.$input.val())
 	        },
 	        callback: function(r) {
-	        	cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments+flt(me.fd.late_fees.$input.val()))
-	        	cur_frm.set_value("total_charges",cur_frm.doc.total_charges+flt(me.fd.late_fees.$input.val()))
-	        	me.dialog.hide();
-	        	render_agreements();
+	        	render_agreements("from_late_fees");
+	        	me.dialog.hide();	        	
 	        	//calculate_total_charges("Customer");
 	        }
 	    });
@@ -1656,8 +1665,9 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
-	       		if(flt(value.bonus) == cur_frm.doc.total_charges){	
+	       		if(flt(value.bonus) >= cur_frm.doc.total_charges){	
 	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
+	       			cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
 	       		}
 	       		else{
 	       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
