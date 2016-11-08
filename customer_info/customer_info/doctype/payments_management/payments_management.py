@@ -254,11 +254,13 @@ def get_customer_agreement(customer,payment_date):
 										WHEN contact_result = "Sent SMS/Email" THEN "SMS/Email" 
 										ELSE "Call/Commitment" 
 										END AS suspension_date,
-										concat(format(discount,2),"-",format(campaign_discount,2),"-",format(discounted_payments_left,2),"-",discount_updated) as discounted_payments_left
+										concat(format(discount,2),"-",format(campaign_discount,2),"-",format(discounted_payments_left,2),"-",discount_updated) as discounted_payments_left,
+										CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
 	for entry in data['list_of_agreement']:
+		print entry[14],"eeeeeeeeeeeeeeee"
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
@@ -269,12 +271,12 @@ def get_customer_agreement(customer,payment_date):
 										`tabPayments Record`
 										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
 			if entry[3] > 0:
-				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9]))
+				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
 			else:	
-				entry[10] = "{0:.2f}".format(float(entry[9]))
+				entry[10] = "{0:.2f}".format(float(entry[9])-float(entry[14]))
 
 		if float(entry[3]) > 0:
-			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9]))
+			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
 
 	return data	
 
@@ -476,7 +478,6 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 
 	if float(values['amount_paid_by_customer']) == 0 and float(values['bank_card']) == 0 and float(values['bank_transfer']) == 0 and\
 		float(values['discount']) == 0:
-		print "in if condition 12345"
 		submitted_payments_ids = []
 		for d in submitted_payments_ids_info:	
 			submitted_payments_ids.append(d["payment_id"])
@@ -502,6 +503,7 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	completed_agreement_list = []
 	merchandise_status = ""
 	discount_amount = 0
+	late_fees_updated_status = ""
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
@@ -509,7 +511,9 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 			discount_amount += customer_agreement.campaign_discount
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
-			completed_agreement_list.append(customer_agreement.name)	
+			completed_agreement_list.append(customer_agreement.name)		
+		if customer_agreement.late_fees_updated == "Yes":
+			late_fees_updated_status = "Yes"
 		flag = "Process Payment"
 	print discount_amount,"\n\n\n\n","discount_amount"
 	#add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
@@ -521,7 +525,8 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 	for d in submitted_payments_ids_info:
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
-	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,"Rental Payment",discount_amount)	
+
+	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount)	
 	
 	return completed_agreement_list
 
@@ -621,6 +626,7 @@ def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
 def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,add_in_receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
 	now_date = datetime.now().date()
 	discount_amount = 0
+	late_fees_updated_status = "No"
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1
 						where check_box = 1 and check_box_of_submit = 0
@@ -654,6 +660,8 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payoff_cond = "90d SAC"
 	if agreement.discount_updated == "Yes":
 		discount_amount = agreement.campaign_discount	
+	if agreement.late_fees_updated == "Yes":
+		late_fees_updated_status = "Yes"	
 	flag = "Payoff Payment"	
 	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
 	values = json.loads(values)
@@ -674,7 +682,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	total_amount = float(total_amount.split(" ")[0])
 	rental_payment = float(rental_payment.split(" ")[0])
 	
-	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,payoff_cond,discount_amount)	
+	make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
 	
 
 @frappe.whitelist()

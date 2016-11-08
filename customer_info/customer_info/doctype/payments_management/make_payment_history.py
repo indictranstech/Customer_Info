@@ -2,7 +2,7 @@ import datetime
 from datetime import datetime,date
 import frappe
 
-def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,payoff_cond=None,discount_amount=None):
+def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None):
 	payment_date = datetime.strptime(payment_date, '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(values['amount_paid_by_customer'])
@@ -22,7 +22,7 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 	payments_history.merchandise_status = merchandise_status
 	payments_history.total_payment_received = float(total_amount)
 	payments_history.payoff_cond = payoff_cond if payoff_cond else ""
-
+	payments_history.late_fees_updated = late_fees_updated_status
 
 	for i in payment_ids:
 		if payments_history.payments_ids:

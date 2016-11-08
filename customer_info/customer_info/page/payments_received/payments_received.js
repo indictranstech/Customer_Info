@@ -119,6 +119,8 @@ payments_received = Class.extend({
 						me.payoff_cond = d["payoff_cond"]
 					}
 					me.payments_ids = d["payments_ids"]
+					me.late_fees_updated = d["late_fees_updated"]
+					me.updated_late_fees = d["late_fees"]
 					d["payments_ids"] = me.update_dict_by_payment_ids()
         	   	});
 				/*$.each(r.message, function(i, d) {
@@ -154,7 +156,8 @@ payments_received = Class.extend({
 				rental_payment = parseFloat(flt(d.split("/")[2]).toFixed(2)),
 				total = "-"//parseFloat(flt(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2))
 	   		});
-	   		__dict_of_payments_ids.push({"payments_id":payment_id+"-"+me.payoff_cond,
+	   		__dict_of_payments_ids.push({
+	   			"payments_id":payment_id+"-"+me.payoff_cond,
 				"payment_id_list": JSON.stringify(payments_ids.toString()),
 				"due_date":"-",
 				"rental_payment":rental_payment.toFixed(2),
@@ -165,14 +168,49 @@ payments_received = Class.extend({
 			return __dict_of_payments_ids
 		}
 		else{
-			$.each(formatted_list_of_payment_ids, function(i, d) {
-		   		dict_of_payments_ids.push({"payments_id":d.split("/")[0],
-					"due_date":d.split("/")[1],
-					"rental_payment":d.split("/")[2],
-					"late_fees":parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
-					"total": parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
-		   		})
-		   	});
+			if(me.late_fees_updated == "Yes"){
+				oldest_date = {"payments_id":"","due_date":""}
+				$.each(formatted_list_of_payment_ids, function(i, d) {
+			   		if(oldest_date["due_date"] && frappe.datetime.get_diff(d.split("/")[1],oldest_date["due_date"]) <= 0){
+						oldest_date["payments_id"] = d.split("/")[0]
+						oldest_date["due_date"] = d.split("/")[1]
+					}
+					if(oldest_date["due_date"] == ""){
+						oldest_date["due_date"] = d.split("/")[1]
+						oldest_date["payments_id"] = d.split("/")[0]
+					}
+					console.log(oldest_date,"oldest_date")
+			   		if (d.split("/")[0] == oldest_date["payments_id"]){
+			   			dict_of_payments_ids.push({
+			   				"late_fees": me.updated_late_fees,
+			   				"payments_id":d.split("/")[0],
+							"due_date":d.split("/")[1],
+							"rental_payment":d.split("/")[2],
+							"total": parseFloat(flt(me.updated_late_fees) + flt(d.split("/")[2])).toFixed(2) 
+			   			})
+			   		}	
+			   		else{
+			   			dict_of_payments_ids.push({	
+			   				"late_fees":0,
+			   				"payments_id":d.split("/")[0],
+							"due_date":d.split("/")[1],
+							"rental_payment":d.split("/")[2],
+							"total": parseFloat(0 + flt(d.split("/")[2])).toFixed(2) 
+			   			})
+			   		}
+		   		});
+			}
+			else{
+				$.each(formatted_list_of_payment_ids, function(i, d) {
+			   		dict_of_payments_ids.push({
+			   			"payments_id":d.split("/")[0],
+						"due_date":d.split("/")[1],
+						"rental_payment":d.split("/")[2],
+						"late_fees":parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
+						"total": parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
+			   		})
+		   		});
+			}
 			console.log("dict_of_payments_ids",dict_of_payments_ids)
 			return dict_of_payments_ids
 		}
