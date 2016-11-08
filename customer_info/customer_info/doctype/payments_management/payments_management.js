@@ -492,8 +492,8 @@ edit_campaign_discount = Class.extend({
     		title: "Contact result",
         	fields: [
            		{"fieldtype": "Select" ,"fieldname": "campaign_discount" ,"options":me.options_list.join("\n") ,"label": "Campaign Discount"},
-           		{"fieldtype": "Float" ,"fieldname": "due_amount","label": "Due Amount","precision":2},
-           		{"fieldtype": "Float" ,"fieldname": "total_charges_amount","label": "Total Charges Amount","precision":2}
+           		//{"fieldtype": "Float" ,"fieldname": "due_amount","label": "Due Amount","precision":2},
+           		//{"fieldtype": "Float" ,"fieldname": "total_charges_amount","label": "Total Charges Amount","precision":2}
            	],
            	primary_action_label: "Update",
            	primary_action: function(){
@@ -509,19 +509,19 @@ edit_campaign_discount = Class.extend({
        	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
-		this.campaign_discount();
+		//this.campaign_discount();
 	},
-	campaign_discount:function(){
+	/*campaign_discount:function(){
 		var me = this;
-		/*
+		
 			campaign discount should be preselected if given then that given campaign_discount
 			if again select due will not deduct 
-		*/
+		
 		$(me.dialog.fields_dict.campaign_discount.input).change(function(){
-			/*if (inList(me.options_list, flt(me.item["campaign_discount"].split("-")[1]))){
+			if (inList(me.options_list, flt(me.item["campaign_discount"].split("-")[1]))){
 				console.log("iside my list 1111111",flt(me.item["campaign_discount"].split("-")[1]))
 				me.options_list = []
-			}*/  			
+			}  			
 			if(flt(me.dialog.fields_dict.campaign_discount.$input.val()) != flt(me.item["campaign_discount"].split("-")[1])) {
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
        			me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
@@ -530,8 +530,9 @@ edit_campaign_discount = Class.extend({
 				me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments - flt(me.dialog.fields_dict.campaign_discount.$input.val()))
    				me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges - flt(me.dialog.fields_dict.campaign_discount.$input.val()))	
 			}
+
 		})
-	},
+	},*/
 	update_campaign_discount:function(){
 		var me = this;
 		console.log(me.fd.campaign_discount.$input.val())		
@@ -543,16 +544,20 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
-	        		cur_frm.set_value("amount_of_due_payments",flt(me.fd.due_amount.$input.val()))
-	    			cur_frm.set_value("total_charges",flt(me.fd.total_charges_amount.$input.val()))    	
+	        		cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val()))
+	    			cur_frm.set_value("total_charges",cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val()))
+	        		/*cur_frm.set_value("amount_of_due_payments",flt(me.fd.due_amount.$input.val()))
+	    			cur_frm.set_value("total_charges",flt(me.fd.total_charges_amount.$input.val()))*/    	
 	        	}
 	        	me.dialog.hide();
-	        	//calculate_total_charges("Campaign Discount");
 	        	render_agreements();
+	        	//calculate_total_charges("Campaign Discount");
 	        }
 	    });
 	}	
 })
+
+
 
 edit_late_fees = Class.extend({
 	init:function(id,item){
