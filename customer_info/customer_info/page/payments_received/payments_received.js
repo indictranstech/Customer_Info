@@ -170,8 +170,9 @@ payments_received = Class.extend({
 		else{
 			if(me.late_fees_updated == "Yes"){
 				oldest_date = {"payments_id":"","due_date":""}
+				var due_date_list = []
 				$.each(formatted_list_of_payment_ids, function(i, d) {
-			   		if(oldest_date["due_date"] && frappe.datetime.get_diff(d.split("/")[1],oldest_date["due_date"]) <= 0){
+			   		/*if(oldest_date["due_date"] && frappe.datetime.get_diff(d.split("/")[1],oldest_date["due_date"]) <= 0){
 						oldest_date["payments_id"] = d.split("/")[0]
 						oldest_date["due_date"] = d.split("/")[1]
 					}
@@ -179,7 +180,19 @@ payments_received = Class.extend({
 						oldest_date["due_date"] = d.split("/")[1]
 						oldest_date["payments_id"] = d.split("/")[0]
 					}
-					console.log(oldest_date,"oldest_date")
+					console.log(oldest_date,"oldest_date")*/
+					due_date_list.push(d.split("/")[1])
+					function dmyOrdA(a,b){ return myDate(a) - myDate(b);}
+					//function dmyOrdD(a,b){ return myDate(b) - myDate(a);}
+					function myDate(s){var a=s.split(/-|\//); return new Date(a[0],a[1]-1,a[2]);}
+					due_date_list.sort(dmyOrdA);
+					console.log(due_date_list,"due_date_list")
+					oldest_date["due_date"] = due_date_list[0]
+					if(oldest_date["due_date"] == d.split("/")[1]){
+						oldest_date["payments_id"] = d.split("/")[0]
+					}
+				})
+			   	$.each(formatted_list_of_payment_ids, function(i, d) {
 			   		if (d.split("/")[0] == oldest_date["payments_id"]){
 			   			dict_of_payments_ids.push({
 			   				"late_fees": me.updated_late_fees,

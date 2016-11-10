@@ -20,7 +20,7 @@ def get_data(filters):
 								t3.receivables,
 								t1.monthly_rental_amount,
 								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3 
-								THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
+								THEN format((DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02,2) ELSE 0 END AS late_fees,
 								"a"																		
 								from `tabPayments Record`t1,`tabCustomer Agreement`t2,
 								`tabCustomer`t3		 
@@ -50,13 +50,12 @@ def get_data(filters):
 			if float(l[3]) == 0: # for display purpose
 				l[3] = ""
 
-		total.append(receivables)		
-		total.append(monthly_rental_amount)
-		total.append(late_fees)
-		total.append(total_due)
+		total.append("{0:.2f}".format(receivables))		
+		total.append("{0:.2f}".format(monthly_rental_amount))
+		total.append("{0:.2f}".format(late_fees))
+		total.append("{0:.2f}".format(total_due+receivables))
 		result.append(total)
 		return result
-
 	else:
 		return []	
 
@@ -81,7 +80,7 @@ def get_colums():
 	print "future_payments columns"
 	columns = [("Due Date") + ":Date:100"] + [("Customer") + ":Link/Customer:100"] + \
 			  [("Payment Id") + ":Data:170"] + \
-			  [("Receivables") + ":Float:90"] + \
-			  [("Rental Payment") + ":Float:100"] + [("Late Fees") + ":Float:80"] + \
-			  [("Total Due") + ":Float:90"]	
+			  [("Receivables") + ":Data:90"] + \
+			  [("Rental Payment") + ":Data:100"] + [("Late Fees") + ":Data:80"] + \
+			  [("Total Due") + ":Data:90"]	
 	return columns

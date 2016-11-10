@@ -37,7 +37,7 @@ def get_data(filters):
 													where agreement_status = "Open") 
 									and DATEDIFF('{0}',t1.due_date) >= 0
 									and CASE
-									WHEN t2.suspension_date THEN t2.suspension_date < '{0}'
+									WHEN t2.suspension_date THEN t2.suspension_date <= '{0}'
 									ELSE 1=1 END
 									and t1.check_box_of_submit != 1
 									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)

@@ -74,10 +74,18 @@ def calculate_total_charges(customer,flag,payment_date):
 						and parent in (select name from `tabCustomer Agreement`
 						where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
+		# frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,
+		# 				late_payment = 0,
+		# 				late_fees = CASE WHEN late_fees_updated = "No"
+		#  				THEN 0 ELSE late_fees END
+		# 				where customer = '{0}' 
+		# 				and agreement_status = "Open" """.format(customer))
+		
+		# by above query remain late fees as it is,after update late fees
+
 		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,
 						late_payment = 0,
-						late_fees = CASE WHEN late_fees_updated = "No"
-		 				THEN 0 ELSE late_fees END
+						late_fees = 0,late_fees_updated = "No"
 						where customer = '{0}' 
 						and agreement_status = "Open" """.format(customer))
 	
@@ -514,6 +522,8 @@ def update_on_submit(values,customer,receivables,add_in_receivables,payment_date
 			completed_agreement_list.append(customer_agreement.name)		
 		if customer_agreement.late_fees_updated == "Yes":
 			late_fees_updated_status = "Yes"
+			customer_agreement.late_fees_updated = "No"
+			customer_agreement.save(ignore_permissions=True)
 		flag = "Process Payment"
 	print discount_amount,"\n\n\n\n","discount_amount"
 	#add_bonus_and_receivables_to_customer(customer,bonus,receivables,flag)
@@ -661,7 +671,10 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	if agreement.discount_updated == "Yes":
 		discount_amount = agreement.campaign_discount	
 	if agreement.late_fees_updated == "Yes":
-		late_fees_updated_status = "Yes"	
+		late_fees_updated_status = "Yes"
+		agreement.late_fees_updated = "No"
+		agreement.save(ignore_permissions=True)	
+
 	flag = "Payoff Payment"	
 	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
 	values = json.loads(values)
