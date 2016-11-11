@@ -26,7 +26,7 @@ def get_data(filters):
 			item.purchase_date,item.sold_date,
 			item.merchandise_status,agreement.name,
 			agreement.customer,
-			(select content from `tabCommunication` where reference_doctype = "Item" 
+			(select replace(replace(replace(content,"<p></p>",""),"<p>",""),"</p>","") as content from `tabCommunication` where reference_doctype = "Item" 
 				 and reference_name = item.name order by creation desc limit 1) as Last_Comment
 			FROM `tabItem` item,`tabCustomer Agreement` agreement
 			WHERE item.name = agreement.product

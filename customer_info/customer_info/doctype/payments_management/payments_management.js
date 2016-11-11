@@ -1116,9 +1116,9 @@ Payments_Details = Class.extend({
 	    if(add_list.length >= 1 && add_list[0] != "1"){
 	    	frappe.throw("Error Please Add Payment In sequence")
 	    }
-	    if(me.row_to_check.concat(me.row_to_update).length == 0){
+	    /*if(me.row_to_check.concat(me.row_to_update).length == 0){
 	    	frappe.throw("Please Any Payment")
-	    }
+	    }*/
 	},
 	common_function_for_add_checkbox:function(){
 		var me = this;
@@ -1154,6 +1154,9 @@ Payments_Details = Class.extend({
 	        		me.dialog.hide();
 	        	}
 	        });	
+	    }
+	    else{
+	    	me.dialog.hide();
 	    }
 	},
 	add_date_on_check:function(){
