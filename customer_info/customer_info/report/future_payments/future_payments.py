@@ -21,7 +21,9 @@ def get_data(filters):
 								t1.monthly_rental_amount,
 								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3 
 								THEN format((DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02,2) ELSE 0 END AS late_fees,
-								"a"																		
+								"a",
+								replace(t1.payment_id,concat(t2.name,"-Payment "),'') as payment_id_number,																		
+								replace(t2.name,"BK-",'') as agreement_number
 								from `tabPayments Record`t1,`tabCustomer Agreement`t2,
 								`tabCustomer`t3		 
 								where t1.parent = t2.name and t3.name = t2.customer 
@@ -29,7 +31,7 @@ def get_data(filters):
 												where agreement_status = "Open")
 								and t1.check_box_of_submit != 1
 								{1}
-								order by t2.customer""" .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
+								order by agreement_number,t1.due_date  """ .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
 
 		total = ["","",""]
 		receivables = 0
@@ -40,8 +42,8 @@ def get_data(filters):
 		for l in result:
 			late_fees += float(l[5])
 			monthly_rental_amount += float(l[4])
-			total_due += (float(l[5]) + float(l[4]))
-			l[6] = float(l[5]) + float(l[4])
+			total_due += (float(l[5]) + float(l[4]) + float(l[3]))
+			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
 			if l[1] in customer_list:
 				l[3] = 0
 			else:
@@ -53,7 +55,7 @@ def get_data(filters):
 		total.append("{0:.2f}".format(receivables))		
 		total.append("{0:.2f}".format(monthly_rental_amount))
 		total.append("{0:.2f}".format(late_fees))
-		total.append("{0:.2f}".format(total_due+receivables))
+		total.append("{0:.2f}".format(total_due))
 		result.append(total)
 		return result
 	else:
