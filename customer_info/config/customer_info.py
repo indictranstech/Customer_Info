@@ -73,6 +73,15 @@ def get_data():
 					#"icon": "icon-bar-chart",
 				},
 				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Common bonus report",
+					"label": _("Common bonus report"),
+					"description": _("Common bonus report"),
+					"doctype": "Customer Agreement",
+					#"icon": "icon-bar-chart",
+				},
+				{
 					"type": "page",
 					"name": "payments-received",
 					"label": _("Received Payment"),
