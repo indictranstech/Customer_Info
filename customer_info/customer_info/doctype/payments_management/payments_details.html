@@ -1,0 +1,55 @@
+<div id="home{{ index }}" class="tab-pane fade in active payment">
+        <div  class="row" style="margin-top: 13px;">
+            <div class="col-xs-4 text-right">Total Charges</div>
+            <div class="col-xs-1 text-left total_charges"></div>
+            <div class="col-xs-4 text-right">Due Payments</div>
+            <div class="col-xs-3 text-left due_payments"></div>
+        </div>
+        <table class="table table-bordered table-condensed" id="header-fixed" style="margin-bottom: 0px;">
+            <thead>
+              <tr>
+                <td align="center" style="width:24%;"><b>Payments</b></td>
+                <td align="center" style="width:25%;"><b>Monthly Rental Amount</b></td>
+                <td align="center" style="width:24%;"><b>Due Date</b></td>
+                <td align="center" style="width:20%;"><b>Payment Date</b></td>
+                <td align="center" style="width:5%;"></td>
+                <td align="center" style="width:2%;"></td>
+              </tr>
+            </thead>
+        </table>    
+
+        <div class="add-items">
+            <table class="table table-bordered table-condensed" id="header-fixed">
+                {% if (post[0].length) { %}
+                    {% for(var i=0, l=post[0].length; i < l; i++) { %}
+                            <tr id="demo">
+                                <td align="center" id="no_of_payments" style="width:24%;">{{ post[0][i].no_of_payments}}</td>
+                                <td align="center" id="monthly_rental_amount" style="width:25%;">{{ post[0][i].monthly_rental_amount}}</td>
+                                <td align="center" id="due_date" value="{%= post[0][i].due_date%}" style="width:24%;">{{ post[0][i].due_date}}</td>
+                                <td align="center" payment-id ="{{ post[0][i].payment_id }}" id="payment_date" style="width:20%;">{{ post[0][i].payment_date}}</td>
+                                <td align="left" id="check_id" style="width:5%;">
+                                    
+                                    {% if (post[0][i].check_box_of_submit && post[0][i].check_box) { %}
+                                        <input type="checkbox" class="select" data-from="from_child_table_as_submit" value="{%= post[0][i].payment_id %}" checked disabled="disabled" is-late-payment="{{ post[0][i].is_late_payment}}"
+                                        late-fee="{{ post[0][i].late_fee}}"
+                                        pre-select="{{ post[0][i].pre_select }}" paid="{{ post[0][i].paid }}"></input>
+                                    
+                                    {% } else if (post[0][i].check_box && !post[0][i].check_box_of_submit) { %}
+                                        <input type="checkbox" class="select new-entry" data-from="from_child_table" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" is-late-payment="{{ post[0][i].is_late_payment}}" paid="{{ post[0][i].paid }}" 
+                                        late-fee="{{ post[0][i].late_fee}}"
+                                        checked ></input>    
+
+                                    {% } else { %}
+                                        <input type="checkbox" class="select" data-from="" value="{%= post[0][i].payment_id %}" pre-select="{{ post[0][i].pre_select }}" is-late-payment="{{ post[0][i].is_late_payment}}" 
+                                        late-fee="{{ post[0][i].late_fee}}"
+                                        paid="{{ post[0][i].paid }}"></input>
+                                    
+                                    {% } %}   
+                                </td>
+                            </tr>
+                        
+                    {% } %}
+                {% } %} 
+            </table>
+        </div>
+    </div>
