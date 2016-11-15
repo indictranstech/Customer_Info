@@ -59,6 +59,8 @@ def update_bonus(customer,bonus,old_bonus):
 		#frappe.throw(_("{0}").format(comment))
 		#customer.add_comment("Comment",comment)
 	customer.bonus = bonus
+	customer.assign_manual_bonus = float(customer_doc.assign_manual_bonus) + float(bonus) - float(old_bonus)
+	customer.assign_manual_bonus_date = now_date
 	customer.save(ignore_permissions=True)
 	return comment
 
@@ -588,10 +590,12 @@ def add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus
 	if flag == "Process Payment":
 		if bonus > 0 and customer_doc.customer_group == "Individual":
 			#added_bonus = float(bonus) - customer_doc.bonus
+			now_date = datetime.now().date()
 			customer_doc.update({
 				"bonus":float(bonus),
-				"assign_manual_bonus":float(customer_doc.assign_manual_bonus) + float(manual_bonus),
-				"used_bonus":float(customer_doc.used_bonus) + float(used_bonus)
+				#"assign_manual_bonus":float(customer_doc.assign_manual_bonus) + float(manual_bonus),
+				"used_bonus":float(customer_doc.used_bonus) + float(used_bonus),
+				"used_bonus_date":now_date
 			})
 			customer_doc.save(ignore_permissions=True)
 			#if float(added_bonus) > 0:
@@ -647,7 +651,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
-	if int(condition) == 2 and agreement.agreement_status == "Open":
+	if int(condition) == "90_day_pay_Off" and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
@@ -658,7 +662,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
 	
-	elif int(condition) == 1 and agreement.agreement_status == "Open":
+	elif int(condition) == "pay off agreement" and agreement.agreement_status == "Open":
 		print date_diff(payment_date,agreement.date),"date_diff(agreement.date,payment_date)","\n\n\n\n\n\n"
 		agreement.update({
 			"agreement_status":"Closed",
@@ -720,7 +724,7 @@ def get_summary_records(agreement,receivable,late_fees):
 	payments_made = "{0:.2f}".format(agreement.payments_made)
 	if agreement.today_plus_90_days >= datetime.now().date():
 		day_pay_Off = "{0:.2f}".format(agreement.s90d_sac_price - agreement.payments_made - float(receivable) + float(late_fees))
-		return {"cond":1,
+		return {"cond":"pay off agreement",#1,
 				"s90d_SAC_price":"{0} EUR".format(agreement.s90d_sac_price),
 				"Expires":agreement.today_plus_90_days,
 				"Payments_made":"{0} EUR".format(payments_made),
@@ -735,7 +739,7 @@ def get_summary_records(agreement,receivable,late_fees):
 		Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + float(late_fees) - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		format(Total_payoff_amount)
-		return {"cond":2,
+		return {"cond":"90 day pay Off",#2,
 				"Receivables":"{0} EUR".format(receivable),
 				"Amount_of_payments_left":"{0} EUR".format(balance),
 				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount))),

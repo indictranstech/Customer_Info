@@ -11,7 +11,7 @@ class ProductCategory(Document):
 
 @frappe.whitelist(allow_guest = True)	
 def new_item_group(self,method):
-	print self.category_name,"\n\n","category_name"
+	#print self.category_name,"\n\n","category_name"
 	group = frappe.db.get_value("Item Group",{"name":self.category_name},"name")
 	if not group:
 		group = frappe.new_doc("Item Group")
