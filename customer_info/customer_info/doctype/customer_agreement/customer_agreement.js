@@ -151,7 +151,7 @@ frappe.ui.form.on("Customer Agreement",{
             refresh_field("agreement_no")
             if(cur_frm.doc.agreement_status == "Open"){
                 cur_frm.add_custom_button(__('Payments Management'),function(){
-                    go_to_payments_management();
+                    get_payments_management_from_agreement();
                 });
             }    
         }
@@ -269,9 +269,9 @@ get_update_due_date = function(due_date_of_next_month,i){
 }
 
 
-go_to_payments_management = function(frm){
+get_payments_management_from_agreement = function(frm){
     frappe.model.open_mapped_doc({
-        method: "customer_info.customer_info.doctype.payments_management.payments_management._get_payments_management",
+        method: "customer_info.customer_info.doctype.payments_management.payments_management.get_payments_management_from_agreement",
         frm: cur_frm
     })
 }

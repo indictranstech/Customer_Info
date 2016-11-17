@@ -51,18 +51,18 @@ def get_bonus_details(customer):
 
 
 @frappe.whitelist()
-def update_bonus(customer,bonus,old_bonus):
+def update_bonus(customer,bonus,assign_manual_bonus):
 	customer = frappe.get_doc("Customer",customer)
 	if float(bonus) >= 0:
 		now_date = datetime.now().date()
-		comment = """ Bonus Modified From {1} To {2}""".format(now_date,old_bonus,bonus)
+		comment = """ Bonus Modified From {1} To {2}""".format(now_date,customer.bonus,bonus)
 		#frappe.throw(_("{0}").format(comment))
-		#customer.add_comment("Comment",comment)
-	customer.bonus = bonus
-	customer.assign_manual_bonus = float(customer_doc.assign_manual_bonus) + float(bonus) - float(old_bonus)
-	customer.assign_manual_bonus_date = now_date
-	customer.save(ignore_permissions=True)
-	return comment
+		customer.add_comment("Comment",comment)
+		customer.bonus = bonus
+		customer.assign_manual_bonus = float(customer.assign_manual_bonus) + float(assign_manual_bonus) #float(bonus) - float(old_bonus)
+		customer.assign_manual_bonus_date = now_date
+		customer.save(ignore_permissions=True)
+		return comment
 
 @frappe.whitelist()
 def calculate_total_charges(customer,flag,payment_date):
@@ -363,14 +363,16 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				submitable_payments.append(row.idx)
 			
 			if customer_agreement.customer_group == "Individual" and flag != "Payoff":
-				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0:
+				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
+					print "\n\n\n\n\n",row.payment_id,"iside temporary_payments_update_to_child_table_of_customer_agreement"
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0:
+				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
+					print "\n\n\n\n\n",row.payment_id,"iside temporary_payments_update_to_child_table_of_customer_agreement"
 					add_bonus_of_two_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':1
@@ -854,7 +856,7 @@ def add_notes_in_customer(customer,notes_on_customer_payments,summary_of_notes=N
 
 # call From Customer master OnClick Button Payment management 
 @frappe.whitelist()
-def _get_payments_management(source_name, target_doc=None):
+def get_payments_management_from_agreement(source_name, target_doc=None):
 	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
 	target_doc = get_mapped_doc("Customer Agreement", source_name,
 		{
@@ -881,8 +883,8 @@ def get_payments_management(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,receivables):
-
+def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,receivables,late_fees):
+	#print late_fees,"\n\n\n\n"
 	agreements = json.loads(agreements)
 
 	id_list = tuple([x.encode('UTF8') for x in list(agreements) if x])
@@ -895,8 +897,10 @@ def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,recei
 	record = frappe.db.sql("""select monthly_rental_amount from `tabPayments Record`
 							{0} and payment_date = '{1}' and check_box = 1 and check_box_of_submit = 0
 							order by due_date""".format(cond,payment_date),as_list=1)
+	
 	add = sum([e[0] for e in record][0:-1]) + [e[0] for e in record][-1]/2
-	total = float(add) - float(receivables)
+
+	total = float(add) - float(receivables) + float(late_fees)
 	return total
 	# if float(amount_paid_by_customer) >= float(total):
 	# 	return float(total)

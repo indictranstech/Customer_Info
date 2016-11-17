@@ -23,10 +23,8 @@ payoff_details = Class.extend({
 		});
 	},
 	click_on_90_day_pay_Off: function(){
-		console.log("iside click_on_90_day_pay_Off")
 		var me = this;
 		me.old_instance.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
-			console.log("inside button click s90_day_pay_Off")
 			me.old_dialog = me.old_instance.dialog;
 			me.show_dialog();
 		});
@@ -118,7 +116,6 @@ payoff_details = Class.extend({
 		var agreements = [];
 		var number_of_payments = 0;
 		$.each($(".slick-row"),function(i,d){
-			console.log(Number((flt($($(d).children()[9]).text())).toFixed(flt_precision)), Number((flt($($(d).children()[10]).text())).toFixed(flt_precision)))
 			if(flt($($(d).children()[3]).text()) > 0 ){
 				late_fees += Number((flt($($(d).children()[9]).text())).toFixed(flt_precision))
 				total_due += Number((flt($($(d).children()[10]).text())).toFixed(flt_precision))  
@@ -143,23 +140,16 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			//console.log("late_payment",r.message["late_payment"],"me.rental_payment",me.rental_payment,"first_payment",r.message["first_payment"])
-	    			//console.log(flt(me.late_payment) + flt(r.message["first_payment"]),"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	    			me.late_payment = r.message["late_payment"]
 	    			me.first_payment = r.message["first_payment"]
-	    			console.log(flt(r.message["first_payment"]),"ddddddddddd111")
 	    			me.payable_by_bonus = flt(me.late_payment) + flt(r.message["first_payment"])
-	    			console.log("payable_by_bonus",me.payable_by_bonus,"aaaaaaaa")
-	    			console.log("me.rental_payment",me.rental_payment)
+	    			
 	    			if(flt(me.payable_by_bonus) >= flt((me.rental_payment).toFixed(2))){
-	    				console.log("gereter")
 	    				me.payable_by_bonus = flt((me.rental_payment).toFixed(2)) - flt(me.late_payment) - flt(r.message["first_payment"])
 	    			}
 	    			else if(flt(me.payable_by_bonus) < flt((me.rental_payment).toFixed(2))){
-	    				console.log("less")
 	    				me.payable_by_bonus = cur_frm.doc.static_bonus
 	    			}
-	    			console.log("payable_by_bonus",me.payable_by_bonus,"aaaa1111aaaa")
 	    		}
 	    	}
 	    });	
@@ -217,7 +207,6 @@ payoff_details = Class.extend({
 		var me = this;
 		me.hide_button();
 		if(me.old_instance != "Process Payments"){
-			console.log("in if")
 			var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) + flt(cur_dialog.fields_dict.bank_card.$input.val())
 																				  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
 																				  + flt(cur_dialog.fields_dict.discount.$input.val())
@@ -248,15 +237,21 @@ payoff_details = Class.extend({
 	click_on_process_payment:function(){
 		var me = this;
 		me.dialog.fields_dict.process_payment.$input.click(function() {
-			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) >= 0 ){
-       			$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
-       			console.log(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()),"dssssssssssssssss")
-       			if(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()) > 0){
+       		$(me.dialog.body).find("[data-fieldname ='process_payment']").hide();
+			if(parseFloat(me.dialog.fields_dict.balance.$input.val()) >= 0){ 
+				if(flt(me.fd.amount_paid_by_customer.$input.val()) == 0 
+					&& flt(me.fd.bonus.$input.val()) > 0 && flt(me.fd.bank_transfer.$input.val()) == 0 && flt(me.fd.bank_card.$input.val()) == 0 && flt(me.fd.discount.$input.val()) == 0 ) {
+       				html_msg = "<div class='row'>There Is "+0+" eur in balance Put It Into Receivables OR Give Change</div>"
+       			}
+       			else{
+					html_msg = "<div class='row'>There Is "+ flt(me.dialog.fields_dict.balance.$input.val())+" eur in balance Put It Into Receivables OR Give Change</div>"       				
+       			}
+       			/*if(flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()) > 0){
        				html_msg = "<div class='row'>There Is "+ (flt(me.dialog.fields_dict.balance.$input.val()) - flt(me.dialog.fields_dict.bonus.$input.val()))+" eur in balance Put It Into Receivables OR Give Change</div>"	
        			}
        			else{
        				html_msg = "<div class='row'>There Is "+0+" eur in balance Put It Into Receivables OR Give Change</div>"
-       			}
+       			}*/
        			me.dialog.fields_dict.msg.$wrapper.empty()
        			me.dialog.fields_dict.msg.$wrapper.append(html_msg)
        			$('button[data-fieldname="process_payment"]').hide();
@@ -299,7 +294,8 @@ payoff_details = Class.extend({
 		       		"agreements":me.agreements,
 		        	"payment_date":cur_frm.doc.payment_date,
 		        	"amount_paid_by_customer":value.amount_paid_by_customer,
-		        	"receivables":cur_frm.doc.receivables
+		        	"receivables":cur_frm.doc.receivables,
+		        	"late_fees":me.late_fees
 		        },
 		       	callback: function(r){
 					r.message = Number((flt(r.message)).toFixed(2))
@@ -444,7 +440,8 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
-	       		if(flt(value.bonus) >= cur_frm.doc.total_charges){	
+	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
+	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){	
 	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
 	       			cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
 	       		}

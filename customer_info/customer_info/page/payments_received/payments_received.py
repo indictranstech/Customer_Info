@@ -36,10 +36,10 @@ def get_payments_details(customer,from_date,to_date):
 
 	
 	data = frappe.db.sql("""select payment_date,customer,payoff_cond,
-								rental_payment,
+								format(rental_payment+campaign_discount,2) as rental_payments,
 								format(1*late_fees,2) as late_fees,receivables,
 								CASE WHEN payoff_cond = "Rental Payment" 
-								THEN format(rental_payment+late_fees-receivables-bonus-discount-campaign_discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
+								THEN format(rental_payment+late_fees-receivables-bonus-discount+campaign_discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 	    							format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated
@@ -152,10 +152,11 @@ def make_refund_payment(payments_ids,ph_name):
 
 		if payment_history.payment_type == "Normal Payment":
 			print "inside 2","\n\n\n\n\n\n"
+			print agreement,"agreement set_values_in_agreement_temporary","\n\n\n\n\n\n"
 			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
-	print refund_bonus,"refund_bonus","\n\n\n\n\n"		
+	print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
 	#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
-	customer.bonus = sum(refund_bonus) + float(payment_history.bonus)
+	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
 	customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
 	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 
