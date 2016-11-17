@@ -250,13 +250,13 @@ render_agreements = function(flag){
 
 					if(cur_frm.doc.customer_agreement){
 						$.each($(".slick-row"),function(i,d){
-							console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
+							console.log(String($($(d).children()[13]).find(".detail").attr("agreement")))
 							/*var row = frappe.model.add_child(cur_frm.doc, "Payment Management Record", "payment_management_record");	
 							row.product = String($($(d).children()[2]).text());
 							row.late_fees = flt($($(d).children()[9]).text());
 							row.rental_payment = flt($($(d).children()[4]).text());
 							row.no_of_late_days = flt($($(d).children()[4]).text());*/
-							if(String($($(d).children()[12]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
+							if(String($($(d).children()[13]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
 								cur_frm.set_value("customer_agreement","")
 							}
@@ -453,7 +453,7 @@ edit_bonus = Class.extend({
 		        args: {
 		          "customer": cur_frm.doc.customer,
 		          "bonus":flt(me.dialog.fields_dict.bonus.$input.val()),
-		          "old_bonus":cur_frm.doc.bonus
+		          "assign_manual_bonus":flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)
 		        },
 		        callback: function(r){
 		        	if(r.message){
