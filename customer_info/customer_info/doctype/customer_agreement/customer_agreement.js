@@ -109,9 +109,9 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
-        if(cur_frm.doc.product_category && cur_frm.doc.product){
+        /*if(cur_frm.doc.product_category && cur_frm.doc.product){
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
-        }
+        }*/
         if(cur_frm.doc.__islocal){ //add bonus of new agreement
             if(cur_frm.doc.customer_group == "Individual"){    
                 frappe.call({

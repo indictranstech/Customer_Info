@@ -52,7 +52,7 @@ def get_payments_details(customer,from_date,to_date):
 								format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
 								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
 								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
-								from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
+								from `tabPayments History` {0}""".format(cond),as_dict=1)
 	total,"total"
 	total_payment_received = []
 	for i in data:
@@ -124,9 +124,8 @@ def make_refund_payment(payments_ids,ph_name):
 	refund_bonus = []	
 	for i,agreement in enumerate(agreement_list):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		#set_values_in_agreement_on_submit(customer_agreement)
+		set_values_in_agreement_on_submit(customer_agreement)
 		item_doc = frappe.get_doc("Item",customer_agreement.product)
-		print "from refund","\n\n\n\n\n\n",item_doc.old_sold_date,"old",item_doc.sold_date,"sold_date"
 		if payment_history.payment_type == "Payoff Payment":
 			payment_history.payoff_cond = ""
 			item_doc.sold_date = item_doc.old_sold_date
@@ -151,9 +150,8 @@ def make_refund_payment(payments_ids,ph_name):
 			customer_agreement.save(ignore_permissions=True)
 
 		if payment_history.payment_type == "Normal Payment":
-			print "inside 2","\n\n\n\n\n\n"
-			print agreement,"agreement set_values_in_agreement_temporary","\n\n\n\n\n\n"
 			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
+	
 	print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
 	#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
 	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
@@ -161,7 +159,8 @@ def make_refund_payment(payments_ids,ph_name):
 	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 
 	#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
-	customer.receivables = payment_history.receivables
+	#customer.receivables = payment_history.receivables
+	customer.receivables = float(customer.receivables) + float(payment_history.receivables) - float(payment_history.receivables_collected)
 	customer.old_receivables = payment_history.receivables
 	customer.save(ignore_permissions=True)
 	
