@@ -338,7 +338,7 @@ payoff_details = Class.extend({
 		var me =this;
 		me.dialog.fields_dict.return_to_customer.$input.click(function() {
 			var val_of_cash = flt($(me.fd.amount_paid_by_customer.input).val()) - flt($(me.fd.balance.input).val())
-			cur_dialog.fields_dict.amount_paid_by_customer.set_input(val_of_cash.toFixed(2))
+			//cur_dialog.fields_dict.amount_paid_by_customer.set_input(val_of_cash.toFixed(2))
 			me.add_in_receivables = 0
     		me.hide_other_and_show_complete_payment();
     		me.click_on_submit();

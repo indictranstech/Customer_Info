@@ -112,7 +112,7 @@ payments_received = Class.extend({
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
-				//console.log(r.message["data"],"r.message")
+				console.log(r.message["data"],"r.message")
         	   	me.page.find(".data").empty();
 				$.each(r.message["data"], function(i, d) {
 					if(d["payoff_cond"]){
@@ -164,7 +164,7 @@ payments_received = Class.extend({
 				"late_fees":late_fees,//.toFixed(2),
 				"total": total//.toFixed(2) 
 	   		})
-			console.log("__dict_of_payments_ids",__dict_of_payments_ids)
+			//console.log("__dict_of_payments_ids",__dict_of_payments_ids)
 			return __dict_of_payments_ids
 		}
 		else{
@@ -224,7 +224,7 @@ payments_received = Class.extend({
 			   		})
 		   		});
 			}
-			console.log("dict_of_payments_ids",dict_of_payments_ids)
+			//console.log("dict_of_payments_ids",dict_of_payments_ids)
 			return dict_of_payments_ids
 		}
 	},

@@ -256,7 +256,7 @@ def get_customer_agreement(customer,payment_date):
 	#WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
 	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
-										concade_product_name_and_category,number_of_payments,
+										concat(product," ",product_category),number_of_payments,
 										monthly_rental_payment,current_due_date,next_due_date,
 										payments_left,balance,late_fees,total_due,payments_made,
 										CASE 
@@ -653,7 +653,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
-	if int(condition) == "90_day_pay_Off" and agreement.agreement_status == "Open":
+	if condition == "90 day pay Off" and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
@@ -664,7 +664,7 @@ def payoff_submit(customer_agreement,agreement_status,condition,customer,receiva
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
 	
-	elif int(condition) == "pay off agreement" and agreement.agreement_status == "Open":
+	elif condition == "pay off agreement" and agreement.agreement_status == "Open":
 		print date_diff(payment_date,agreement.date),"date_diff(agreement.date,payment_date)","\n\n\n\n\n\n"
 		agreement.update({
 			"agreement_status":"Closed",
