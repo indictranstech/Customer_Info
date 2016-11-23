@@ -136,7 +136,9 @@ def calculate_total_charges(customer,flag,payment_date):
 
 		#print rental_amount_of_late_payments,"rental_amount_of_late_payments","\n\n\n\n\n\n\n"				
 		customer_agreement.late_payment = sum(rental_amount_of_late_payments)	# 	updating by addition of rental payment of late payment of agreement
-			
+		#customer_agreement.total_late_payments = sum(rental_amount_of_late_payments)
+
+
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
 
