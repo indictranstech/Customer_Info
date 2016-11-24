@@ -38,7 +38,7 @@ def make_payment_history(values,customer,receivables,receivables_collected,payme
 	# else:
 	# 	total_transaction_amount = float(rental_payment) + float(late_fees) -float(receivables)-float(values['bonus'])-float(values['discount'])
 	bonus = float(values['bonus']) if values['bonus'] else 0
-	total_transaction_amount = float(values['amount_paid_by_customer']) + float(values['bank_card']) + float(values['bank_transfer'])
+	total_transaction_amount = float(values['amount_paid_by_customer']) + float(values['bank_card']) + float(values['bank_transfer']) + float(bonus)
 	if payment_type == "Payoff":
 		total_calculated_payment_amount = float(total_amount)
 	else:	

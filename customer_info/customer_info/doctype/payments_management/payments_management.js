@@ -98,7 +98,7 @@ get_bonus_link = function(){
 	html = '<div class="row">\
             <label class="control-label" style="margin-left: 16px;">Active Bonus</label></div>\
             <div class="row">\
-            <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus + '</a>\
+            <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus.toFixed(2) + '</a>\
             </div>'
 	$(cur_frm.fields_dict.bonus_link.wrapper).html(html);
 	bonus = cur_frm.doc.static_bonus
@@ -485,7 +485,7 @@ edit_campaign_discount = Class.extend({
 		me.options_list = ["0"]
 		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
-			for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
+			for(i=1;i<=flt(me.item["payments_left"]);i++){
 				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
 			}
 			console.log(me.options_list,"options_list")
@@ -546,8 +546,10 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
-	        		cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val()))
-	    			cur_frm.set_value("total_charges",cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val()))
+	        		var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val())
+	        		var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val())
+	        		cur_frm.set_value("amount_of_due_payments",flt(amount_of_due_payments) == 0 ? "0.00":flt(amount_of_due_payments))
+	    			cur_frm.set_value("total_charges",flt(total_charges) == 0 ? "0.00":flt(total_charges))
 	        		/*cur_frm.set_value("amount_of_due_payments",flt(me.fd.due_amount.$input.val()))
 	    			cur_frm.set_value("total_charges",flt(me.fd.total_charges_amount.$input.val()))*/    	
 	        	}
