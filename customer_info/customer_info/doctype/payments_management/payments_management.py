@@ -579,6 +579,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.late_payment = 0
 		customer_agreement.discount_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		#customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0

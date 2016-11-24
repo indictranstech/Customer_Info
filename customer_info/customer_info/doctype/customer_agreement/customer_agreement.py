@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 import frappe
-import datetime
 import frappe.defaults
 import json
 from frappe import _
@@ -52,12 +51,15 @@ class CustomerAgreement(Document):
 		if self.agreement_status == "Suspended":
 			self.merchandise_status = "Suspended"
 		if self.agreement_closing_suspending_reason == "Fraud/Stolen":
-			self.merchandise_status = "Stolen"			
+			self.merchandise_status = "Stolen"
+		if self.agreement_status == "Open":
+			self.merchandise_status = "New"				
 
 
 			
 	def change_default_warehouse(self):
-		default_warehouse = ""
+		item = frappe.get_doc("Item",self.product)
+		default_warehouse = item.default_warehouse
 		if self.agreement_status == "Open":
 			default_warehouse = "9101 – Prekė pas klientą - BK"
 		if self.agreement_status in  ["Closed","Suspended"] and self.agreement_closing_suspending_reason in ["Return","Upgrade","Financial Difficulties","Temporary Leave"]:
@@ -66,14 +68,12 @@ class CustomerAgreement(Document):
 			default_warehouse = "8101 – Ištrinta, grąžinta tiekėjui, sugadinta, naudojama įmonės reikmėms, pasibaigė sutartis, išsipirko anksčiau. - BK"
 		if self.agreement_status == "Closed" and self.merchandise_status == "Stolen" and self.agreement_closing_suspending_reason == "Fraud/Stolen":
 			default_warehouse = "9101 – Prekė pas klientą - BK"
-		item = frappe.get_doc("Item",self.product)
 		item.default_warehouse = default_warehouse
 		item.save(ignore_permissions=True)
 
 	def check_date_diff_of_first_and_second_month_due_date(self):
-		due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+		due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
 		diff_of_first_and_second_due_date = date_diff(due_date_of_next_month,self.date)
-		#print diff_of_first_and_second_due_date,"\n\n\n\n","diff_of_first_and_second_due_date"
 		if date_diff(due_date_of_next_month,self.date) > 44 :
 			self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,-1))+"T00:00:00.000Z"
 			#frappe.throw("Decrease Payment Day")
@@ -148,9 +148,7 @@ class CustomerAgreement(Document):
 
 	# add row in child table	
 	def add_payments_record(self):
-		print self.due_date_of_next_month,type(self.due_date_of_next_month),"self.due_date_of_next_month","\n\n\n\n\n"
-		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-		print current_date,"current_date","\n\n\n\n\n\n"
+		current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
 		list_of_payments_record = []
 		list_of_payments_record.append({
 		'no_of_payments':'Payment 1',
@@ -188,7 +186,10 @@ class CustomerAgreement(Document):
 	# get date after i month
 	def get_next_due_date(self,date,i):
 		add_month_to_date = add_months(date,i)
-		return add_month_to_date.date()    	
+		if isinstance(add_month_to_date, datetime):
+			return add_month_to_date.date()	
+		else:
+			return add_month_to_date
 
 	# Comment For Changing Payment Day
 	def payment_date_comment(self):
@@ -243,7 +244,6 @@ class CustomerAgreement(Document):
 def reset_contact_result_of_sent_sms():
 	now_date = datetime.now().date()
 	customer_agreement = frappe.get_all("Customer Agreement", fields=["name"],filters={"agreement_status": "Open","contact_result":"Sent SMS/Email"})
-	#print customer_agreement,"customer_agreement","\n\n\n\n\n\n"
 	for agreement in customer_agreement:
 		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
 		if agreement_doc.suspension_date <= now_date:
@@ -373,7 +373,6 @@ def get_primary_address(customer):
 
 @frappe.whitelist()
 def make_update_agreement(source_name, target_doc=None):
-	print source_name
 	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
 	target_doc = get_mapped_doc("Customer Agreement", source_name,
 		{
@@ -417,10 +416,10 @@ def make_update_agreement(source_name, target_doc=None):
 # filter Product
 @frappe.whitelist()
 def get_product(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select item_name,merchandise_status from `tabItem` 
-							where item_name not in (select product from `tabCustomer Agreement` 
+	return frappe.db.sql("""select name,merchandise_status from `tabItem` 
+							where name not in (select product from `tabCustomer Agreement` 
 													where agreement_status = "Open") 
-							and (merchandise_status = "Used" or merchandise_status = "New" )
+							and merchandise_status in ("Used","New" )
 							and (item_name like '{txt}'
 											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
 
