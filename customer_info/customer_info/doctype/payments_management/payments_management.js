@@ -182,7 +182,12 @@ render_agreements = function(flag){
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
 		console.log(dataContext['campaign_discount'],"dataContext['campaign_discount']")
-		return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[1] + "</a>";
+		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){			
+			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
+		}
+		else{
+			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a>";
+		}
 		/*if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[1] + "</a>";
 		}
@@ -485,11 +490,15 @@ edit_campaign_discount = Class.extend({
 		me.options_list = ["0"]
 		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
-			for(i=1;i<=flt(me.item["payments_left"]);i++){
+			/*for(i=1;i<=flt(me.item["payments_left"]);i++){
 				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
-			}
-			console.log(me.options_list,"options_list")
+			}*/
 		}	
+		for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
+			console.log(i*flt(me.item["campaign_discount"].split("-")[1]))
+			me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[1]))
+		}
+		console.log(me.options_list,"options_list")
 		this.dialog = new frappe.ui.Dialog({
     		title: "Contact result",
         	fields: [
@@ -508,7 +517,7 @@ edit_campaign_discount = Class.extend({
        	//this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
 		//$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
        	this.dialog.show();
-       	this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[1]))
+       	//this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[0]))
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		//this.campaign_discount();
@@ -546,12 +555,16 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
-	        		var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val())
-	        		var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[1])-flt(me.fd.campaign_discount.$input.val())
-	        		cur_frm.set_value("amount_of_due_payments",flt(amount_of_due_payments) == 0 ? "0.00":flt(amount_of_due_payments))
-	    			cur_frm.set_value("total_charges",flt(total_charges) == 0 ? "0.00":flt(total_charges))
-	        		/*cur_frm.set_value("amount_of_due_payments",flt(me.fd.due_amount.$input.val()))
-	    			cur_frm.set_value("total_charges",flt(me.fd.total_charges_amount.$input.val()))*/    	
+	        		var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
+	        		var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
+	        		if(me.item["campaign_discount"].split("-")[3] == "Yes"){
+	        			cur_frm.set_value("amount_of_due_payments",flt(amount_of_due_payments) == 0 ? "0.00":flt(amount_of_due_payments))
+	    				cur_frm.set_value("total_charges",flt(total_charges) == 0 ? "0.00":flt(total_charges))	
+	        		}
+	        		else{
+	    				cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments - flt(me.fd.campaign_discount.$input.val()) == 0 ? "0.00":cur_frm.doc.amount_of_due_payments - flt(me.fd.campaign_discount.$input.val()))
+	    				cur_frm.set_value("total_charges",cur_frm.doc.total_charges - flt(me.fd.campaign_discount.$input.val()) == 0 ? "0.00":cur_frm.doc.total_charges - flt(me.fd.campaign_discount.$input.val()))
+	        		}
 	        	}
 	        	me.dialog.hide();
 	        	render_agreements();
