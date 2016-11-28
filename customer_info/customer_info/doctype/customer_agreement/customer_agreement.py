@@ -416,12 +416,15 @@ def make_update_agreement(source_name, target_doc=None):
 # filter Product
 @frappe.whitelist()
 def get_product(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select name,merchandise_status from `tabItem` 
-							where name not in (select product from `tabCustomer Agreement` 
-													where agreement_status = "Open") 
-							and merchandise_status in ("Used","New" )
-							and (item_name like '{txt}'
-											or merchandise_status like '{txt}') limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
+	return frappe.db.sql("""select name,merchandise_status 
+								from `tabItem` 
+								where name not in 
+									(select product from `tabCustomer Agreement` 
+										where agreement_status = "Open") 
+									and merchandise_status in ("Used","New" )
+									and (item_name like '{txt}'
+									or merchandise_status like '{txt}') 
+								limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
 
 
 @frappe.whitelist()
