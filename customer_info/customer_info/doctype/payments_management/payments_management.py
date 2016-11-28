@@ -87,7 +87,8 @@ def calculate_total_charges(customer,flag,payment_date):
 
 		frappe.db.sql("""update `tabCustomer Agreement` set number_of_payments = 0,total_due = 0,
 						late_payment = 0,
-						late_fees = 0,late_fees_updated = "No"
+						late_fees = 0,late_fees_updated = "No",
+						discount_updated = "No"
 						where customer = '{0}' 
 						and agreement_status = "Open" """.format(customer))
 	
@@ -143,7 +144,8 @@ def calculate_total_charges(customer,flag,payment_date):
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
 
 		if customer_agreement.discount_updated == "Yes":
-			agreements_discount_list.append(customer_agreement.campaign_discount)
+			#agreements_discount_list.append(customer_agreement.campaign_discount)
+			agreements_discount_list.append(customer_agreement.discount)
 
 		if customer_agreement.late_fees_updated == "Yes":
 			agreements_and_late_fees_dict[customer_agreement.name] = customer_agreement.late_fees	
@@ -151,8 +153,8 @@ def calculate_total_charges(customer,flag,payment_date):
 		customer_agreement.save(ignore_permissions=True)
 		
 		print agreements_and_late_fees_dict,"agreements_and_late_fees_dict","\n\n\n\n\n\n\n"				
-	
 	discount_amount_of_agreements = "{0:.2f}".format(sum(agreements_discount_list))
+	print "\n\n\n\n\n\n\n\n",float(discount_amount_of_agreements),"\n\n\n\n\n\n\n\n"
 	agreements_due_amount_list.append(float("{0:.2f}".format(sum(agreements_and_late_fees_dict.values()))))
 	return {"amount_of_due_payments":sum(agreements_due_amount_list) - float(discount_amount_of_agreements), # deduct campaign discount of all agreements
 			"receivables":receivables,
@@ -248,7 +250,8 @@ def update_late_fees(agreement,late_fees):
 def update_campaign_discount(agreement,campaign_discount):
 	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 	customer_agreement.discount_updated = "Yes"
-	customer_agreement.campaign_discount = campaign_discount
+	#customer_agreement.campaign_discount = campaign_discount
+	customer_agreement.discount = campaign_discount
 	customer_agreement.save(ignore_permissions=True)		
 	return customer_agreement.campaign_discount
 
@@ -267,7 +270,8 @@ def get_customer_agreement(customer,payment_date):
 										ELSE "Call/Commitment" 
 										END AS suspension_date,
 										concat(format(discount,2),"-",format(campaign_discount,2),"-",format(discounted_payments_left,2),"-",discount_updated) as discounted_payments_left,
-										CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount
+										/* CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount */
+										CASE WHEN discount_updated = "Yes" THEN discount ELSE 0 END as campaign_discount
 										from `tabCustomer Agreement`
 										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
 	}
@@ -581,8 +585,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.late_payment = 0
 		customer_agreement.discount_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
-		customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		#customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - float(customer_agreement.discount)/float(customer_agreement.campaign_discount)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
 	#customer_agreement.save(ignore_permissions=True)
