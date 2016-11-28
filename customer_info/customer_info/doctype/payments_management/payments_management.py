@@ -530,7 +530,7 @@ def update_on_submit(args):
 		flag = "Process Payment"
 
 	#add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus,add_in_receivables,flag)
-	add_bonus_and_receivables_to_customer(args,flag)
+	used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -541,7 +541,12 @@ def update_on_submit(args):
 	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
 	args['total_amount'] = 0
 	make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount)
-	return completed_agreement_list
+	
+	return {"completed_agreement_list":completed_agreement_list,"used_bonus_of_customer":used_bonus_of_customer}
+	# if len(completed_agreement_list) > 0:
+	# else:
+	# 	return {"used_bonus_of_customer":used_bonus_of_customer}	
+	
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
@@ -595,7 +600,6 @@ def add_bonus_and_receivables_to_customer(args,flag):
 			now_date = datetime.now().date()
 			customer_doc.update({
 				"bonus":float(args['bonus']),
-				"assign_manual_bonus":float(customer_doc.assign_manual_bonus) + float(args['manual_bonus']),
 				"used_bonus":float(customer_doc.used_bonus) + float(args['used_bonus']),
 				"used_bonus_date":now_date
 			})
@@ -609,6 +613,8 @@ def add_bonus_and_receivables_to_customer(args,flag):
 			"old_receivables":float(args['add_in_receivables'])
 		}) 	
 		customer_doc.save(ignore_permissions=True)
+		return customer_doc.used_bonus
+
 	elif flag == "Payoff Payment":
 		customer_doc.update({
 			"receivables":float(args['add_in_receivables']),
