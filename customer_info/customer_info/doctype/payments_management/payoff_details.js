@@ -454,9 +454,11 @@ payoff_details = Class.extend({
 	       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
 		       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
 	       		}
-	       		cur_frm.set_value("used_bonus",flt(value.bonus))
-	            if(r.message){
-	            	msgprint(r.message+"\n"+"Agreement Payoff successfully")
+	            if(r.message && r.message["completed_agreement_list"]){
+	            	msgprint(r.message["completed_agreement_list"]+"\n"+"Agreement Payoff successfully")
+	            }
+	            if(r.message && r.message["used_bonus_of_customer"]){	
+	       			cur_frm.set_value("used_bonus",flt(r.message['used_bonus_of_customer']))
 	            }
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
