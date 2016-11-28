@@ -8,7 +8,7 @@ from customer_info.customer_info.doctype.payments_management.payments_management
 
 @frappe.whitelist()
 def get_payments_details(customer,from_date,to_date):
-	print customer,from_date,to_date
+	#print customer,from_date,to_date
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -154,7 +154,7 @@ def make_refund_payment(payments_ids,ph_name):
 	
 	print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
 	#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
-	customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
+	customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
 	customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
 	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 

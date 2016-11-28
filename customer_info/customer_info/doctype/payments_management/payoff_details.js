@@ -393,21 +393,22 @@ payoff_details = Class.extend({
 		console.log(me.old_instance,"me old_instance ")
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
-	       	args: {
-	       		"customer_agreement":me.old_instance.item['id'],
-	        	"agreement_status":"Closed",
-	        	"condition": me.old_instance.values['cond'],
-	        	"customer":cur_frm.doc.customer,
+	       	args:{"args": {
+							"customer_agreement":me.old_instance.item['id'],
+							"agreement_status":"Closed",
+							"condition": me.old_instance.values['cond'],
+							"customer":cur_frm.doc.customer,
+							"receivables":cur_frm.doc.receivables,
+							"add_in_receivables":me.add_in_receivables,
+							"values":value,//JSON.stringify(value),
+							"payment_date":cur_frm.doc.payment_date,
+							"total_charges":cur_frm.doc.total_charges,
+							"data":data,
+							"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['Discounted_payment_amount'],
+							"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['Total_payoff_amount']
+	       		        }
+	       		},
 	        	//"receivables":me.add_in_receivables,
-	        	"receivables":cur_frm.doc.receivables,
-	        	"add_in_receivables":me.add_in_receivables,
-	        	"values":JSON.stringify(value),
-	        	"payment_date":cur_frm.doc.payment_date,
-	        	"total_charges":cur_frm.doc.total_charges,
-              	"data":data,
-              	"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['Discounted_payment_amount'],
-              	"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['Total_payoff_amount']
-	        },
 	       	callback: function(r){
 	       		me.dialog.hide();
 				me.old_dialog.hide();
@@ -424,20 +425,23 @@ payoff_details = Class.extend({
 		frappe.call({
 			async:false,    
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_on_submit",
-	       	args: {
-	       		"values":JSON.stringify(value),
-	       		"rental_payment":me.rental_payment,
-	       		"late_fees":me.late_fees,
-	        	"payment_date":cur_frm.doc.payment_date,
-	        	"customer":cur_frm.doc.customer,
-	        	"bonus":cur_frm.doc.bonus - flt(value.bonus),
-	        	"manual_bonus":cur_frm.doc.assign_manual_bonus,
-	        	"used_bonus":flt(value.bonus),
-	        	//"receivables":me.add_in_receivables,
-	        	"add_in_receivables":me.add_in_receivables,
-              	"receivables":cur_frm.doc.receivables,
-              	"total_charges":cur_frm.doc.total_charges,
-	        },
+	       	args:{
+	       		"args": {
+					"values":value,//JSON.stringify(value),
+					"rental_payment":me.rental_payment,
+					"late_fees":me.late_fees,
+					"payment_date":cur_frm.doc.payment_date,
+					"customer":cur_frm.doc.customer,
+					"bonus":cur_frm.doc.bonus - flt(value.bonus),
+					"manual_bonus":cur_frm.doc.assign_manual_bonus,
+					"used_bonus":flt(value.bonus),
+					"new_bonus":flt(cur_frm.doc.bonus) - flt(cur_frm.doc.static_bonus),
+					"add_in_receivables":me.add_in_receivables,
+					"receivables":cur_frm.doc.receivables,
+					"total_charges":cur_frm.doc.total_charges,
+					//"receivables":me.add_in_receivables,
+   		        }
+	       	},
 	       	callback: function(r){
 	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
 	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
