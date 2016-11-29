@@ -448,11 +448,11 @@ payoff_details = Class.extend({
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){	
 	       			//cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
 	       			cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus) + flt(value.balance))
-	       			cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+	       			cur_frm.set_value("static_bonus",cur_frm.doc.static_bonus - flt(value.bonus) + flt(value.balance))
 	       		}
 	       		else{
 	       			cur_frm.set_value("bonus",cur_frm.doc.bonus - flt(value.bonus))
-		       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus)
+		       		cur_frm.set_value("static_bonus",cur_frm.doc.bonus - flt(value.bonus))
 	       		}
 	            if(r.message && r.message["completed_agreement_list"]){
 	            	msgprint(r.message["completed_agreement_list"]+"\n"+"Agreement Payoff successfully")
