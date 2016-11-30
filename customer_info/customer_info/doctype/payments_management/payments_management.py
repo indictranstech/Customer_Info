@@ -586,7 +586,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.discount_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		#customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
-		customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - float(customer_agreement.discount)/float(customer_agreement.campaign_discount)
+		if customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
+			customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
 	#customer_agreement.save(ignore_permissions=True)

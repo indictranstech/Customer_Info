@@ -554,7 +554,13 @@ edit_campaign_discount = Class.extend({
        	//this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
 		//$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
        	this.dialog.show();
-       	//this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[0]))
+ 		if(me.item["campaign_discount"].split("-")[3] == "Yes"){
+ 			this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[0]))	
+ 		}
+ 		else{
+ 			this.dialog.fields_dict.campaign_discount.set_input(0)
+ 		}      	
+       	
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		//this.campaign_discount();
