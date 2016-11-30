@@ -98,7 +98,7 @@ get_bonus_link = function(){
 	html = '<div class="row">\
             <label class="control-label" style="margin-left: 16px;">Active Bonus</label></div>\
             <div class="row">\
-            <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + cur_frm.doc.static_bonus.toFixed(2) + '</a>\
+            <a class="bonus_link" style="margin-left: 16px;" value='+cur_frm.doc.static_bonus+'>' + flt(cur_frm.doc.static_bonus).toFixed(2) + '</a>\
             </div>'
 	$(cur_frm.fields_dict.bonus_link.wrapper).html(html);
 	bonus = cur_frm.doc.static_bonus
@@ -116,14 +116,16 @@ get_address_of_customer = function(){
             "customer": cur_frm.doc.customer,
         },
      	callback: function(r){
-            if(r.message[0]['address_line1'] && !r.message[0]['address_line2']){
-            	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
-     			refresh_field('full_address')
-     		}
-     		else if(r.message[0]['address_line2']){
-     			cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
-     			refresh_field("full_address")
-     		}
+	        if(r.message){
+	        	if(r.message[0]['address_line1']){
+	            	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
+	     			refresh_field('full_address')
+	     		}
+	     		else if(r.message[0]['address_line2']){
+	     			cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
+	     			refresh_field("full_address")
+	     		}
+	        }    
      	}  	
     });
 }
@@ -139,14 +141,14 @@ calculate_total_charges = function(flag){
         },
         callback: function(r){
             if(r.message){
-              	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
-           		cur_frm.doc.receivables = r.message['receivables'] == 0 ? "0":r.message['receivables'];
-           		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables']);
-           		cur_frm.refresh_fields()
               	if(flag != "Process Payment"){
 	           		cur_frm.doc.static_bonus = r.message['bonus'] > 0 ? r.message['bonus'] : "0";
               		refresh_field('static_bonus')	
 	           	}	
+              	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
+           		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables']);
+           		cur_frm.doc.receivables = r.message['receivables'] == 0 ? "0":r.message['receivables'];
+           		cur_frm.refresh_fields();
             }
             else{
             	cur_frm.doc.total_charges = 0.0
@@ -214,9 +216,13 @@ render_agreements = function(flag){
 	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail,toolTip: "Detail"},
 	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension,toolTip: "Call/Commitment"}
   	];
+
+
   	var options = {
     	enableCellNavigation: true,
     	enableColumnReorder: false,
+    	//showHeaderRow:true,
+    	//explicitInitialization: true
   		/*editable: true,*/
   	};
   	var data = [];
@@ -256,20 +262,11 @@ render_agreements = function(flag){
 					if(cur_frm.doc.customer_agreement){
 						$.each($(".slick-row"),function(i,d){
 							console.log(String($($(d).children()[13]).find(".detail").attr("agreement")))
-							/*var row = frappe.model.add_child(cur_frm.doc, "Payment Management Record", "payment_management_record");	
-							row.product = String($($(d).children()[2]).text());
-							row.late_fees = flt($($(d).children()[9]).text());
-							row.rental_payment = flt($($(d).children()[4]).text());
-							row.no_of_late_days = flt($($(d).children()[4]).text());*/
 							if(String($($(d).children()[13]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
 								cur_frm.set_value("customer_agreement","")
 							}
 						});
-						//refresh_field("payment_management_record");
-						/*$.each(r.message, function(i, d) {
-                           
-                       });*/
 					}
 				}
 			}
@@ -301,12 +298,59 @@ make_grid= function(data1,columns,options){
         };
     }
 
-    dataView = new Slick.Data.DataView();    
+    dataView = new Slick.Data.DataView();  
+
+	grid = new Slick.Grid("#payments_grid", dataView, columns, options);
+      
+    // for row header filters
+    var columnFilters = []
+    function filter(item) {
+	    for (var columnId in columnFilters) {
+	      if (columnId !== undefined && columnFilters[columnId] !== "") {
+	        var c = grid.getColumns()[grid.getColumnIndex(columnId)];
+	        if (item[c.field] != columnFilters[columnId]) {
+	          return false;
+	        }
+	      }
+	    }
+    	return true;
+  	}	
+
+    dataView.onRowCountChanged.subscribe(function (e, args) {
+      grid.updateRowCount();
+      grid.render();
+    });
+
+    dataView.onRowsChanged.subscribe(function (e, args) {
+      grid.invalidateRows(args.rows);
+      grid.render();
+    });
+
+    $(grid.getHeaderRow()).delegate(":input", "change keyup", function (e) {
+      var columnId = $(this).data("columnId");
+      if (columnId != null) {
+        columnFilters[columnId] = $.trim($(this).val());
+        dataView.refresh();
+      }
+    });
+
+    grid.onHeaderRowCellRendered.subscribe(function(e, args) {
+        $(args.node).empty();
+        $("<input type='text'>")
+           .data("columnId", args.column.id)
+           .val(columnFilters[args.column.id])
+           .appendTo(args.node);
+    });
+    grid.init();
+    //dataView.setFilter(filter);
+   	
+   	//
+
     dataView.beginUpdate();
     dataView.setItems(data);
     dataView.endUpdate();
 
-	grid = new Slick.Grid("#payments_grid", dataView, columns, options);
+
 	grid.onClick.subscribe(function (e, args) {
         var item = dataView.getItem(args.row);
         if($(e.target).hasClass("detail")) {
@@ -353,23 +397,17 @@ bonus_summary = Class.extend({
 	},
 	get_bonus_details:function(){
 		var me =this;
-		frappe.call({    
-			//method: "frappe.client.get_list",
+		frappe.call({
 		   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_details",
-		   	/*args: {
-		    	doctype: "Customer Agreement",
-		       	fields: ["name","new_agreement_bonus","early_payments_bonus","payment_on_time_bonus"],
-		       	filters: {"agreement_status":"Open","customer":cur_frm.doc.customer},
-			},*/
 			args: {
 				"customer":	cur_frm.doc.customer
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r){
-				//console.log(r.message,"e.message get_bonus_details")
 				if(r.message){
-					total_bonus = {"name":"Total",
+					total_bonus = {
+									"name":"Total",
 									"early_payments_bonus":0,
 									"payment_on_time_bonus":0,
 									"new_agreement_bonus":0
@@ -382,7 +420,6 @@ bonus_summary = Class.extend({
 					})
 					r.message.push(total_bonus)
 					me.dialog.show();
-					console.log(r.message[r.message.length -1])
 					var total_bonus_accumulated = r.message[r.message.length -1]["early_payments_bonus"] 
 												+ r.message[r.message.length -1]["new_agreement_bonus"] 
 												+ r.message[r.message.length -1]["payment_on_time_bonus"] 
@@ -465,7 +502,8 @@ edit_bonus = Class.extend({
 		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+"] "+r.message)
 						$('button[data-fieldname="add_notes"]').click();
 		        		cur_frm.set_value("notes_on_customer_payments","")
-		    			cur_frm.set_value("assign_manual_bonus",cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)))
+		        		var assign_manual_bonus = cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus))
+		    			cur_frm.set_value("assign_manual_bonus",assign_manual_bonus)
 		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
 		        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(cur_frm.doc.assign_manual_bonus));
 		    			msgprint("Bonus Updated");
@@ -488,17 +526,16 @@ edit_campaign_discount = Class.extend({
 		var me = this;
 		console.log(me.item["campaign_discount"])
 		me.options_list = ["0"]
-		if (flt(me.item["campaign_discount"].split("-")[0]) > 0){
+		if (flt(me.item["campaign_discount"].split("-")[1]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
 			/*for(i=1;i<=flt(me.item["payments_left"]);i++){
 				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
 			}*/
-		}	
-		for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
-			console.log(i*flt(me.item["campaign_discount"].split("-")[1]))
-			me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[1]))
+			for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
+				console.log(i*flt(me.item["campaign_discount"].split("-")[1]))
+				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[1]))
+			}
 		}
-		console.log(me.options_list,"options_list")
 		this.dialog = new frappe.ui.Dialog({
     		title: "Contact result",
         	fields: [
@@ -517,7 +554,13 @@ edit_campaign_discount = Class.extend({
        	//this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
 		//$(this.dialog.$wrapper).find('[data-dismiss="modal"]').hide();
        	this.dialog.show();
-       	//this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[0]))
+ 		if(me.item["campaign_discount"].split("-")[3] == "Yes"){
+ 			this.dialog.fields_dict.campaign_discount.set_input(flt(me.item["campaign_discount"].split("-")[0]))	
+ 		}
+ 		else{
+ 			this.dialog.fields_dict.campaign_discount.set_input(0)
+ 		}      	
+       	
 		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
 	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		//this.campaign_discount();
@@ -616,10 +659,8 @@ edit_late_fees = Class.extend({
 	},
 	add_comment:function(){
 		var me = this;
-		console.log("in my function")
 		//me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(flt(me.dialog.fields_dict.late_fees.$input.val()) >= 0){
-				console.log("in mybutton mybutton 11223")
 				comment =  "["+user+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
 				cur_frm.set_value("notes_on_customer_payments",comment)
 				$('button[data-fieldname="add_notes"]').click()
@@ -683,13 +724,17 @@ call_commit = Class.extend({
        	this.dialog.$wrapper.find('.hidden-xs').css("margin-left","-2px");
        	this.dialog.show();
        	this.get_fields_values();
-		this.before_select_contact_result();
 		this.select_contact_result();
 		this.click_on_reset();
 	},
 	get_fields_values:function(){
 		this.agreements = [];
-		this.values_of_agreement = []; 
+		this.values_of_agreement = [];
+		this.data_fieldname = $(this.dialog.body).find("[data-fieldname ='date_picker'],\
+										[data-fieldname ='amount'],\
+										[data-fieldname ='comment'],\
+										[data-fieldname ='add_comment']") 
+		this.data_fieldname.hide();
 		var me = this;
 		if(me.item == "Common" && me.id == "Common"){
 			me.filters = {"agreement_status" : "Open","customer":cur_frm.doc.customer}
@@ -706,11 +751,11 @@ call_commit = Class.extend({
 			},
 			callback: function(r){
 				if(r && r.message){
-					console.log("r.message",r.message)
 					if(me.item == "Common"){
 						for(i=0;i<r.message.length;i++){
-							me.agreements.push({"name":r.message[i]['name'],
-												"call_commitment":r.message[i]['call_commitment']})
+							/*me.agreements.push({"name":r.message[i]['name'],
+												"call_commitment":r.message[i]['call_commitment']})*/
+							
 							if(r.message[i]['call_commitment'] == "All"){
 								me.values_of_agreement.push({"amount_of_contact_result":r.message[i]['amount_of_contact_result'],
 																		"contact_result":r.message[i]['contact_result'],
@@ -719,26 +764,28 @@ call_commit = Class.extend({
 																		});
 							}
 						}
-						if(me.values_of_agreement[0]['contact_result'] == "WBI" && me.values_of_agreement[0]['amount_of_contact_result'] && me.values_of_agreement[0]["call_commitment"] == "All"){
-							me.contact_result = me.values_of_agreement[0]['contact_result']
-							me.suspension_date = me.values_of_agreement[0]['suspension_date']
-							me.amount_of_contact_result = me.values_of_agreement[0]['amount_of_contact_result']
-							me.set_values();
-						}
-						else if(me.values_of_agreement[0]['contact_result'] == "Sent SMS/Email" && me.values_of_agreement[0]["call_commitment"] == "All"){
-							me.contact_result = r.message[0]['contact_result']
-							me.suspension_date = me.values_of_agreement[0]['suspension_date']
-							me._set_values()
+						if(me.values_of_agreement.length > 0){
+							if(me.values_of_agreement[0]['contact_result'] == "WBI" && me.values_of_agreement[0]['amount_of_contact_result'] && me.values_of_agreement[0]["call_commitment"] == "All"){
+								me.contact_result = me.values_of_agreement[0]['contact_result']
+								me.suspension_date = me.values_of_agreement[0]['suspension_date']
+								me.amount_of_contact_result = me.values_of_agreement[0]['amount_of_contact_result']
+								me.set_values();
+							}
+							else if(me.values_of_agreement[0]['contact_result'] == "Sent SMS/Email" && me.values_of_agreement[0]["call_commitment"] == "All"){
+								me.contact_result = r.message[0]['contact_result']
+								me.suspension_date = me.values_of_agreement[0]['suspension_date']
+								me._set_values()
+							}
 						}
 					}
 					else{
-						if(r && r.message[0]['contact_result'] == "WBI"){
+						if(r.message[0]['contact_result'] && r.message[0]['contact_result'] == "WBI"){
 							me.contact_result = r.message[0]['contact_result']
 							me.suspension_date = r.message[0]['suspension_date']
 							me.amount_of_contact_result = r.message[0]['amount_of_contact_result']
 							me.set_values()
 						}
-						else if(r && r.message[0]['contact_result'] == "Sent SMS/Email"){
+						else if(r.message[0]['contact_result'] && r.message[0]['contact_result'] == "Sent SMS/Email"){
 							me.contact_result = r.message[0]['contact_result']
 							me.suspension_date = r.message[0]['suspension_date']
 							me._set_values()
@@ -751,39 +798,26 @@ call_commit = Class.extend({
 	_set_values:function(){
 		var me = this;
 		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
-		$(me.dialog.body).find("[data-fieldname ='comment']").show();
-		$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
+		$(me.dialog.body).find("[data-fieldname ='comment'],\
+								[data-fieldname ='add_comment']").show();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 		me.add_comment();
 	},
 	set_values:function(){
 		var me = this;
-		$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
-		$(me.dialog.body).find("[data-fieldname ='amount']").show();
-		$(me.dialog.body).find("[data-fieldname ='comment']").show();
-		$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
+		me.data_fieldname.show();
 		me.dialog.fields_dict.contact_result.set_input(me.contact_result)
 		me.dialog.fields_dict.date_picker.set_input(me.suspension_date)
 		me.dialog.fields_dict.amount.set_input(me.amount_of_contact_result)
 		me.add_comment();
-	},
-	before_select_contact_result:function(){
-		var me = this;
-		$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
-		$(me.dialog.body).find("[data-fieldname ='amount']").hide();
-		$(me.dialog.body).find("[data-fieldname ='comment']").hide();
-		$(me.dialog.body).find("[data-fieldname ='add_comment']").hide();
 	},
 	select_contact_result:function(){
 		var me = this;
 		nowdate = frappe.datetime.nowdate()
 		$(me.fd.contact_result.input).change(function(){
 			if(me.fd.contact_result.$input.val() == "WBI"){
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").show();
-				$(me.dialog.body).find("[data-fieldname ='amount']").show();
-				$(me.dialog.body).find("[data-fieldname ='comment']").show();
-				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();					
+				me.data_fieldname.show();
 				me.dialog.fields_dict.amount.set_input(flt(me.item["total_dues"]).toFixed(2))
 				me.add_comment();
 			}
@@ -791,18 +825,12 @@ call_commit = Class.extend({
 				console.log(me.item["current_due_date"],"current_due_date1232212")
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();					
-				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
-				$(me.dialog.body).find("[data-fieldname ='comment']").show();
-				$(me.dialog.body).find("[data-fieldname ='add_comment']").show();
+				$(me.dialog.body).find("[data-fieldname ='date_picker'],[data-fieldname ='amount']").hide();
+				$(me.dialog.body).find("[data-fieldname ='comment'],[data-fieldname ='add_comment']").show();
 				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == ""){
-				console.log("inside hol")
-				$(me.dialog.body).find("[data-fieldname ='date_picker']").hide();
-				$(me.dialog.body).find("[data-fieldname ='amount']").hide();
-				$(me.dialog.body).find("[data-fieldname ='comment']").hide();
-				$(me.dialog.body).find("[data-fieldname ='add_comment']").hide();			
+				me.data_fieldname.hide();
 			}
 		})
 	},
@@ -874,13 +902,11 @@ call_commit = Class.extend({
 	},
 	add_comment:function(){
 		var me = this;
-		console.log("in my function")
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				console.log("in mybutton mybutton 11223")
 				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
-				$('button[data-fieldname="add_notes"]').click()
-				me.dialog.fields_dict.comment.set_input("")
+				$('button[data-fieldname="add_notes"]').click();
+				me.dialog.fields_dict.comment.set_input("");
 			}
 		})
 	}

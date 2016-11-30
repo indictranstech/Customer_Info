@@ -37,17 +37,17 @@ frappe.ui.form.on("Customer Agreement",{
 		          		cur_frm.doc.address_line1 = r.message[0]["address_line1"]
 		          		cur_frm.doc.city = r.message[0]["city"]
 		          		refresh_field(["address","address_line1","city"]);
+                        if(r.message[0]['address_line2']){
+                        cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
+                        cur_frm.doc.address_line2 = r.message[0]["address_line2"]
+                        refresh_field(['full_address','address_line2'])
+                        }
+                        if(!r.message[0]['address_line2']){
+                            cur_frm.doc.address_line2 = ""
+                            cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
+                            refresh_field(["full_address","address_line2"])
+                        }
                     }
-                    if(r.message[0]['address_line2']){
-                    	cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
-             			cur_frm.doc.address_line2 = r.message[0]["address_line2"]
-             			refresh_field(['full_address','address_line2'])
-             		}
-             		if(!r.message[0]['address_line2']){
-             			cur_frm.doc.address_line2 = ""
-             			cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
-             			refresh_field(["full_address","address_line2"])
-             		}
              	}  	
             });			
 		}
