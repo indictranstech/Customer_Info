@@ -126,6 +126,10 @@ payoff_details = Class.extend({
 		});
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
+       	if(flt(this.late_fees) > 0){
+       		me.fd.bonus.df.hidden=1;
+   			me.fd.bonus.refresh();
+       	}
 		this.agreements = agreements;
 		this.number_of_payments = number_of_payments;
 		me.get_amount_of_late_payment();
@@ -326,9 +330,9 @@ payoff_details = Class.extend({
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
 			me.add_in_receivables = value.balance - value.bonus;
-			if(flt(me.add_in_receivables) + flt(value.bonus) >= 0 && flt(value.bonus) > 0){
+			/*if(flt(me.add_in_receivables) + flt(value.bonus) >= 0 && flt(value.bonus) > 0){
 				me.add_in_receivables = 0	
-			}
+			}*/
 			me.hide_other_and_show_complete_payment();
 			me.click_on_submit();
 			console.log(me.add_in_receivables,"add_in_receivables")
