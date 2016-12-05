@@ -460,6 +460,7 @@ payoff_details = Class.extend({
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
+	       		console.log(r.message["completed_agreement_list"],"r.message[sssssssssssssssssssssssss]")
 	            if(r.message && r.message["completed_agreement_list"]){
 	            	msgprint(r.message["completed_agreement_list"]+"\n"+"Agreement Payoff successfully")
 	            }
