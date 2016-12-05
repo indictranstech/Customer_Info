@@ -36,8 +36,9 @@ def get_data(filters=None):
 							select sum(early_payments_bonus),
 							sum(new_agreement_bonus),
 							sum(payment_on_time_bonus) 
-							from `tabCustomer Agreement`;
-						""",as_list=1)
+							from `tabCustomer Agreement`
+							where agreement_status = "Open"
+						""",as_list=1,)
 
 	result[0].extend(frappe.db.sql("""
 						select 
@@ -72,8 +73,8 @@ def get_data(filters=None):
 
 def get_colums():
 	print "future_payments columns"
-	columns =  [("New agreement bonus") + ":Float:150"] + \
-				[("Early payments bonus") + ":Float:150"] + \
+	columns =  [("Early payments bonus") + ":Float:150"] + \
+				[("New agreement bonus") + ":Float:150"] + \
 				[("Payment on time bonus") + ":Float:150"] + \
 			[("Assign manual bonus") + ":Float:150"] + \
 			[("Total bonus accumulated") + ":Float:160"] + \
