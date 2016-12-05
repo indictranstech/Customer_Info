@@ -164,7 +164,7 @@ payments_received = Class.extend({
 				"late_fees":late_fees,//.toFixed(2),
 				"total": total//.toFixed(2) 
 	   		})
-			//console.log("__dict_of_payments_ids",__dict_of_payments_ids)
+			console.log("__dict_of_payments_ids",__dict_of_payments_ids)
 			return __dict_of_payments_ids
 		}
 		else{

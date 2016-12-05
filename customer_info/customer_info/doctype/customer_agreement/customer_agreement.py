@@ -82,8 +82,21 @@ class CustomerAgreement(Document):
 			#frappe.throw("Increase Payment Day")
 
 	def after_insert(self):
+		self.balance = self.monthly_rental_payment * float(self.agreement_period)
+		self.add_bonus_for_this_agreement()
 		self.comment_for_agreement_creation()
 		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
+
+
+	def add_bonus_for_this_agreement(self):
+		customer_agreement = frappe.db.get_value("Customer Agreement",{"customer":self.customer,"agreement_status":"Open"},"name")
+		if customer_agreement:
+			self.new_agreement_bonus = 20
+			self.bonus = 20
+			customer = frappe.get_doc("Customer",self.customer)
+			customer.bonus = customer.bonus + 20
+			customer.save(ignore_permissions=True)
+
 
 	def change_sold_date_on_agreement_creation(self):
 		item = frappe.get_doc("Item",self.product)
