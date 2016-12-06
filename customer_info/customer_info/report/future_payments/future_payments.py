@@ -16,22 +16,25 @@ def execute(filters=None):
 def get_data(filters):
 	now_date = datetime.now().date()
 	if filters:
-		result = frappe.db.sql("""select t1.due_date,t2.customer,t1.payment_id,
+		result = frappe.db.sql("""select 
+								t1.due_date,
+								t2.customer,
+								t1.payment_id,
 								t3.receivables,
 								t1.monthly_rental_amount,
-								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3 
+								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3
 								THEN format((DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02,2) ELSE 0 END AS late_fees,
 								"a",
-								replace(t1.payment_id,concat(t2.name,"-Payment "),'') as payment_id_number,																		
+								replace(t1.payment_id,concat(t2.name,"-Payment "),'') as payment_id_number,
 								replace(t2.name,"BK-",'') as agreement_number
 								from `tabPayments Record`t1,`tabCustomer Agreement`t2,
-								`tabCustomer`t3		 
-								where t1.parent = t2.name and t3.name = t2.customer 
-								and t2.name in  (select name from `tabCustomer Agreement`
+								`tabCustomer`t3
+								where t1.parent = t2.name and t3.name = t2.customer
+									and t2.name in  (select name from `tabCustomer Agreement`
 												where agreement_status = "Open")
-								and t1.check_box_of_submit != 1
-								{1}
-								order by agreement_number,t1.due_date  """ .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
+									and t1.check_box_of_submit != 1
+									{1}
+									order by agreement_number,t1.due_date  """ .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
 
 		total = ["","",""]
 		receivables = 0
@@ -42,12 +45,14 @@ def get_data(filters):
 		for l in result:
 			late_fees += float(l[5])
 			monthly_rental_amount += float(l[4])
-			total_due += (float(l[5]) + float(l[4]) + float(l[3]))
-			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
+			# total_due += (float(l[5]) + float(l[4]) + float(l[3]))
+			# l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
 			if l[1] in customer_list:
 				l[3] = 0
 			else:
 				customer_list.append(l[1])	
+			total_due += (float(l[5]) + float(l[4]) + float(l[3]))
+			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
 			receivables += float(l[3])
 			if float(l[3]) == 0: # for display purpose
 				l[3] = ""

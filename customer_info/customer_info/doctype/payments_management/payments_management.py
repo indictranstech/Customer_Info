@@ -51,12 +51,16 @@ def get_bonus_details(customer):
 
 
 @frappe.whitelist()
-def update_bonus(customer,bonus,assign_manual_bonus):
+def update_bonus(customer,bonus,assign_manual_bonus,payment_date):
 	customer = frappe.get_doc("Customer",customer)
 	if float(bonus) >= 0:
 		now_date = datetime.now().date()
 		comment = """ Bonus Modified From {1} To {2}""".format(now_date,customer.bonus,bonus)
 		#frappe.throw(_("{0}").format(comment))
+		customer_bonus_records = customer.append("customer_bonus_records")
+		customer_bonus_records.amount = assign_manual_bonus
+		customer_bonus_records.bonus_type = "Adding Manual Bonus"
+		customer_bonus_records.payment_date = payment_date
 		customer.add_comment("Comment",comment)
 		customer.bonus = bonus
 		customer.assign_manual_bonus = float(customer.assign_manual_bonus) + float(assign_manual_bonus) #float(bonus) - float(old_bonus)
@@ -71,7 +75,8 @@ def calculate_total_charges(customer,flag,payment_date):
 
 	if flag == "Customer" or flag == "Onload":
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "",
-						add_bonus_to_this_payment = 0	 
+						add_bonus_to_this_payment = 0,
+						bonus_type = ""	 
 						where check_box_of_submit = 0 
 						and parent in (select name from `tabCustomer Agreement`
 						where customer = '{0}' and agreement_status = "Open") """.format(customer))
@@ -335,7 +340,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	if flag != "Make Refund" and row_to_uncheck:
 		row_to_uncheck = json.loads(row_to_uncheck)
 	now_date = datetime.now().date()
-	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
+	#firstDay_next_month = date(now_date.year, now_date.month+1, 1)
 	
 	no_of_late_days = 0
 	late_payments = []
@@ -370,32 +375,34 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 			
 			if customer_agreement.customer_group == "Individual" and flag != "Payoff":
 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
-					print "\n\n\n\n\n",row.payment_id,"iside temporary_payments_update_to_child_table_of_customer_agreement"
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
-						'add_bonus_to_this_payment':1
+						'add_bonus_to_this_payment':1,
+						'bonus_type':"On Time Bonus"
 						})
 					row.save(ignore_permissions = True)
 
 				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
-					print "\n\n\n\n\n",row.payment_id,"iside temporary_payments_update_to_child_table_of_customer_agreement"
 					add_bonus_of_two_eur.append(row.idx)
 					row.update({
-						'add_bonus_to_this_payment':1
+						'add_bonus_to_this_payment':1,
+						'bonus_type':"Early Bonus"
 						})
 					row.save(ignore_permissions = True)
 				
 				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
 					remove_bonus_of_one_eur.append(row.idx)
 					row.update({
-						'add_bonus_to_this_payment':0
+						'add_bonus_to_this_payment':0,
+						'bonus_type':""
 						})
 					row.save(ignore_permissions = True)
 
 				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
 					remove_bonus_of_two_eur.append(row.idx)	
 					row.update({
-						'add_bonus_to_this_payment':0
+						'add_bonus_to_this_payment':0,
+						'bonus_type':""
 						})
 					row.save(ignore_permissions = True)
 
@@ -504,7 +511,7 @@ def update_on_submit(args):
 		elif len(submitted_payments_ids) == 1:
 			condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
 		frappe.db.sql("""update `tabPayments Record` 
-						set add_bonus_to_this_payment = 0
+						set add_bonus_to_this_payment = 0,bonus_type=""
 						{0} and add_bonus_to_this_payment=1""".format(condi),debug=1)	
 
 	frappe.db.sql("""update `tabPayments Record` 
@@ -598,6 +605,10 @@ def add_bonus_and_receivables_to_customer(args,flag):
 		if args['bonus'] > 0 and customer_doc.customer_group == "Individual":
 			#added_bonus = float(bonus) - customer_doc.bonus
 			now_date = datetime.now().date()
+			customer_bonus_records = customer_doc.append("customer_bonus_records")
+			customer_bonus_records.amount = float(args['used_bonus'])
+			customer_bonus_records.bonus_type = "Used Bonus"
+			customer_bonus_records.payment_date = args['payment_date']
 			customer_doc.update({
 				"bonus":float(args['bonus']),
 				"used_bonus":float(customer_doc.used_bonus) + float(args['used_bonus']),

@@ -3,7 +3,7 @@
 
 frappe.query_reports["Common bonus report"] = {
 	"filters": [
-		/*{
+		{
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
@@ -14,6 +14,6 @@ frappe.query_reports["Common bonus report"] = {
 			"label": __("To Date"),
 			"fieldtype": "Date",
 			"width": "80"
-		}*/
+		}
 	]
 }
