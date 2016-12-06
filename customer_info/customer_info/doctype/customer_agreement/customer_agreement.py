@@ -87,6 +87,7 @@ class CustomerAgreement(Document):
 		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
 		customer_agreement = frappe.get_doc("Customer Agreement",self.name)
 		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)		
+		customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
 
 	def add_bonus_for_this_agreement(self):
