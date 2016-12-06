@@ -193,16 +193,25 @@ payoff_details = Class.extend({
 			if($(me.fd.bonus.input).val() == ""){
 				me.dialog.set_value("bonus","0.0")	
 			}
-			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
-				me.init_for_commom_calculation();
+			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) 
+				&& (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
+				if (flt($(me.fd.bonus.input).val()) > -flt($(me.fd.balance.input).val())) {
+					me.dialog.set_value("bonus",-flt($(me.fd.balance.input).val()))	
+					me.init_for_commom_calculation();
+				}
+				else{
+					me.init_for_commom_calculation();
+				}
 			}
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) && (flt($(me.fd.bonus.input).val())) > flt(me.payable_by_bonus)) {
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
 				//msgprint(__("Bonus Is not Used For Late Payments \n Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
+				me.init_for_commom_calculation();
 				frappe.throw(__("Enter less then or Equal to {0} for bonus",[flt(me.payable_by_bonus).toFixed(2)]));
 			}
 			if(flt($(me.fd.bonus.input).val()) > cur_frm.doc.static_bonus){
 				cur_dialog.fields_dict.bonus.set_input("0.0")		
+				me.init_for_commom_calculation();
 				frappe.throw(__("Please Enter less then or Equal to {0} for bonus", [cur_frm.doc.static_bonus]));
 			}
 		})		
@@ -329,7 +338,7 @@ payoff_details = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.add_in_receivables.$input.click(function() {
 			value = me.dialog.get_values();
-			me.add_in_receivables = value.balance - value.bonus;
+			me.add_in_receivables = value.balance// - value.bonus;
 			/*if(flt(me.add_in_receivables) + flt(value.bonus) >= 0 && flt(value.bonus) > 0){
 				me.add_in_receivables = 0	
 			}*/
