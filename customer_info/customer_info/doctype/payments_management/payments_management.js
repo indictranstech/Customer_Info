@@ -495,7 +495,8 @@ edit_bonus = Class.extend({
 		        args: {
 		          "customer": cur_frm.doc.customer,
 		          "bonus":flt(me.dialog.fields_dict.bonus.$input.val()),
-		          "assign_manual_bonus":flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus)
+		          "assign_manual_bonus":flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus),
+			      "payment_date":cur_frm.doc.payment_date	
 		        },
 		        callback: function(r){
 		        	if(r.message){

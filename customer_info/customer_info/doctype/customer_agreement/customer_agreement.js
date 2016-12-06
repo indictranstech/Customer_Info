@@ -94,12 +94,12 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.old_merchandise_status = cur_frm.doc.merchandise_status
             refresh_field("old_merchandise_status")
         }
-        if(cur_frm.doc.agreement_period && cur_frm.doc.__islocal){
+        /*if(cur_frm.doc.agreement_period && cur_frm.doc.__islocal){
             cur_frm.doc.payments_left = cur_frm.doc.agreement_period
             refresh_field("payments_left")
-            //cur_frm.set_value("discounted_payments_left",cur_frm.doc.agreement_period)
-            //cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
-        }
+            cur_frm.set_value("discounted_payments_left",cur_frm.doc.agreement_period)
+            cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
+        }*/
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
         }

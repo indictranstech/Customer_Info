@@ -68,7 +68,7 @@ def get_colums():
 			  [("Product Category") + ":Link/Product Category:90"] + [("Product Model") + ":Link/Brand:90"] + \
 			  [("Serial number") + "::90"] + [("IMEI number") + "::90"] + \
 			  [("Purchase price with VAT") + ":Data:90"] + [("Purchase price without VAT") + ":Data:90"] + \
-			  [("Purchase Date") + ":Date:100"] + [("Sold Date") + ":Date:80"] + \
+			  [("Purchase Date") + ":Date:100"] + [("Merchandise transfer date") + ":Date:80"] + \
 			  [("Merchandise status") + "::90"]	+ [("Customer Agreement") + ":Link/Customer Agreement:90"] + [("Customer") + ":Link/Customer:90"] + \
 			  [("Last Comment") + ":Data:150"]	
 	return columns
