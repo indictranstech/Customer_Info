@@ -14,6 +14,7 @@ def get_data(filters=None):
 							COALESCE(sum(IF(bonus_type = "Early Bonus", add_bonus_to_this_payment*1, 0)),0) as early_bonus,
 							COALESCE(sum(IF(bonus_type = "On Time Bonus", add_bonus_to_this_payment*2, 0)),0) as on_time
 							from `tabPayments Record` where add_bonus_to_this_payment = 1
+							and check_box_of_submit = 1
 							and parent in (select name from `tabCustomer Agreement` where agreement_status="Open")
 							{1} """.format(get_condtion_for_date(filters.get('from_date'),filters.get('to_date')),get_condtion(filters.get('from_date'),filters.get('to_date'))),as_list=1)
 
