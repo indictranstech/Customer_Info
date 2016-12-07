@@ -193,10 +193,20 @@ payoff_details = Class.extend({
 			if($(me.fd.bonus.input).val() == ""){
 				me.dialog.set_value("bonus","0.0")	
 			}
-			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) 
+			/*if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) 
 				&& (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
 				if (flt($(me.fd.bonus.input).val()) > -flt($(me.fd.balance.input).val())) {
 					me.dialog.set_value("bonus",-flt($(me.fd.balance.input).val()))	
+					me.init_for_commom_calculation();
+				}
+				else{
+					me.init_for_commom_calculation();
+				}
+			}*/
+			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) 
+				&& (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
+				if (flt($(me.fd.bonus.input).val()) > flt(cur_frm.doc.total_charges)) {
+					me.dialog.set_value("bonus",flt(cur_frm.doc.total_charges))	
 					me.init_for_commom_calculation();
 				}
 				else{
