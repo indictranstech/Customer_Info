@@ -30,17 +30,15 @@ def get_data(filters):
 									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date < t2.suspension_date AND t1.due_date < '{1}'
 									THEN concat(t2.contact_result," ",t2.suspension_date) ELSE " " END AS contact_result,
 									t3.company_email_id_1																		
-									from `tabPayments Record`t1,`tabCustomer Agreement`t2,
-									`tabCustomer`t3		 
-									where t1.parent = t2.name and t3.name = t2.customer 
-									and t2.name in  (select name from `tabCustomer Agreement`
-													where agreement_status = "Open") 
-									and DATEDIFF('{0}',t1.due_date) >= 0
-									and CASE
-									WHEN t2.suspension_date THEN t2.suspension_date <= '{0}'
-									ELSE 1=1 END
-									and t1.check_box_of_submit != 1
-									order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
+									from `tabPayments Record`t1,`tabCustomer Agreement`t2, `tabCustomer`t3		 
+									where t1.parent = t2.name 
+										and t3.name = t2.customer
+										and t2.agreement_status = "Open"
+										and DATEDIFF('{0}',t1.due_date) >= 0
+										and CASE WHEN t2.suspension_date THEN t2.suspension_date <= '{0}'
+											ELSE 1=1 END
+										and t1.check_box_of_submit != 1
+											order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
 		for l in result:
 			if float(l[8]):
 				total_due = l[8] + l[3]
