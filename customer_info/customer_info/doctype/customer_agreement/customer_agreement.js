@@ -33,20 +33,21 @@ frappe.ui.form.on("Customer Agreement",{
                 },
              	callback: function(r){
                     if(r.message){
-                        cur_frm.doc.address = r.message[0]["name"],                        
-		          		cur_frm.doc.address_line1 = r.message[0]["address_line1"]
-		          		cur_frm.doc.city = r.message[0]["city"]
-		          		refresh_field(["address","address_line1","city"]);
+                        //cur_frm.set_value("address",r.message[0]['name'])
+                        cur_frm.set_value("address_line1",r.message[0]['address_line1'])
+                        cur_frm.set_value("city",r.message[0]['city'])
                         if(r.message[0]['address_line2']){
-                        cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["address_line2"] + "\n" + r.message[0]["city"]
-                        cur_frm.doc.address_line2 = r.message[0]["address_line2"]
-                        refresh_field(['full_address','address_line2'])
+                            cur_frm.set_value("address_line2",r.message[0]["address_line2"])
                         }
-                        if(!r.message[0]['address_line2']){
-                            cur_frm.doc.address_line2 = ""
-                            cur_frm.doc.full_address = r.message[0]["address_line1"] + "\n" + r.message[0]["city"]
-                            refresh_field(["full_address","address_line2"])
+                        else{
+                            cur_frm.set_value("address_line2","")
                         }
+                    }
+                    else{
+                        //cur_frm.set_value("address","")
+                        cur_frm.set_value("city","")
+                        cur_frm.set_value("address_line1","")
+                        cur_frm.set_value("address_line2","")   
                     }
              	}  	
             });			

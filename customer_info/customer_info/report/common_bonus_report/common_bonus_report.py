@@ -15,7 +15,7 @@ def get_data(filters=None):
 							COALESCE(sum(IF(bonus_type = "On Time Bonus", add_bonus_to_this_payment*2, 0)),0) as on_time
 							from `tabPayments Record` where add_bonus_to_this_payment = 1
 							and parent in (select name from `tabCustomer Agreement` where agreement_status="Open")
-							{1} """.format(get_condtion_for_date(filters.get('from_date'),filters.get('to_date')),get_condtion(filters.get('from_date'),filters.get('to_date'))),as_list=1,debug=1)
+							{1} """.format(get_condtion_for_date(filters.get('from_date'),filters.get('to_date')),get_condtion(filters.get('from_date'),filters.get('to_date'))),as_list=1)
 
 	result[0].extend(frappe.db.sql("""select
 											COALESCE(sum(IF(bonus_type = "Adding Manual Bonus",amount,0)),0) as manual_bonus,
@@ -24,7 +24,7 @@ def get_data(filters=None):
 											0
 											from `tabBonus Records` where
 											parent in (select name from `tabCustomer` where customer_group = "Individual") 
-											{0} """.format(get_condtion(filters.get('from_date'),filters.get('to_date'))),as_list=1,debug=1)[0])
+											{0} """.format(get_condtion(filters.get('from_date'),filters.get('to_date'))),as_list=1)[0])
 
 	if result:
 		result[0][4] = result[0][0]+result[0][1]+result[0][2]+result[0][3]
