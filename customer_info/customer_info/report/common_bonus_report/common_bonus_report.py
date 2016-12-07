@@ -66,8 +66,8 @@ def get_colums():
 	columns =  [("New agreement bonus") + ":Float:150"] + \
 				[("Early payments bonus") + ":Float:150"] + \
 				[("Payment on time bonus") + ":Float:150"] + \
-			[("Assign manual bonus") + ":Float:150"] + \
-			[("Total bonus accumulated") + ":Float:160"] + \
-			[("Used bonus") + ":Float:90"] + \
-			[("Active bonus") + ":Float:90"]
+				[("Assign manual bonus") + ":Float:150"] + \
+				[("Total bonus accumulated") + ":Float:160"] + \
+				[("Used bonus") + ":Float:90"] + \
+				[("Active bonus") + ":Float:90"]
 	return columns
