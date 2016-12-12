@@ -181,6 +181,9 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
+        if(cur_frm.doc.agreement_status == "Suspended" && !cur_frm.doc.__islocal){
+            cur_frm.set_value("suspended_from",frappe.datetime.nowdate())
+        }
     },
     agreement_closing_suspending_reason:function(frm){
         if(cur_frm.doc.agreement_closing_suspending_reason  == "Fraud/Stolen"){

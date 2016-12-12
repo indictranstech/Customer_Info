@@ -2,9 +2,11 @@
 {% include 'customer_info/customer_info/doctype/payments_management/payoff_details.js' %};
 
 Payments_Details = Class.extend({
-	init:function(item, index){
+	init:function(item, index, flag){
+		console.log(flag,"flag")
 		this.item = item;
 		this.index = index;
+		this.flag = flag
 		this.init_for_render_dialog();
 	},
 	init_for_render_dialog:function(){
@@ -33,6 +35,7 @@ Payments_Details = Class.extend({
 	},
 	render_payment_management:function(){
 		var me = this;
+		console.log("item",me.item,this.item,"eeeeeee")
 		var counter = 0
 		$('button[data-fieldname="pay_off_agreement"]').hide();
 		$('button[data-fieldname="s90_day_pay_Off"]').hide();
@@ -92,14 +95,18 @@ Payments_Details = Class.extend({
 					$(me.dialog.body).parent().find('.btn-primary').hide();
 			
 					if(r.message['summary_records']['cond'] == "pay off agreement"){
-						$('button[data-fieldname="pay_off_agreement"]').show();
-						me.values = r.message["summary_records"];
-						new payoff_details(me)
+						if(me.flag == "Open Agreement"){
+							$('button[data-fieldname="pay_off_agreement"]').show();
+							me.values = r.message["summary_records"];
+							new payoff_details(me);	
+						}
 					}
 					else if(r.message['summary_records']['cond'] == "90 day pay Off"){
-						$('button[data-fieldname="s90_day_pay_Off"]').show();
-						me.values = r.message["summary_records"];
-						new payoff_details(me)
+						if(me.flag == "Open Agreement"){
+							$('button[data-fieldname="s90_day_pay_Off"]').show();
+							me.values = r.message["summary_records"];
+							new payoff_details(me);
+						}
 					}
 					html = $(frappe.render_template("summary_record",{
         	   				"summary":r.message['summary_records'],
@@ -292,6 +299,11 @@ Payments_Details = Class.extend({
 	    }
 	},
 	add_date_on_check:function(){
+		var me = this;
+		if(me.flag == "Suspended Agreement"){
+			$(me.dialog.body).find('input[type="checkbox"]').prop( "disabled", true );
+			$(me.dialog.body).parent().find('.btn-primary').hide();
+		}
 		$('.select').change(function() {  
 		    var value = '"'+$(this).attr("value")+'"' 
 		    if ($(this).is(':checked')){

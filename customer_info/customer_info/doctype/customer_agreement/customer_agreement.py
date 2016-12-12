@@ -50,10 +50,13 @@ class CustomerAgreement(Document):
 			self.merchandise_status = "Used"
 		if self.agreement_status == "Suspended":
 			self.merchandise_status = "Suspended"
-		if self.agreement_closing_suspending_reason == "Fraud/Stolen":
+		if  self.agreement_status == "Suspended" and self.agreement_closing_suspending_reason == "Fraud/Stolen":
 			self.merchandise_status = "Stolen"
 		if self.agreement_status == "Open":
-			self.merchandise_status = "New"				
+			self.merchandise_status = "New"
+			self.agreement_closing_suspending_reason = ""
+			self.suspended_from = ""
+			self.agreement_close_date = ""				
 
 
 			
