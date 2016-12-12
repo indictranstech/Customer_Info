@@ -1,4 +1,5 @@
 {% include 'customer_info/customer_info/doctype/payments_management/payments_details.js' %};
+{% include 'customer_info/customer_info/doctype/payments_management/suspended_payments_grid.js' %};
 
 cur_frm.add_fetch('customer', 'first_name', 'first_name');
 cur_frm.add_fetch('customer', 'last_name', 'last_name');
@@ -20,7 +21,7 @@ frappe.ui.form.on("Payments Management", {
 	},
 	onload:function(frm){
 		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")
-		$(cur_frm.fields_dict.payments_grid.wrapper).empty()
+		$(cur_frm.fields_dict.payments_grid.wrapper).empty();
 		$(cur_frm.fields_dict.payments_grid.wrapper).append("<table width='100%>\
   		<tr>\
 		    <td valign='top' width='100%'>\
@@ -33,14 +34,16 @@ frappe.ui.form.on("Payments Management", {
 			get_bonus_link();
 			get_address_of_customer()
 			render_agreements();
+			render_suspended_agreements();
 		}
 	},
-	customer:function(){
+	customer:function(frm){
 		if(cur_frm.doc.customer){
 			get_bonus_link()
 			calculate_total_charges("Customer");
 			get_address_of_customer();			
 			render_agreements();
+			render_suspended_agreements();
 		}
 	},
 	/*static_bonus:function(){
@@ -91,6 +94,29 @@ frappe.ui.form.on("Payments Management", {
 	}
 })
 
+
+render_suspended_agreements = function(frm){
+	$(cur_frm.fields_dict.suspended_payments_grid.wrapper).empty();
+	var me = this
+	frappe.call({
+   		method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
+    	args: {
+      		"customer": cur_frm.doc.customer,
+      		"payment_date":cur_frm.doc.payment_date,
+      		"flag":"Suspended"
+    	},
+    	callback: function(r){
+			if(r.message){
+				console.log("dsdddd",r.message,r.message['list_of_agreement'],r.message['list_of_agreement'].length)
+				agreement_data = []
+				agreement_data = r.message;
+				if(r.message['list_of_agreement'].length > 0){
+					new suspended_payments(frm,agreement_data);
+				}
+			}
+		}
+	});	
+}
 
 get_bonus_link = function(){
 	console.log("callback from payoff_details")
@@ -355,7 +381,8 @@ make_grid= function(data1,columns,options){
         var item = dataView.getItem(args.row);
         if($(e.target).hasClass("detail")) {
             index = parseInt(index) + 1;
-        	new Payments_Details(item, index)
+            var flag = "Open Agreement"
+        	new Payments_Details(item,index,flag)
         }
         if($(e.target).hasClass("suspenison")) {
         	var id = $(e.target).attr('id')

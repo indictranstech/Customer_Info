@@ -262,8 +262,9 @@ def update_campaign_discount(agreement,campaign_discount):
 
 
 @frappe.whitelist()
-def get_customer_agreement(customer,payment_date):
+def get_customer_agreement(customer,payment_date,flag=None):
 	#WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
+	condition =  "and agreement_status = '{0}' ".format("Suspended" if flag else "Open") 
 	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
 										concat(product," ",product_category),number_of_payments,
@@ -278,7 +279,7 @@ def get_customer_agreement(customer,payment_date):
 										/* CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount */
 										CASE WHEN discount_updated = "Yes" THEN discount ELSE 0 END as campaign_discount
 										from `tabCustomer Agreement`
-										where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
+										where customer = '{0}' {1} """.format(customer,condition),as_list=1)
 	}
 	for entry in data['list_of_agreement']:
 		print entry[14],"eeeeeeeeeeeeeeee"
@@ -497,7 +498,7 @@ def update_on_submit(args):
 							and check_box_of_submit = 0 
 							and payment_date = '{1}' order by idx """.format(cond,args['payment_date']),as_dict=1)
 	
-	# checking  all payment done by bonus then update payments record
+	# checking  all payment done by bonus then update payments record remove new given bonus
 
 	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 		float(args['values']['discount']) == 0:
@@ -530,7 +531,8 @@ def update_on_submit(args):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		if customer_agreement.discount_updated == "Yes":
-			discount_amount += customer_agreement.campaign_discount
+			#discount_amount += customer_agreement.campaign_discount
+			discount_amount += customer_agreement.discount
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
 			completed_agreement_list.append(customer_agreement.name)		

@@ -126,7 +126,7 @@ payoff_details = Class.extend({
 		});
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
-       	if(flt(this.late_fees) > 0){
+       	if(flt(this.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0){
        		me.fd.bonus.df.hidden=1;
    			me.fd.bonus.refresh();
        	}
@@ -322,18 +322,18 @@ payoff_details = Class.extend({
 		        },
 		       	callback: function(r){
 					r.message = Number((flt(r.message)).toFixed(2))
-		       		sum_of_cash_card_transfer = flt(me.dialog.fields_dict.bank_transfer.$input.val()) + flt(me.dialog.fields_dict.bank_card.$input.val()) + flt(me.dialog.fields_dict.amount_paid_by_customer.$input.val())
-		       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer >= parseFloat(r.message)){
+		       		me.sum_of_cash_card_transfer = flt(me.dialog.fields_dict.bank_transfer.$input.val()) + flt(me.dialog.fields_dict.bank_card.$input.val()) + flt(me.dialog.fields_dict.amount_paid_by_customer.$input.val())
+		       		if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && me.sum_of_cash_card_transfer >= parseFloat(r.message)){
 			       		$('button[data-fieldname="process_payment"]').hide();
 					    $('button[data-fieldname="return_to_customer"]').hide();
 						$('button[data-fieldname="add_in_receivables"]').show();
-						html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" add in receivables</div>"
+						html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" so "+flt(value.balance)+" "+"add in receivables</div>"
 					    me.dialog.fields_dict.msg.$wrapper.empty()
 					    me.dialog.fields_dict.msg.$wrapper.append(html)
 					    me.click_on_add_in_receivables();
 					    me.click_on_return_to_customer();
 					}
-			       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && sum_of_cash_card_transfer < parseFloat(r.message)){
+			       	if(r.message && (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0) && me.sum_of_cash_card_transfer < parseFloat(r.message)){
 			       		html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative Cash should be >= "+" "+r.message+"</div>"
 		       			$('button[data-fieldname="add_in_receivables"]').hide();
 					    $('button[data-fieldname="return_to_customer"]').hide();
@@ -413,7 +413,6 @@ payoff_details = Class.extend({
 	update_on_payoff:function(data){
 		var me = this;
 		value = me.dialog.get_values();
-		console.log(me.old_instance,"me old_instance ")
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.payoff_submit",
 	       	args:{"args": {

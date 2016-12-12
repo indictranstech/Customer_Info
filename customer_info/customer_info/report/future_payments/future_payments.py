@@ -51,8 +51,8 @@ def get_data(filters):
 				l[3] = 0
 			else:
 				customer_list.append(l[1])	
-			total_due += (float(l[5]) + float(l[4]) + float(l[3]))
-			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
+			total_due += (float(l[5]) + float(l[4]) - float(l[3]))
+			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) - float(l[3]))
 			receivables += float(l[3])
 			if float(l[3]) == 0: # for display purpose
 				l[3] = ""
