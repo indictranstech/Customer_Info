@@ -126,6 +126,7 @@ payoff_details = Class.extend({
 		});
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
+       	console.log(this.late_fees,"late_fees my console 11111")
        	if(flt(this.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0){
        		me.fd.bonus.df.hidden=1;
    			me.fd.bonus.refresh();
@@ -469,16 +470,22 @@ payoff_details = Class.extend({
 	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){	
 	       			//cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
+	       			console.log("in only bonus")
 	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) + flt(value.balance)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
+	       		}
+	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0){
+	       			console.log("in late fee and negative receivables")
+	       			var bonus_val = flt(cur_frm.doc.static_bonus)
+	       			cur_frm.set_value("bonus",bonus_val)
+	       			cur_frm.set_value("static_bonus",bonus_val)
 	       		}
 	       		else{
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
-	       		console.log(r.message["completed_agreement_list"],"r.message[sssssssssssssssssssssssss]")
 	            if(r.message && r.message["completed_agreement_list"]){
 	            	msgprint(r.message["completed_agreement_list"]+"\n"+"Agreement Payoff successfully")
 	            }

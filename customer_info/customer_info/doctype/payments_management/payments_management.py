@@ -502,18 +502,14 @@ def update_on_submit(args):
 
 	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 		float(args['values']['discount']) == 0:
-		submitted_payments_ids = []
-		for d in submitted_payments_ids_info:	
-			submitted_payments_ids.append(d["payment_id"])
+		remove_new_bonus(submitted_payments_ids_info)
+		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
+		args['new_bonus'] = 0
 
-		submitted_payments_ids = tuple([x.encode('UTF8') for x in submitted_payments_ids if x])	
-		if len(submitted_payments_ids) > 1:
-			condi = "where payment_id in {0}".format(submitted_payments_ids)
-		elif len(submitted_payments_ids) == 1:
-			condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
-		frappe.db.sql("""update `tabPayments Record` 
-						set add_bonus_to_this_payment = 0,bonus_type=""
-						{0} and add_bonus_to_this_payment=1""".format(condi),debug=1)	
+	if float(args['late_fees']) > 0 or float(args['receivables']) < 0:
+		remove_new_bonus(submitted_payments_ids_info)
+		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
+		args['new_bonus'] = 0
 
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1
@@ -555,6 +551,26 @@ def update_on_submit(args):
 	args['total_amount'] = 0
 	make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount)	
 	return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "","used_bonus_of_customer":used_bonus_of_customer}
+
+
+"""remove newly added bonus of payments"""
+
+def remove_new_bonus(submitted_payments_ids_info):
+	submitted_payments_ids = []
+	for d in submitted_payments_ids_info:	
+		submitted_payments_ids.append(d["payment_id"])
+
+	submitted_payments_ids = tuple([x.encode('UTF8') for x in submitted_payments_ids if x])	
+	if len(submitted_payments_ids) > 1:
+		condi = "where payment_id in {0}".format(submitted_payments_ids)
+	elif len(submitted_payments_ids) == 1:
+		condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
+	frappe.db.sql("""update `tabPayments Record` 
+					set add_bonus_to_this_payment = 0,bonus_type=""
+					{0} and add_bonus_to_this_payment=1""".format(condi))
+
+
+
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
