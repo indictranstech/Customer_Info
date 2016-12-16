@@ -20,7 +20,7 @@ suspended_payments = Class.extend({
 		var me = this;
 		var suspended_payments_grid;
 		var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
-			return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
+			return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail-suspended' style='height:20px;padding: 0px;width: 70px;'; />";    
 		}
 		/*var buttonFormat_suspension = function (row, cell, value, columnDef, dataContext) {
 			var id = "mybutton" + String(row);
@@ -99,9 +99,9 @@ suspended_payments = Class.extend({
 	        };
 	    }
 
-	    dataView = new Slick.Data.DataView();  
+	    dataView_suspended = new Slick.Data.DataView();  
 
-		suspended_payments_grid = new Slick.Grid("#suspended_payments_grid", dataView, me.suspended_columns, me.suspended_options);
+		suspended_payments_grid = new Slick.Grid("#suspended_payments_grid", dataView_suspended, me.suspended_columns, me.suspended_options);
 	      
 	    // for row header filters
 	    var columnFilters = []
@@ -117,12 +117,12 @@ suspended_payments = Class.extend({
 	    	return true;
 	  	}	
 
-	    dataView.onRowCountChanged.subscribe(function (e, args) {
+	    dataView_suspended.onRowCountChanged.subscribe(function (e, args) {
 	      suspended_payments_grid.updateRowCount();
 	      suspended_payments_grid.render();
 	    });
 
-	    dataView.onRowsChanged.subscribe(function (e, args) {
+	    dataView_suspended.onRowsChanged.subscribe(function (e, args) {
 	      suspended_payments_grid.invalidateRows(args.rows);
 	      suspended_payments_grid.render();
 	    });
@@ -131,7 +131,7 @@ suspended_payments = Class.extend({
 	      var columnId = $(this).data("columnId");
 	      if (columnId != null) {
 	        columnFilters[columnId] = $.trim($(this).val());
-	        dataView.refresh();
+	        dataView_suspended.refresh();
 	      }
 	    });
 
@@ -147,14 +147,14 @@ suspended_payments = Class.extend({
 	   	
 	   	//
 
-	    dataView.beginUpdate();
-	    dataView.setItems(grid_data);
-	    dataView.endUpdate();
+	    dataView_suspended.beginUpdate();
+	    dataView_suspended.setItems(grid_data);
+	    dataView_suspended.endUpdate();
 
 
 		suspended_payments_grid.onClick.subscribe(function (e, args) {
-	        var item = dataView.getItem(args.row);
-	        if($(e.target).hasClass("detail")) {
+	        var item = dataView_suspended.getItem(args.row);
+	        if($(e.target).hasClass("detail-suspended")) {
 	            index = parseInt(index) + 1;
 	        	 var flag = "Suspended Agreement"
 	        	new Payments_Details(item, index,flag)

@@ -47,7 +47,6 @@ Payments_Details = Class.extend({
 	},
 	common_function_for_render_templates:function(){
 		var me = this;
-		console.log(me.item,"ttttttttttttttttt")
 		frappe.call({
 			method:"customer_info.customer_info.doctype.payments_management.payments_management.get_payments_record",
 			args:{

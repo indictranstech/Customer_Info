@@ -20,7 +20,7 @@ class PaymentsManagement(Document):
 	pass
 
 @frappe.whitelist()
-def get_bonus_details(customer):
+def get_bonus_summary(customer):
 	"""
 	update early_payments_bonus and payment_on_time_bonus
 
@@ -431,7 +431,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 
 	if customer_agreement.payments_record and customer_agreement.date:
-		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
+		#customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
 		customer_agreement.total_late_payments = sum(late_payments)
 		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
