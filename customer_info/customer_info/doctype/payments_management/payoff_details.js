@@ -329,7 +329,8 @@ payoff_details = Class.extend({
 			       		$('button[data-fieldname="process_payment"]').hide();
 					    $('button[data-fieldname="return_to_customer"]').hide();
 						$('button[data-fieldname="add_in_receivables"]').show();
-						html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" so "+flt(value.balance)+" "+"add in receivables</div>"
+						//html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" so "+flt(value.balance)+" "+"add in receivables</div>"
+					    html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= Add "+flt(value.balance)+" "+" in receivables</div>"
 					    me.dialog.fields_dict.msg.$wrapper.empty()
 					    me.dialog.fields_dict.msg.$wrapper.append(html)
 					    me.click_on_add_in_receivables();
@@ -477,7 +478,7 @@ payoff_details = Class.extend({
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
-	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0){
+	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0 || flt(me.add_in_receivables) < 0){
 	       			console.log("in late fee and negative receivables")
 	       			var bonus_val = flt(cur_frm.doc.static_bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_val)

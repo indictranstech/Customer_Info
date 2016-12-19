@@ -457,7 +457,7 @@ bonus_summary = Class.extend({
 						"total_bonus_accumulated":total_bonus_accumulated,
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus,
 						"used_bonus":cur_frm.doc.used_bonus,
-						"active_bonus":flt(total_bonus_accumulated) - cur_frm.doc.used_bonus
+						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2)
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}
