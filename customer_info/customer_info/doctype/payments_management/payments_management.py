@@ -20,13 +20,13 @@ class PaymentsManagement(Document):
 	pass
 
 @frappe.whitelist()
-def get_bonus_details(customer):
+def get_bonus_summary(customer):
 	"""
 	update early_payments_bonus and payment_on_time_bonus
 
 	"""
 	for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
-					 filters={"agreement_status":"Open","customer":customer})]:
+					 filters={"customer":customer})]:
 		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
 		# print frappe.db.sql("""select payment_id from `tabPayments Record` 
 		# 	where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
@@ -44,8 +44,7 @@ def get_bonus_details(customer):
 			""".format(agreement['name']),as_list=1)[0][0]		
 		agreement_doc.save(ignore_permissions=True)
 
-	return frappe.db.get_values("Customer Agreement",{"agreement_status":"Open",\
-								"customer":customer},["name","new_agreement_bonus",\
+	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
 
 
@@ -431,7 +430,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 
 	if customer_agreement.payments_record and customer_agreement.date:
-		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
+		#customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments) - len(submitable_payments)
 		customer_agreement.total_late_payments = sum(late_payments)
 		customer_agreement.late_payment = sum(late_payments)
 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
@@ -502,18 +501,14 @@ def update_on_submit(args):
 
 	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 		float(args['values']['discount']) == 0:
-		submitted_payments_ids = []
-		for d in submitted_payments_ids_info:	
-			submitted_payments_ids.append(d["payment_id"])
+		remove_new_bonus(submitted_payments_ids_info)
+		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
+		args['new_bonus'] = 0
 
-		submitted_payments_ids = tuple([x.encode('UTF8') for x in submitted_payments_ids if x])	
-		if len(submitted_payments_ids) > 1:
-			condi = "where payment_id in {0}".format(submitted_payments_ids)
-		elif len(submitted_payments_ids) == 1:
-			condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
-		frappe.db.sql("""update `tabPayments Record` 
-						set add_bonus_to_this_payment = 0,bonus_type=""
-						{0} and add_bonus_to_this_payment=1""".format(condi),debug=1)	
+	if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
+		remove_new_bonus(submitted_payments_ids_info)
+		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
+		args['new_bonus'] = 0
 
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1
@@ -526,12 +521,14 @@ def update_on_submit(args):
 	completed_agreement_list = []
 	merchandise_status = ""
 	discount_amount = 0
+	campaign_discount_of_agreements = ""
 	late_fees_updated_status = ""
 	for agreement in [agreement[0] for agreement in agreements]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		if customer_agreement.discount_updated == "Yes":
 			#discount_amount += customer_agreement.campaign_discount
+			campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
 			discount_amount += customer_agreement.discount
 		set_values_in_agreement_on_submit(customer_agreement)
 		if float(customer_agreement.payments_left) == 0:
@@ -553,8 +550,28 @@ def update_on_submit(args):
 
 	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
 	args['total_amount'] = 0
-	make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount)	
+	make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
 	return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "","used_bonus_of_customer":used_bonus_of_customer}
+
+
+"""remove newly added bonus of payments"""
+
+def remove_new_bonus(submitted_payments_ids_info):
+	submitted_payments_ids = []
+	for d in submitted_payments_ids_info:	
+		submitted_payments_ids.append(d["payment_id"])
+
+	submitted_payments_ids = tuple([x.encode('UTF8') for x in submitted_payments_ids if x])	
+	if len(submitted_payments_ids) > 1:
+		condi = "where payment_id in {0}".format(submitted_payments_ids)
+	elif len(submitted_payments_ids) == 1:
+		condi = "where payment_id = '{0}'".format(submitted_payments_ids[0])	
+	frappe.db.sql("""update `tabPayments Record` 
+					set add_bonus_to_this_payment = 0,bonus_type=""
+					{0} and add_bonus_to_this_payment=1""".format(condi))
+
+
+
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
@@ -589,7 +606,6 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.late_payment = 0
 		customer_agreement.discount_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
-		#customer_agreement.discounted_payments_left = len(customer_agreement.payments_record) - len(payment_made)
 		if customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
 			customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment

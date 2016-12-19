@@ -262,11 +262,12 @@ render_agreements = function(flag){
             },
             callback: function(r){
 				if(r.message){
+					console.log(r.message,"r.message1111222333")
 					this.data = r.message;
 					make_grid(r.message,columns,options)
 					if(flag == "from_late_fees"){
 						var total_due_amount = 0
-			        	$.each($(".slick-row"),function(i,d){
+			        	$.each($("#payments_grid").find(".slick-row"),function(i,d){
 							total_due_amount += flt($($(d).children()[10]).text())
 						});
 						console.log(total_due_amount,"total_due_amount")
@@ -286,7 +287,7 @@ render_agreements = function(flag){
 					refresh_field("payment_management_record");*/
 
 					if(cur_frm.doc.customer_agreement){
-						$.each($(".slick-row"),function(i,d){
+						$.each($("#payments_grid").find(".slick-row"),function(i,d){
 							console.log(String($($(d).children()[13]).find(".detail").attr("agreement")))
 							if(String($($(d).children()[13]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
@@ -420,12 +421,12 @@ bonus_summary = Class.extend({
 	},
 	render_bonus_summary:function(){
 		var me = this;
-		me.get_bonus_details()
+		me.get_bonus_summary()
 	},
-	get_bonus_details:function(){
+	get_bonus_summary:function(){
 		var me =this;
 		frappe.call({
-		   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_details",
+		   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
 			args: {
 				"customer":	cur_frm.doc.customer
 			},
@@ -456,7 +457,7 @@ bonus_summary = Class.extend({
 						"total_bonus_accumulated":total_bonus_accumulated,
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus,
 						"used_bonus":cur_frm.doc.used_bonus,
-						"active_bonus":flt(total_bonus_accumulated) - cur_frm.doc.used_bonus
+						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2)
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}
@@ -499,8 +500,19 @@ edit_bonus = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.bonus.set_input(me.bonus)
 		me.dialog.show();
+		me.trigger_bonus();
 		me.update_bonus();
 		me.add_comment();
+	},
+	trigger_bonus:function(){
+		var me = this;
+		$(me.dialog.fields_dict.bonus.input).change(function(){
+			console.log("inside bonus change")
+			if(flt($(this).val()) < flt(me.bonus)){
+				me.dialog.fields_dict.bonus.set_input(me.bonus)
+				frappe.throw(__("Enter Amount greater or Equal to {0} for bonus",[flt(me.bonus).toFixed(2)]));
+			}
+		})
 	},
 	add_comment:function(){
 		var me = this;
@@ -516,30 +528,35 @@ edit_bonus = Class.extend({
 	update_bonus:function(){
 		var me = this;
 		me.dialog.fields_dict.update_bonus.$input.click(function() {
-			console.log(me.dialog.fields_dict.bonus.$input.val(),"bonus value")
-			frappe.call({
-		        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
-		        args: {
-		          "customer": cur_frm.doc.customer,
-		          "bonus":flt(me.dialog.fields_dict.bonus.$input.val()),
-		          "assign_manual_bonus":flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus),
-			      "payment_date":cur_frm.doc.payment_date	
-		        },
-		        callback: function(r){
-		        	if(r.message){
-		        		cur_frm.set_value("notes_on_customer_payments"," ["+user+"] "+r.message)
-						$('button[data-fieldname="add_notes"]').click();
-		        		cur_frm.set_value("notes_on_customer_payments","")
-		        		var assign_manual_bonus = cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus))
-		    			cur_frm.set_value("assign_manual_bonus",assign_manual_bonus)
-		        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
-		        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(cur_frm.doc.assign_manual_bonus));
-		    			msgprint("Bonus Updated");
-		    			me.dialog.hide();
-		    			get_bonus_link();
-		        	}
-		    	}	
-    		});
+			if(me.dialog.fields_dict.bonus.$input.val() && !me.dialog.fields_dict.bonus.$input.val() < me.bonus){
+				console.log(me.dialog.fields_dict.bonus.$input.val(),"bonus value")
+				frappe.call({
+			        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
+			        args: {
+			          "customer": cur_frm.doc.customer,
+			          "bonus":flt(me.dialog.fields_dict.bonus.$input.val()),
+			          "assign_manual_bonus":flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus),
+				      "payment_date":cur_frm.doc.payment_date	
+			        },
+			        callback: function(r){
+			        	if(r.message){
+			        		cur_frm.set_value("notes_on_customer_payments"," ["+user+"] "+r.message)
+							$('button[data-fieldname="add_notes"]').click();
+			        		cur_frm.set_value("notes_on_customer_payments","")
+			        		var assign_manual_bonus = cur_frm.doc.assign_manual_bonus+(flt(me.dialog.fields_dict.bonus.$input.val()) - flt(cur_frm.doc.static_bonus))
+			    			cur_frm.set_value("assign_manual_bonus",assign_manual_bonus)
+			        		cur_frm.set_value("static_bonus",flt(me.dialog.fields_dict.bonus.$input.val()));
+			        		cur_frm.set_value("bonus",flt(cur_frm.doc.bonus)+flt(cur_frm.doc.assign_manual_bonus));
+			    			msgprint("Bonus Updated");
+			    			me.dialog.hide();
+			    			get_bonus_link();
+			        	}
+			    	}	
+	    		});
+			}
+			else{
+				frappe.throw(__("Enter Amount greater or Equal to {0} for bonus",[flt(me.bonus).toFixed(2)]));
+			}
 		})
 	}
 });	
@@ -869,7 +886,7 @@ call_commit = Class.extend({
 		me.dialog.fields_dict.amount.set_input("")
 		var agreements_name = []
 		if(me.item == "Common"){
-			$.each($(".slick-row"),function(i,d){
+			$.each($("#payments_grid").find(".slick-row"),function(i,d){
 				agreements_name.push($($(d).children()[0]).text())
 			});
 		}	

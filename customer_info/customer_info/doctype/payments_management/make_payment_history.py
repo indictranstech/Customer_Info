@@ -3,7 +3,7 @@ from datetime import datetime,date
 import frappe
 
 #def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,new_bonus=None):
-def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None):	
+def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,campaign_discount_of_agreements=None):	
 	payment_date = datetime.strptime(args['payment_date'], '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(args['values']['amount_paid_by_customer'])
@@ -13,6 +13,7 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 	payments_history.new_bonus = args['new_bonus']
 	payments_history.discount = float(args['values']['discount'])
 	payments_history.campaign_discount = float(discount_amount) if discount_amount else 0
+	payments_history.campaign_discount_of_agreements = campaign_discount_of_agreements if campaign_discount_of_agreements else ""
 	payments_history.rental_payment = args['rental_payment']
 	payments_history.late_fees = args['late_fees']
 	payments_history.customer = args['customer']
@@ -42,9 +43,9 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 	bonus = float(args['values']['bonus']) if args['values']['bonus'] else 0
 	total_transaction_amount = float(args['values']['amount_paid_by_customer']) + float(args['values']['bank_card']) + float(args['values']['bank_transfer']) + float(bonus)
 	if payment_type == "Payoff":
-		total_calculated_payment_amount = float(total_amount)
+		total_calculated_payment_amount = float(args['total_amount'])
 	else:	
-		total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])-float(args['receivables'])-float(bonus)- float(args['values']['discount'])
+		total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])-float(args['receivables'])-float(bonus) - float(args['values']['discount'])
 	pmt = "Split"
 
 	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) > 0:
