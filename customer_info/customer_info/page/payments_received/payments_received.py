@@ -36,10 +36,10 @@ def get_payments_details(customer,from_date,to_date):
 
 	
 	data = frappe.db.sql("""select payment_date,customer,payoff_cond,
-								format(rental_payment,2) as rental_payments,
+								format(rental_payment+campaign_discount,2) as rental_payments,
 								format(1*late_fees,2) as late_fees,receivables,
 								CASE WHEN payoff_cond = "Rental Payment" 
-								THEN format(rental_payment+late_fees-receivables-bonus-discount-campaign_discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
+								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 	    						format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated
