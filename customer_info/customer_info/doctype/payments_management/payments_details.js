@@ -300,9 +300,18 @@ Payments_Details = Class.extend({
 	add_date_on_check:function(){
 		var me = this;
 		if(me.flag == "Suspended Agreement"){
-			$(me.dialog.body).find('input[type="checkbox"]').prop( "disabled", true );
+			$.each($('input.select'), function(i, d) {
+				if($(d).attr('checked')){
+					$(d).prop("disabled", false);
+				}
+				else{
+					$(d).prop("disabled", true);
+				}
+			});
 			$(me.dialog.body).parent().find('.btn-primary').hide();
 		}
+			
+
 		$('.select').change(function() {  
 		    var value = '"'+$(this).attr("value")+'"' 
 		    if ($(this).is(':checked')){

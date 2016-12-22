@@ -264,6 +264,7 @@ def update_campaign_discount(agreement,campaign_discount):
 def get_customer_agreement(customer,payment_date,flag=None):
 	#WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
 	condition =  "and agreement_status = '{0}' ".format("Suspended" if flag else "Open") 
+	suspended_until_date = ",suspended_until" if flag else ""
 	data = {
 	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
 										concat(product," ",product_category),number_of_payments,
@@ -276,12 +277,12 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										END AS suspension_date,
 										concat(format(discount,2),"-",format(campaign_discount,2),"-",format(discounted_payments_left,2),"-",discount_updated) as discounted_payments_left,
 										/* CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount */
-										CASE WHEN discount_updated = "Yes" THEN discount ELSE 0 END as campaign_discount
+										CASE WHEN discount_updated = "Yes" THEN discount ELSE 0 END as campaign_discount {2}
 										from `tabCustomer Agreement`
-										where customer = '{0}' {1} """.format(customer,condition),as_list=1)
+										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1,debug=1)
 	}
 	for entry in data['list_of_agreement']:
-		print entry[14],"eeeeeeeeeeeeeeee"
+		print entry[14],"eeeeeeeeeeeeeeee",entry[1],"\n\n\n\n\n"
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
@@ -500,12 +501,14 @@ def update_on_submit(args):
 	# checking  all payment done by bonus then update payments record remove new given bonus
 
 	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
-		float(args['values']['discount']) == 0:
+		float(args['values']['discount']) and float(args['values']['bonus']) > 0:
+		print "inside 1","\n\n\n\n\n\n"
 		remove_new_bonus(submitted_payments_ids_info)
 		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
 		args['new_bonus'] = 0
 
 	if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
+		print "inside 2","\n\n\n\n\n\n"
 		remove_new_bonus(submitted_payments_ids_info)
 		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
 		args['new_bonus'] = 0
@@ -544,15 +547,18 @@ def update_on_submit(args):
 
 	payments_detalis_list = []
 	payment_ids_list = []
-	for d in submitted_payments_ids_info:
-		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
-		payment_ids_list.append(d["payment_id"])
+	if submitted_payments_ids_info:
+		for d in submitted_payments_ids_info:
+			payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
+			payment_ids_list.append(d["payment_id"])
 
-	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
-	args['total_amount'] = 0
-	make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
-	return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "","used_bonus_of_customer":used_bonus_of_customer}
-
+		#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
+		args['total_amount'] = 0
+		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
+		return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "","used_bonus_of_customer":used_bonus_of_customer}
+	else:
+		args['total_amount'] = 0
+		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
 
 """remove newly added bonus of payments"""
 
@@ -711,8 +717,9 @@ def payoff_submit(args):
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "90d SAC"
+
 	if agreement.discount_updated == "Yes":
-		discount_amount = agreement.campaign_discount	
+		discount_amount = agreement.discount	
 	if agreement.late_fees_updated == "Yes":
 		late_fees_updated_status = "Yes"
 		agreement.late_fees_updated = "No"

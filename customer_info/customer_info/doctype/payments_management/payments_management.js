@@ -111,7 +111,11 @@ render_suspended_agreements = function(frm){
 				agreement_data = []
 				agreement_data = r.message;
 				if(r.message['list_of_agreement'].length > 0){
+					cur_frm.set_df_property("suspended_agreement_detail","hidden",0)
 					new suspended_payments(frm,agreement_data);
+				}
+				else{
+					cur_frm.set_df_property("suspended_agreement_detail","hidden",1)
 				}
 			}
 		}
@@ -261,9 +265,11 @@ render_agreements = function(flag){
               "payment_date":cur_frm.doc.payment_date
             },
             callback: function(r){
-				if(r.message){
+				if(r.message && r.message['list_of_agreement'].length > 0){
 					console.log(r.message,"r.message1111222333")
 					this.data = r.message;
+					cur_frm.set_df_property("open_agreements","hidden",0)
+					cur_frm.set_df_property("process_payment_section","hidden",0)
 					make_grid(r.message,columns,options)
 					if(flag == "from_late_fees"){
 						var total_due_amount = 0
@@ -296,6 +302,10 @@ render_agreements = function(flag){
 						});
 					}
 				}
+				else{
+					cur_frm.set_df_property("open_agreements","hidden",1)
+					cur_frm.set_df_property("process_payment_section","hidden",1)
+				}	
 			}
     });
 }
