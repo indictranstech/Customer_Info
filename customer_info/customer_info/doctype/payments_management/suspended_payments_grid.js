@@ -51,6 +51,7 @@ suspended_payments = Class.extend({
 
 		me.suspended_columns = [
 		    {id: "agreement_no", name: "Agreement No", field: "agreement_no",width: 80,toolTip: "Agreement No"},
+		    {id: "suspended_until", name: "Suspended Until", field: "suspended_until",width: 80,toolTip: "Suspended Until"},
 		    {id: "agreement_period", name: "Agreement Period", field: "agreement_period",width: 80,toolTip: "Agreement Period"},
 		    {id: "product", name: "Product", field: "product",width: 120,toolTip: "Product"},
 		    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 70,toolTip: "# of Payments"},
@@ -83,6 +84,7 @@ suspended_payments = Class.extend({
 	          	id : me.agreement_data.list_of_agreement[i][0],	
 	          	/*serial:i,*/	
 	            agreement_no: me.agreement_data.list_of_agreement[i][0],
+	            suspended_until: me.agreement_data.list_of_agreement[i][15],
 	            agreement_period: me.agreement_data.list_of_agreement[i][1],
 	            product: me.agreement_data.list_of_agreement[i][2],
 	            number_of_payments: me.agreement_data.list_of_agreement[i][3],

@@ -389,7 +389,8 @@ payoff_details = Class.extend({
 				me.update_payments_records();
 			}
 			else if(me.old_instance == "Process Payments" && me.number_of_payments == 0){
-				frappe.throw("Please Add Any Payment")
+				//frappe.throw("Please Add Any Payment")
+				me.update_payments_records();
 			}
 			else{
 				me.payoff_submit();	

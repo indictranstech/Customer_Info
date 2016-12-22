@@ -38,18 +38,20 @@ max-height: 400px;
                               <th>Total</th>
                               <!-- <th><input class= "refund" type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></input></th> -->
                             </tr>
-                            {% for(var j=0, le=data[i]["payments_ids"].length; j < le; j++) { %}
-                            <tr>
-                                {% if (data[i]["payoff_cond"] == "Rental Payment") { %}
-                                <td class = {{ data[i]["refund"] }} >{{ data[i]["payments_ids"][j]["payments_id"] }}</td>
-                                {% } else { %}
-                                <td class = {{ data[i]["refund"] }} payment-ids = {{ data[i]["payments_ids"][j]["payment_id_list"] }} >{{ data[i]["payments_ids"][j]["payments_id"] }}</td>
+                            {% if (data[i]["payment_type"] != "Modification Of Receivables") { %}
+                                {% for(var j=0, le=data[i]["payments_ids"].length; j < le; j++) { %}
+                                <tr>
+                                    {% if (data[i]["payoff_cond"] == "Rental Payment") { %}
+                                    <td class = {{ data[i]["refund"] }} >{{ data[i]["payments_ids"][j]["payments_id"] }}</td>
+                                    {% } else { %}
+                                    <td class = {{ data[i]["refund"] }} payment-ids = {{ data[i]["payments_ids"][j]["payment_id_list"] }} >{{ data[i]["payments_ids"][j]["payments_id"] }}</td>
+                                    {% } %}
+                                    <td>{{ data[i]["payments_ids"][j]["due_date"] }}</td>
+                                    <td>{{ data[i]["payments_ids"][j]["rental_payment"] }}</td>
+                                    <td>{{ data[i]["payments_ids"][j]["late_fees"] }}</td>
+                                    <td>{{ data[i]["payments_ids"][j]["total"] }}</td>
+                                </tr>
                                 {% } %}
-                                <td>{{ data[i]["payments_ids"][j]["due_date"] }}</td>
-                                <td>{{ data[i]["payments_ids"][j]["rental_payment"] }}</td>
-                                <td>{{ data[i]["payments_ids"][j]["late_fees"] }}</td>
-                                <td>{{ data[i]["payments_ids"][j]["total"] }}</td>
-                            </tr>
                             {% } %}
                         </table>
                     <!-- <div class="table">

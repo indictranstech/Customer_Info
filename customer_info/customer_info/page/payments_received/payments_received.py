@@ -42,9 +42,8 @@ def get_payments_details(customer,from_date,to_date):
 								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 	    						format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
-								late_fees_updated
+								late_fees_updated,payment_type
 								from `tabPayments History` {0}
-								and payments_ids is not null
 								order by payment_date asc """.format(cond),as_dict=1,debug=1)
 
 
@@ -101,75 +100,76 @@ def make_refund_payment(payments_ids,ph_name):
 	payments_id_list = []
 	agreement_list = []
 	merchandise_status_list= []
-	for i in payments_ids:
-		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
-							payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="",
-							total_transaction_amount = 0 
-							where check_box_of_submit = 1 
-							and payment_id = '{0}' """.format(i))
-		payments_id_list.append(i)
-		agreement_list.append(i.split("-P")[0])
-	agreement_list =  list(set(agreement_list))
-	if agreement_list:
-		agreement_list = [x.encode('UTF8') for x in agreement_list if x]
-	flag = "Make Refund"
-	agreement_list.sort()
+	if len(payments_ids) > 0:
+		for i in payments_ids:
+			frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
+								payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="",
+								total_transaction_amount = 0 
+								where check_box_of_submit = 1 
+								and payment_id = '{0}' """.format(i))
+			payments_id_list.append(i)
+			agreement_list.append(i.split("-P")[0])
+		agreement_list =  list(set(agreement_list))
+		if agreement_list:
+			agreement_list = [x.encode('UTF8') for x in agreement_list if x]
+		flag = "Make Refund"
+		agreement_list.sort()
 
-	merchandise_status = payment_history.merchandise_status
-	if merchandise_status and payment_history.payment_type == "Normal Payment":
-		merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
-		merchandise_status_list.sort()
-
-
-	campaign_discount_of_agreements = payment_history.campaign_discount_of_agreements
-	if campaign_discount_of_agreements and payment_history.payment_type == "Normal Payment":
-		campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
-		campaign_discount_of_agreements_list.sort()	
-			
+		merchandise_status = payment_history.merchandise_status
+		if merchandise_status and payment_history.payment_type == "Normal Payment":
+			merchandise_status_list = [x.encode('UTF8') for x in merchandise_status.split(",")[0:-1] if x]	
+			merchandise_status_list.sort()
 
 
-	refund_bonus = []	
-	for i,agreement in enumerate(agreement_list):
-		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		set_values_in_agreement_on_submit(customer_agreement)
-		item_doc = frappe.get_doc("Item",customer_agreement.product)
-		if payment_history.payment_type == "Payoff Payment":
-			payment_history.payoff_cond = ""
-			item_doc.sold_date = item_doc.old_sold_date
-			item_doc.old_sold_date = item_doc.old_sold_date
-			item_doc.save(ignore_permissions=True)
-			customer_agreement.agreement_status = "Open"
-			customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
-			customer_agreement.merchandise_status = payment_history.merchandise_status
-			customer_agreement.agreement_closing_suspending_reason = ""
-			customer_agreement.save(ignore_permissions=True)
-
-		if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
-			print "inside 111111"
-			item_doc.sold_date = item_doc.old_sold_date
-			item_doc.old_sold_date = item_doc.old_sold_date
-			item_doc.save(ignore_permissions=True)
-			customer_agreement.agreement_status = "Open"
-			customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
-			customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]
-			customer_agreement.agreement_closing_suspending_reason = ""  							
-			customer_agreement.save(ignore_permissions=True)
+		campaign_discount_of_agreements = payment_history.campaign_discount_of_agreements
+		if campaign_discount_of_agreements and payment_history.payment_type == "Normal Payment":
+			campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
+			campaign_discount_of_agreements_list.sort()	
+				
 
 
-		if payment_history.payment_type == "Normal Payment" and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
-			print "inside campaign_discount_of_agreements"
-			customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
-			customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
-			customer_agreement.save(ignore_permissions=True)	
+		refund_bonus = []	
+		for i,agreement in enumerate(agreement_list):
+			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+			set_values_in_agreement_on_submit(customer_agreement)
+			item_doc = frappe.get_doc("Item",customer_agreement.product)
+			if payment_history.payment_type == "Payoff Payment":
+				payment_history.payoff_cond = ""
+				item_doc.sold_date = item_doc.old_sold_date
+				item_doc.old_sold_date = item_doc.old_sold_date
+				item_doc.save(ignore_permissions=True)
+				customer_agreement.agreement_status = "Open"
+				customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
+				customer_agreement.merchandise_status = payment_history.merchandise_status
+				customer_agreement.agreement_closing_suspending_reason = ""
+				customer_agreement.save(ignore_permissions=True)
 
-		if payment_history.payment_type == "Normal Payment":
-			refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
-	
-	print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
-	#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
-	customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
-	customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
-	customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
+			if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
+				print "inside 111111"
+				item_doc.sold_date = item_doc.old_sold_date
+				item_doc.old_sold_date = item_doc.old_sold_date
+				item_doc.save(ignore_permissions=True)
+				customer_agreement.agreement_status = "Open"
+				customer_agreement.old_merchandise_status = customer_agreement.merchandise_status
+				customer_agreement.merchandise_status = merchandise_status_list[i].split("/")[1]
+				customer_agreement.agreement_closing_suspending_reason = ""  							
+				customer_agreement.save(ignore_permissions=True)
+
+
+			if payment_history.payment_type == "Normal Payment" and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
+				print "inside campaign_discount_of_agreements"
+				customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
+				customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
+				customer_agreement.save(ignore_permissions=True)	
+
+			if payment_history.payment_type == "Normal Payment":
+				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
+		
+		print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
+		#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
+		customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
+		customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
+		customer.refund_to_customer = float(payment_history.cash) + float(payment_history.bank_card) + float(payment_history.bank_transfer) - float(payment_history.bonus) - float(payment_history.discount)
 
 	#customer.receivables = float(payment_history.rental_payment) - float(payment_history.late_fees) - float(payment_history.total_charges)
 	#customer.receivables = payment_history.receivables
