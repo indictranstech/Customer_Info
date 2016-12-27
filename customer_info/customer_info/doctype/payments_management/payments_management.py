@@ -499,19 +499,19 @@ def update_on_submit(args):
 							and payment_date = '{1}' order by idx """.format(cond,args['payment_date']),as_dict=1)
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
+	if submitted_payments_ids_info:
+		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
+			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
+			print "inside 1","\n\n\n\n\n\n"
+			remove_new_bonus(submitted_payments_ids_info)
+			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
+			args['new_bonus'] = 0
 
-	if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
-		float(args['values']['discount']) and float(args['values']['bonus']) > 0:
-		print "inside 1","\n\n\n\n\n\n"
-		remove_new_bonus(submitted_payments_ids_info)
-		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
-		args['new_bonus'] = 0
-
-	if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
-		print "inside 2","\n\n\n\n\n\n"
-		remove_new_bonus(submitted_payments_ids_info)
-		args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
-		args['new_bonus'] = 0
+		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
+			print "inside 2","\n\n\n\n\n\n"
+			remove_new_bonus(submitted_payments_ids_info)
+			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
+			args['new_bonus'] = 0
 
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1

@@ -517,7 +517,6 @@ edit_bonus = Class.extend({
 	trigger_bonus:function(){
 		var me = this;
 		$(me.dialog.fields_dict.bonus.input).change(function(){
-			console.log("inside bonus change")
 			if(flt($(this).val()) < flt(me.bonus)){
 				me.dialog.fields_dict.bonus.set_input(me.bonus)
 				frappe.throw(__("Enter Amount greater or Equal to {0} for bonus",[flt(me.bonus).toFixed(2)]));
@@ -526,7 +525,6 @@ edit_bonus = Class.extend({
 	},
 	add_comment:function(){
 		var me = this;
-		console.log("in my function")
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
 				cur_frm.set_value("notes_on_customer_payments","["+user+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
@@ -538,8 +536,7 @@ edit_bonus = Class.extend({
 	update_bonus:function(){
 		var me = this;
 		me.dialog.fields_dict.update_bonus.$input.click(function() {
-			if(me.dialog.fields_dict.bonus.$input.val() && !me.dialog.fields_dict.bonus.$input.val() < me.bonus){
-				console.log(me.dialog.fields_dict.bonus.$input.val(),"bonus value")
+			if(me.dialog.fields_dict.bonus.$input.val() && flt(me.dialog.fields_dict.bonus.$input.val()) > flt(me.bonus)){
 				frappe.call({
 			        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_bonus",
 			        args: {
