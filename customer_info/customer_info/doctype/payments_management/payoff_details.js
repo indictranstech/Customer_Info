@@ -293,7 +293,7 @@ payoff_details = Class.extend({
        			me.add_in_receivables = 0
 				me.click_on_submit();
        		}
-       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments"){
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments" && me.number_of_payments > 0){
        			me.calculate_underpayment();
        		}
        		else if (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0){
