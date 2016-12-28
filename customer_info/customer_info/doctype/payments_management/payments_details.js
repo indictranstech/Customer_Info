@@ -301,7 +301,7 @@ Payments_Details = Class.extend({
 		var me = this;
 		if(me.flag == "Suspended Agreement"){
 			$.each($('input.select'), function(i, d) {
-				if($(d).attr('checked')){
+				if($(d).attr('checked') && $(d).attr('data-from') != "from_child_table_as_submit"){
 					$(d).prop("disabled", false);
 				}
 				else{

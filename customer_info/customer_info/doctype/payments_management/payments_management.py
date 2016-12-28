@@ -626,7 +626,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 def add_bonus_and_receivables_to_customer(args,flag):
 	customer_doc = frappe.get_doc("Customer",args['customer'])
 	if flag == "Process Payment":
-		if args['bonus'] > 0 and customer_doc.customer_group == "Individual":
+		if args['bonus'] >= 0 and customer_doc.customer_group == "Individual":
 			#added_bonus = float(bonus) - customer_doc.bonus
 			now_date = datetime.now().date()
 			customer_bonus_records = customer_doc.append("customer_bonus_records")
@@ -789,7 +789,7 @@ def get_summary_records(agreement,receivable,late_fees):
 		format(Total_payoff_amount)
 		return {"cond":"90 day pay Off",#2,
 				"Receivables":"{0} EUR".format(receivable),
-				"Amount_of_payments_left":"{0} EUR".format(balance),
+				"Amount_of_payments_left":"{0} EUR".format(float(balance)-float(agreement.total_late_payments)),
 				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount))),
 				"Late_payments":"{0} EUR".format(agreement.total_late_payments),
 				"Late_fees":"{0} EUR".format(float(late_fees)),

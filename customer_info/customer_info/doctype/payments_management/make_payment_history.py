@@ -3,7 +3,7 @@ from datetime import datetime,date
 import frappe
 
 #def make_payment_history(values,customer,receivables,receivables_collected,payment_date,total_charges,payment_ids,payments_ids_list,rental_payment,total_amount,late_fees,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,new_bonus=None):
-def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,campaign_discount_of_agreements=None):	
+def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,campaign_discount_of_agreements=None):
 	payment_date = datetime.strptime(args['payment_date'], '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
 	payments_history.cash = float(args['values']['amount_paid_by_customer'])

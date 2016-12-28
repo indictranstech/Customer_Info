@@ -100,6 +100,7 @@ def make_refund_payment(payments_ids,ph_name):
 	payments_id_list = []
 	agreement_list = []
 	merchandise_status_list= []
+	campaign_discount_of_agreements_list = []
 	if len(payments_ids) > 0:
 		for i in payments_ids:
 			frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
@@ -125,7 +126,8 @@ def make_refund_payment(payments_ids,ph_name):
 		if campaign_discount_of_agreements and payment_history.payment_type == "Normal Payment":
 			campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
 			campaign_discount_of_agreements_list.sort()	
-				
+		
+		print campaign_discount_of_agreements_list,"\n\n\n\n\n\n","ffffffff"		
 
 
 		refund_bonus = []	
@@ -156,13 +158,11 @@ def make_refund_payment(payments_ids,ph_name):
 				customer_agreement.save(ignore_permissions=True)
 
 
-			if payment_history.payment_type == "Normal Payment" and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
-				print "inside campaign_discount_of_agreements"
-				customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
-				customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
-				customer_agreement.save(ignore_permissions=True)	
-
 			if payment_history.payment_type == "Normal Payment":
+				if campaign_discount_of_agreements_list and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
+					customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
+					customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
+					customer_agreement.save(ignore_permissions=True)	
 				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
 		
 		print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
