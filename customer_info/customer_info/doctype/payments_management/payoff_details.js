@@ -330,7 +330,7 @@ payoff_details = Class.extend({
 					    $('button[data-fieldname="return_to_customer"]').hide();
 						$('button[data-fieldname="add_in_receivables"]').show();
 						//html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= "+" "+(flt(r.message) - flt(value.bonus))+" so "+flt(value.balance)+" "+"add in receivables</div>"
-					    html = "<div class='row' style='margin-left: -88px;color: green;'>Cash amount >= Add "+flt(value.balance)+" "+" in receivables</div>"
+					    html = "<div class='row' style='margin-left: -88px;color: green;'>Add "+flt(value.balance)+" "+" in receivables</div>"
 					    me.dialog.fields_dict.msg.$wrapper.empty()
 					    me.dialog.fields_dict.msg.$wrapper.append(html)
 					    me.click_on_add_in_receivables();
