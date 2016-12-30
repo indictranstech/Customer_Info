@@ -249,6 +249,8 @@ payments_received = Class.extend({
 	},
 	click_on_refund_inside_dialog:function(){
 		var me = this;
+		me.fd.refund.$wrapper.find('[data-fieldtype="Select"]').attr("dir","rtl");
+		me.fd.refund_payment.$wrapper.find('[data-fieldname="refund_payment"]').css({"float":"right"});
 		me.fd.refund_payment.$input.click(function() {
 			me.make_refund_payment()
 		})	
