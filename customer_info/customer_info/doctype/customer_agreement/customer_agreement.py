@@ -14,6 +14,8 @@ from frappe.utils import now_datetime
 from datetime import datetime, timedelta,date
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
+from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
+
 
 class CustomerAgreement(Document):	 
 	def validate(self):
@@ -399,9 +401,18 @@ def payments_done_by_scheduler():
 	for name in [i[0] for i in customer]:
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
+		
+		payments_detalis_list = []
+		payment_ids_list = []
+		monthly_rental_amount = []
+		merchandise_status = ""
+		args = {'values':{}}
+		args['receivables'] = frappe.get_doc("Customer",name).receivables
 		for agreement in [e[0] for e in customer_agreement]:
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+			
 			print customer_agreement.name,"name"
+			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 			for row in customer_agreement.payments_record:
 				if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month:
 					print "in month"
@@ -409,7 +420,9 @@ def payments_done_by_scheduler():
 					receivables = customer.receivables
 					print "receivables",receivables,customer.name,row.monthly_rental_amount,"\n\n\n\n"
 					if float(receivables) >= float(row.monthly_rental_amount):
-						
+						payment_ids_list.append(row.payment_id)
+						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
+						monthly_rental_amount.append(row.monthly_rental_amount)
 						row.update({
 							"check_box":1,
 							"check_box_of_submit":1,
@@ -425,7 +438,9 @@ def payments_done_by_scheduler():
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
-						
+						payment_ids_list.append(row.payment_id)
+						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
+						monthly_rental_amount.append(row.monthly_rental_amount)
 						row.update({
 							"check_box":1,
 							"check_box_of_submit":1,
@@ -438,7 +453,22 @@ def payments_done_by_scheduler():
 			
 			customer_agreement.save(ignore_permissions = True)
 			set_values_in_agreement(customer_agreement)
-
+		args['customer'] = name
+		args['add_in_receivables'] = customer.receivables
+		args['payment_date'] = str(now_date)
+		args['rental_payment'] = sum(monthly_rental_amount)
+		args['payment_type'] = "Normal Payment"
+		args['late_fees'] = 0
+		args['values']['amount_paid_by_customer'] = 0
+		args['values']['bank_card'] = 0
+		args['values']['bank_transfer'] = 0
+		args['values']['discount'] = 0
+		args['values']['bonus'] = 0
+		args['new_bonus'] = 0
+		args['total_charges'] = 0
+		args['total_amount'] = 0
+		if len(payment_ids_list) > 0:
+			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 	
 def set_values_in_agreement(customer_agreement):
 	payment_made = []
