@@ -6,24 +6,24 @@ import frappe
 def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchandise_status,late_fees_updated_status,payoff_cond=None,discount_amount=None,campaign_discount_of_agreements=None):
 	payment_date = datetime.strptime(args['payment_date'], '%Y-%m-%d')
 	payments_history = frappe.new_doc("Payments History")
-	payments_history.cash = float(args['values']['amount_paid_by_customer'])
-	payments_history.bank_card = float(args['values']['bank_card'])
-	payments_history.bank_transfer = float(args['values']['bank_transfer'])
+	payments_history.cash = float(args['values']['amount_paid_by_customer']) if args['values']['amount_paid_by_customer'] else 0
+	payments_history.bank_card = float(args['values']['bank_card']) if args['values']['bank_card'] else 0
+	payments_history.bank_transfer = float(args['values']['bank_transfer']) if args['values']['bank_transfer'] else 0
 	payments_history.bonus = float(args['values']['bonus']) if args['values']['bonus'] else 0
-	payments_history.new_bonus = args['new_bonus']
-	payments_history.discount = float(args['values']['discount'])
+	payments_history.new_bonus = args['new_bonus'] if args['new_bonus'] else 0
+	payments_history.discount = float(args['values']['discount']) if args['values']['discount'] else 0
 	payments_history.campaign_discount = float(discount_amount) if discount_amount else 0
 	payments_history.campaign_discount_of_agreements = campaign_discount_of_agreements if campaign_discount_of_agreements else ""
-	payments_history.rental_payment = args['rental_payment']
-	payments_history.late_fees = args['late_fees']
-	payments_history.customer = args['customer']
-	payments_history.receivables = float(args['receivables'])
-	payments_history.receivables_collected = float(args['add_in_receivables'])
+	payments_history.rental_payment = args['rental_payment'] if args['rental_payment'] else 0
+	payments_history.late_fees = args['late_fees'] if args['late_fees'] else 0
+	payments_history.customer = args['customer'] if args['customer'] else 0
+	payments_history.receivables = float(args['receivables']) if args['receivables'] else 0
+	payments_history.receivables_collected = float(args['add_in_receivables']) if args['add_in_receivables'] else 0
 	payments_history.payment_date = payment_date.date()
-	payments_history.total_charges = float(args['total_charges'])
+	payments_history.total_charges = float(args['total_charges']) if args['total_charges'] else 0
 	payments_history.payment_type = payment_type
 	payments_history.merchandise_status = merchandise_status
-	payments_history.total_payment_received = float(args['total_amount'])
+	payments_history.total_payment_received = float(args['total_amount']) if args['total_amount'] else 0
 	payments_history.payoff_cond = payoff_cond if payoff_cond else ""
 	payments_history.late_fees_updated = late_fees_updated_status
 
@@ -45,7 +45,7 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 		bonus = float(args['values']['bonus']) if args['values']['bonus'] else 0
 		total_transaction_amount = float(args['values']['amount_paid_by_customer']) + float(args['values']['bank_card']) + float(args['values']['bank_transfer']) + float(bonus)
 		if payment_type == "Payoff Payment":
-			total_calculated_payment_amount = float(args['total_amount'])
+			total_calculated_payment_amount = float(args['total_amount']) if args['total_amount'] else 0
 		else:	
 			total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])-float(args['receivables'])-float(bonus) - float(args['values']['discount'])
 		pmt = "Split"
@@ -56,8 +56,10 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 			pmt = "Cash"
 		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) > 0 and float(args['values']['bank_card']) == 0:
 			pmt = "Bank Transfer"	
-		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0:
-			pmt = "Bonus"		
+		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0 and float(args['values']['amount_paid_by_customer']) > 0:
+			pmt = "Bonus"
+		else:
+			pmt = "Receivables"			
 
 		id_list = tuple([x.encode('UTF8') for x in list(payments_ids_list) if x])
 		cond = ""	
