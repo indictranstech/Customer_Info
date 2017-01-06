@@ -745,7 +745,10 @@ def payoff_submit(args):
 
 	args['total_charges'] = float(args['total_charges']) + float(_total_charges)
 	args['total_amount'] = float(args['total_amount'].split(" ")[0])
-	args['rental_payment'] = float(args['rental_payment'].split(" ")[0])
+	if args['condition'] == "90 day pay Off":
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) + float(agreement.late_payment)
+	else:
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0])	
 	args['new_bonus'] = 0
 	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
 	make_payment_history(args,payments_detalis_list,payment_ids_list,"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
