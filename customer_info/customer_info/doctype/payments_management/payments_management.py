@@ -694,6 +694,7 @@ def payoff_submit(args):
 	frappe.db.commit()
 	
 	agreement = frappe.get_doc("Customer Agreement",args['customer_agreement'])
+	late_payment = agreement.late_payment
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
 	if args['condition'] == "90 day pay Off" and agreement.agreement_status == "Open":
@@ -725,14 +726,9 @@ def payoff_submit(args):
 		agreement.late_fees_updated = "No"
 		agreement.save(ignore_permissions=True)	
 
-	flag = "Payoff Payment"	
-	#add_bonus_and_receivables_to_customer(customer,0,receivables,flag)
-	#values = json.loads(values)
-	
-	#add_bonus_and_receivables_to_customer(customer,0,values['balance'],flag)
+	flag = "Payoff Payment"
 	add_bonus_and_receivables_to_customer(args,flag)
 	
-	#data = json.loads(args['data'])
 	data = args['data']
 	_total_charges = 0
 	payments_detalis_list = []
@@ -746,7 +742,7 @@ def payoff_submit(args):
 	args['total_charges'] = float(args['total_charges']) + float(_total_charges)
 	args['total_amount'] = float(args['total_amount'].split(" ")[0])
 	if args['condition'] == "90 day pay Off":
-		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) + float(agreement.late_payment)
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) + float(late_payment)
 	else:
 		args['rental_payment'] = float(args['rental_payment'].split(" ")[0])	
 	args['new_bonus'] = 0
