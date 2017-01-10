@@ -296,6 +296,9 @@ payoff_details = Class.extend({
        		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments" && me.number_of_payments > 0){
        			me.calculate_underpayment();
        		}
+       		if(parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0 && me.old_instance == "Process Payments" && me.number_of_payments == 0){
+       			me.check_value_of_cash_card_transfer_discount();
+       		}
        		else if (parseFloat(me.dialog.fields_dict.balance.$input.val()) < 0){
        			html = "<div class='row' style='margin-left: -160px;color: red;'>Error Message Balance Is Negative</div>"
        			$('button[data-fieldname="add_in_receivables"]').hide();
@@ -304,6 +307,21 @@ payoff_details = Class.extend({
        			me.dialog.fields_dict.msg.$wrapper.append(html)
        		}
 		});
+	},
+	check_value_of_cash_card_transfer_discount:function(){
+		var me = this;
+		value = me.dialog.get_values();
+		if(flt(value.amount_paid_by_customer) > 0 || flt(value.bank_transfer) > 0 || flt(value.bank_card) > 0 || flt(value.discount) > 0){
+			$('button[data-fieldname="add_in_receivables"]').show();
+			$('button[data-fieldname="return_to_customer"]').show();
+			me.click_on_add_in_receivables();
+			me.click_on_return_to_customer();
+		}
+		else{
+			html = "<div class='row' style='margin-left: -160px;color: red;'>Enter amount in Cash or Bank Card or Bank Transfer or Discount </div>"
+			me.dialog.fields_dict.msg.$wrapper.empty()
+       		me.dialog.fields_dict.msg.$wrapper.append(html)			
+		}
 	},
 	calculate_underpayment:function(){
 		var me = this;
