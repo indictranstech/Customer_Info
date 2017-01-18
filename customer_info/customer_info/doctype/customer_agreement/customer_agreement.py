@@ -31,10 +31,10 @@ class CustomerAgreement(Document):
 	def change_sold_date_of_item(self):
 		"""
 			change solde date when agreement is closed and agreement_closing_suspending_reason 
-			in ["40% Offer","90d SAC"] or Contract Term is over
+			in ["Early buy offer","90d SAC"] or Contract Term is over
 		"""
 		item = frappe.get_doc("Item",self.product)
-		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["40% Offer","90d SAC"]:
+		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason  in ["Early buy offer","90d SAC"]:
 			item.old_sold_date = item.sold_date
 			item.sold_date = datetime.now()
 		
@@ -69,7 +69,7 @@ class CustomerAgreement(Document):
 			default_warehouse = "9101 – Prekė pas klientą - BK"
 		if self.agreement_status in  ["Closed","Suspended"] and self.agreement_closing_suspending_reason in ["Return","Upgrade","Financial Difficulties","Temporary Leave"]:
 			default_warehouse = "101 - Be kredito sandėlys - BK"	
-		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["40% Offer","90d SAC","Contract Term is over"]:
+		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason in ["Early buy offer","90d SAC","Contract Term is over"]:
 			default_warehouse = "8101 – Ištrinta, grąžinta tiekėjui, sugadinta, naudojama įmonės reikmėms, pasibaigė sutartis, išsipirko anksčiau. - BK"
 		if self.agreement_status == "Closed" and self.merchandise_status == "Stolen" and self.agreement_closing_suspending_reason == "Fraud/Stolen":
 			default_warehouse = "9101 – Prekė pas klientą - BK"
@@ -477,16 +477,18 @@ def set_values_in_agreement(customer_agreement):
 		for row in customer_agreement.payments_record:
 			if row.check_box_of_submit == 1:
 				payment_made.append(row.monthly_rental_amount)				
-		for row in customer_agreement.payments_record:
-			if row.check_box == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
+		for index,row in enumerate(customer_agreement.payments_record):
+			if row.check_box_of_submit == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
-				customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
+				customer_agreement.next_due_date = customer_agreement.payments_record[index+1].due_date#get_next_due_date(row.due_date,1)
 				break
-			if row.check_box == 0 and row.idx == 1:
+			#if row.check_box == 0 and row.idx == 1:
+			if row.check_box_of_submit == 0 and row.idx == 1:
 				customer_agreement.current_due_date = customer_agreement.date
-				customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
+				customer_agreement.next_due_date = customer_agreement.payments_record[index+1].due_date#get_next_due_date(customer_agreement.due_date_of_next_month,0)
 				break
-			if row.check_box == 0 and row.idx == len(customer_agreement.payments_record):
+			#if row.check_box == 0 and row.idx == len(customer_agreement.payments_record):
+			if row.check_box_of_submit == 0 and row.idx == len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
 				customer_agreement.next_due_date = row.due_date
 				break

@@ -39,6 +39,11 @@ app_license = "GNU General Public License"
 # Add Fixtures
 fixtures =['Custom Field', "Property Setter","Custom Script","Letter Head","Print Format"]
 
+doctype_js = {
+    "Customer":["custom_scripts/customer.js"],
+    "Item":["custom_scripts/item.js"],
+    "Brand":["custom_scripts/brand.js"]
+}
 
 # Generators
 # ----------

@@ -10,6 +10,11 @@ def get_data():
 			"items": [
 				{
 					"type": "doctype",
+					"name": "Customer Agreement",
+					"description": _("Record Of Customer Agreement"),
+				},
+				{
+					"type": "doctype",
 					"name": "Payments Management",
 					"description": _("Record Of Payments"),
 				}

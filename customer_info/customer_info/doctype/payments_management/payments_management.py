@@ -585,16 +585,18 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		for row in customer_agreement.payments_record:
 			if row.check_box_of_submit == 1:
 				payment_made.append(row.monthly_rental_amount)				
-		for row in customer_agreement.payments_record:
-			if row.check_box == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
+		for index,row in enumerate(customer_agreement.payments_record):
+			if row.check_box_of_submit == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
-				customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
+				customer_agreement.next_due_date = customer_agreement.payments_record[index+1].due_date#get_next_due_date(row.due_date,1)
 				break
-			if row.check_box == 0 and row.idx == 1:
+			#if row.check_box == 0 and row.idx == 1:
+			if row.check_box_of_submit == 0 and row.idx == 1:
 				customer_agreement.current_due_date = customer_agreement.date
-				customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
+				customer_agreement.next_due_date = customer_agreement.payments_record[index+1].due_date#get_next_due_date(customer_agreement.due_date_of_next_month,0)
 				break
-			if row.check_box == 0 and row.idx == len(customer_agreement.payments_record):
+			#if row.check_box == 0 and row.idx == len(customer_agreement.payments_record):
+			if row.check_box_of_submit == 0 and row.idx == len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
 				customer_agreement.next_due_date = row.due_date
 				break			
@@ -701,8 +703,8 @@ def payoff_submit(args):
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
-			"agreement_closing_suspending_reason":"40% Offer",
-			"merchandise_status":"40% Early buy"
+			"agreement_closing_suspending_reason":"Early buy offer",
+			"merchandise_status":"Early buy"
 		})
 		agreement.save(ignore_permissions=True)
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
