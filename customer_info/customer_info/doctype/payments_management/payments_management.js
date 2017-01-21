@@ -464,9 +464,9 @@ bonus_summary = Class.extend({
 												+ cur_frm.doc.assign_manual_bonus
 					html = $(frappe.render_template("bonus_summary",{
 						"bonus":r.message,
-						"total_bonus_accumulated":total_bonus_accumulated,
-						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus,
-						"used_bonus":cur_frm.doc.used_bonus,
+						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
+						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
+						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
 						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2)
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}

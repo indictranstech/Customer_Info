@@ -43,20 +43,21 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 	# 	total_transaction_amount = float(rental_payment) + float(late_fees) -float(receivables)-float(values['bonus'])-float(values['discount'])
 	if payment_type == "Payoff Payment" or payment_type == "Normal Payment":	
 		bonus = float(args['values']['bonus']) if args['values']['bonus'] else 0
-		total_transaction_amount = float(args['values']['amount_paid_by_customer']) + float(args['values']['bank_card']) + float(args['values']['bank_transfer']) + float(bonus)
+		#total_transaction_amount = float(args['values']['amount_paid_by_customer']) + float(args['values']['bank_card']) + float(args['values']['bank_transfer']) + float(bonus)
+		total_transaction_amount = float(args['values']['amount_paid_by_customer']) + float(args['values']['bank_card']) + float(args['values']['bank_transfer'])
 		if payment_type == "Payoff Payment":
 			total_calculated_payment_amount = float(args['total_amount']) if args['total_amount'] else 0
 		else:	
 			total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])-float(args['receivables'])-float(bonus) - float(args['values']['discount'])
 		pmt = "Split"
 
-		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) > 0:
+		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) > 0 and float(args['values']['bonus']) == 0:
 			pmt = "Credit Card"
-		elif float(args['values']['amount_paid_by_customer']) > 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0:
+		elif float(args['values']['amount_paid_by_customer']) > 0 and float(args['values']['bank_transfer']) == 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bonus']) == 0:
 			pmt = "Cash"
-		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) > 0 and float(args['values']['bank_card']) == 0:
+		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) > 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bonus']) == 0:
 			pmt = "Bank Transfer"	
-		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0 and float(args['values']['amount_paid_by_customer']) > 0:
+		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
 			pmt = "Bonus"
 		else:
 			pmt = "Receivables"			
