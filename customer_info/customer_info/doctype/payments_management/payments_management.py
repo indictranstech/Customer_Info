@@ -786,14 +786,14 @@ def get_summary_records(agreement,receivable,late_fees):
 		balance = float(agreement.payments_left) * agreement.monthly_rental_payment
 		discount = (balance / 100) * float(agreement.early_buy_discount_percentage)
 		#Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + float(late_fees) - float(receivable)
-		Total_payoff_amount = (balance - float(discount)) + float(agreement.late_payment) + float(late_fees) - float(receivable)
+		Total_payoff_amount = (balance - float(discount)) - float(agreement.late_payment) + float(late_fees) - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
-		format(Total_payoff_amount)
+		#format(Total_payoff_amount)
 		return {"cond":"90 day pay Off",#2,
 				"Receivables":"{0} EUR".format(receivable),
 				#"Amount_of_payments_left":"{0} EUR".format(float(balance)-float(agreement.total_late_payments)),
 				"Amount_of_payments_left":"{0} EUR".format(float(balance)-float(agreement.late_payment)),
-				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount))),
+				"Discounted_payment_amount":"{0} EUR".format("{0:.2f}".format(balance - float(discount) -float(agreement.late_payment) )),
 				#"Late_payments":"{0} EUR".format(agreement.total_late_payments),
 				"Late_payments":"{0} EUR".format(agreement.late_payment),
 				"Late_fees":"{0} EUR".format(float(late_fees)),

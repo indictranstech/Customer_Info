@@ -24,6 +24,30 @@ frappe.ui.form.on("Customer Agreement",{
             });
         }
 	},
+    update_due_date:function(frm){
+        if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal && cur_frm.doc.payments_record && cur_frm.doc.update_due_date){
+            cur_frm.doc.due_date_of_next_month = cur_frm.doc.update_due_date
+            refresh_field("due_date_of_next_month")
+            console.log(cur_frm.doc.due_date_of_next_month,"due_date_of_next_month")
+            frappe.call({
+                method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.update_due_dates_of_payments",
+                args:{
+                    "update_date":cur_frm.doc.update_due_date,
+                    "name":cur_frm.doc.name
+                },
+                freeze: true,
+                freeze_message: __("Please Wait..."),
+                callback: function(r){
+                    $.each(cur_frm.doc.payments_record,function(index,row){
+                        if(Object.keys(r.message).indexOf(row.payment_id) != -1){
+                            row.due_date = r.message[row.payment_id]        
+                        }
+                    })
+                    refresh_field("payments_record")
+                }   
+            });
+        }        
+    },
 	customer: function(frm){
 		if(cur_frm.doc.customer){
 			frappe.call({
@@ -80,10 +104,10 @@ frappe.ui.form.on("Customer Agreement",{
     },
     validate:function(frm){
         if(cur_frm.doc.__islocal && cur_frm.doc.document_type == "New"){
-            cur_frm.set_value("date",frappe.datetime.nowdate())
+            cur_frm.set_value("date",cur_frm.doc.date ? cur_frm.doc.date:frappe.datetime.nowdate())
             cur_frm.set_value("today_plus_90_days", frappe.datetime.add_days(frappe.datetime.nowdate(),90));
             cur_frm.set_value("duplicate_today_plus_90_days",frappe.datetime.add_days(frappe.datetime.nowdate(),90));    
-        }    
+        }
         if(cur_frm.doc.payment_day && cur_frm.doc.date && cur_frm.doc.__islocal){
             date_of_next_month_according_to_payment_day()
         }
@@ -169,6 +193,9 @@ frappe.ui.form.on("Customer Agreement",{
                 cur_frm.save();
             }
         }
+        if(!cur_frm.doc.__islocal){
+            cur_frm.set_df_property("update_due_date","hidden",0)
+        }
     },
     agreement_status:function(frm){
         if(cur_frm.doc.agreement_status == "Closed" && !cur_frm.doc.__islocal){
@@ -244,22 +271,26 @@ date_of_next_month_according_to_payment_day = function(frm){
         //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,-c))
         refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)*/    
     }
     if(a < b){
         var c = b - a
         //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,+c))
         refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    */
     }
     if(a == b){
         cur_frm.doc.due_date_of_next_month = newDate
         refresh_field("due_date_of_next_month")
+        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    */
+    }
+    if(cur_frm.doc.__islocal){
         cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)
     }
 }
 

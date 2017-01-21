@@ -77,14 +77,15 @@ class CustomerAgreement(Document):
 		item.save(ignore_permissions=True)
 
 	def check_date_diff_of_first_and_second_month_due_date(self):
-		due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
-		diff_of_first_and_second_due_date = date_diff(due_date_of_next_month,self.date)
-		if date_diff(due_date_of_next_month,self.date) > 44 :
-			self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,-1))+"T00:00:00.000Z"
-			#frappe.throw("Decrease Payment Day")
-		if date_diff(due_date_of_next_month,self.date) <= 14:
-			self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,1))+"T00:00:00.000Z"
-			#frappe.throw("Increase Payment Day")
+		if not self.update_due_date:
+			due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
+			diff_of_first_and_second_due_date = date_diff(due_date_of_next_month,self.date)
+			if date_diff(due_date_of_next_month,self.date) > 44 :
+				self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,-1))+"T00:00:00.000Z"
+				#frappe.throw("Decrease Payment Day")
+			if date_diff(due_date_of_next_month,self.date) <= 14:
+				self.due_date_of_next_month = str(self.get_next_due_date(due_date_of_next_month,1))+"T00:00:00.000Z"
+				#frappe.throw("Increase Payment Day")
 
 	def after_insert(self):
 		self.add_bonus_for_this_agreement()
@@ -195,15 +196,14 @@ class CustomerAgreement(Document):
 
 	# get date after i month on changeing payment day	
 	def change_due_dates_in_child_table(self):
-	    self.check_date_diff_of_first_and_second_month_due_date()
-	    due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
-	    for i,row in enumerate(self.payments_record):
-    		if row.idx > 1 and row.check_box_of_submit == 0:
-		    	#self.check_date_diff_of_first_and_second_month_due_date()
-		    	row.update({
-		    		"due_date":self.get_next_due_date(due_date_of_next_month,i-1)
-		    		#"due_date":self.get_next_due_date(due_date_of_next_month,row.idx-1)
-		    	})
+		if not self.update_due_date:
+			self.check_date_diff_of_first_and_second_month_due_date()
+			due_date_of_next_month = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ')
+			for i,row in enumerate(self.payments_record):
+				if row.idx > 1 and row.check_box_of_submit == 0:
+					row.update({
+						"due_date":self.get_next_due_date(due_date_of_next_month,i-1)
+					})
 
 	# get date after i month
 	def get_next_due_date(self,date,i):
@@ -258,7 +258,8 @@ class CustomerAgreement(Document):
 			self.old_agreement_status = self.agreement_status
 
 	def comment_for_agreement_creation(self):
-		comment = """The agreement {0} is started on the {1}  """.format(self.name,datetime.now().date())
+		#comment = """The agreement {0} is started on the {1}  """.format(self.name,datetime.now().date())
+		comment = """The agreement {0} is started on the {1}  """.format(self.name,self.date)
 		self.add_comment("Comment",comment)
 
 
@@ -514,6 +515,23 @@ def get_primary_address(customer):
 								where customer = '{0}' 
 								and is_primary_address = 1 """.format(customer),as_dict=1)
 	return address
+
+@frappe.whitelist()
+def update_due_dates_of_payments(update_date,name):
+	frappe.errprint(update_date)
+	agreement = frappe.get_doc("Customer Agreement",name)
+	counter_of_row = 0
+	date_dict = {}
+	for row in agreement.payments_record:
+		if row.check_box_of_submit == 0:
+				date_dict[row.payment_id] = get_next_due_date(update_date,counter_of_row)
+				counter_of_row += 1
+			# if row.idx == 1:
+			# 	date_dict[row.payment_id] = agreement.date
+			# else:
+			# 	date_dict[row.payment_id] = get_next_due_date(update_date,counter_of_row)
+			# 	counter_of_row += 1
+	return date_dict
 
 @frappe.whitelist()
 def make_update_agreement(source_name, target_doc=None):
