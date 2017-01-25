@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import frappe
 import datetime
 import frappe.defaults
+from frappe import _
 from datetime import datetime,date
 from frappe.utils import date_diff
 from frappe.model.document import Document
@@ -52,3 +53,4 @@ def add_comment_for_change_receivables(self,method):
 		comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
 		self.add_comment("Comment",comment)
 		self.old_receivables = self.receivables
+
