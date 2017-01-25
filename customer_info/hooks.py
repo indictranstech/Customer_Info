@@ -24,7 +24,6 @@ app_license = "GNU General Public License"
 
 # Home Pages
 # ----------
-
 # application home page (will override Website Settings)
 # home_page = "login"
 
