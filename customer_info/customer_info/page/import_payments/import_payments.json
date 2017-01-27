@@ -1,0 +1,22 @@
+{
+ "content": null, 
+ "creation": "2017-01-26 15:28:51.875460", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "idx": 0, 
+ "modified": "2017-01-26 22:35:54.886792", 
+ "modified_by": "Administrator", 
+ "module": "Customer Info", 
+ "name": "import_payments", 
+ "owner": "Administrator", 
+ "page_name": "import_payments", 
+ "roles": [
+  {
+   "role": "All"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "title": "Payments Import Tool"
+}

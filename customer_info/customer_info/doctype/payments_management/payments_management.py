@@ -486,8 +486,8 @@ def get_late_payment(agreements,payment_date):
 
 @frappe.whitelist()
 #def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,manual_bonus,used_bonus,new_bonus,total_charges,rental_payment,late_fees):
-def update_on_submit(args):
-	args = json.loads(args)
+def update_on_submit(args,flag=None):
+	args = json.loads(args) if not flag else args
 	#values = json.loads(values)
 	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(args['customer'])
 

@@ -109,4 +109,18 @@ def get_data():
 				}
 			]
 		},
+		{
+			"label": _("Tools"),
+			"icon": "icon-star",
+			"items": [
+				{
+					"type": "page",
+					"name": "import_payments",
+					"label": _("Payments Import Tool"),
+					"description": _("Import Payments"),
+					"doctype": "Customer Agreement",
+					"icon": "icon-bar-chart",
+				}
+			]	
+		}		
 	]
