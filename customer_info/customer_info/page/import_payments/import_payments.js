@@ -1,5 +1,6 @@
 frappe.pages['import_payments'].on_page_load = function(wrapper) {
 	payment_import_tool = new PaymentImportTool(wrapper);
+	frappe.breadcrumbs.add("Customer Info");
 }
 
 PaymentImportTool = Class.extend({
@@ -24,61 +25,45 @@ PaymentImportTool = Class.extend({
 			args: {
 				method: 'customer_info.customer_info.page.import_payments.import_payments.upload',
 			},
-			onerror: function(r) {
-				me.onerror(r);
-			},
 			callback: function(attachment, r) {
-				if(r.message.error) {
-					me.onerror(r);
+				me.page.main.find(".import-log").removeClass("hide");
+				var parent = me.page.main.find(".import-log-messages").empty();
+				if(!r.messages) r.messages = [];
+				// replace links if error has occured
+				if(r.exc || r.error) {
+					r.messages = $.map(r.message.messages, function(v) {
+						var msg = v.replace("Inserted", "Valid")
+							.replace("Updated", "Valid").split("<");
+						if (msg.length > 1) {
+							v = msg[0] + (msg[1].split(">").slice(-1)[0]);
+						} else {
+							v = msg[0];
+						}
+						return v;
+					});
+
+					r.messages = ["<h4 style='color:red'>"+__("Import Failed!")+"</h4>"]
+						.concat(r.messages)
 				} else {
-					r.messages = ["<h5 style='color:green'>" + __("Import Successful!") + "</h5>"].
+					r.messages = ["<h4 style='color:green'>"+__("Import Successful!")+"</h4>"].
 						concat(r.message.messages)
-					me.write_messages(r.messages);
 				}
+				console.log(r.messages)
+				$.each(r.messages, function(i, v) {
+
+					var $p = $('<p>').html(v).appendTo(parent);
+					if(v.substr(0,5)=='Error') {
+						$p.css('color', 'red');
+					} else if(v.substr(0,8)=='Inserted') {
+						$p.css('color', 'green');
+					} else if(v.substr(0,7)=='Updated') {
+						$p.css('color', 'green');
+					} else if(v.substr(0,5)=='Valid') {
+						$p.css('color', '#777');
+					}
+				});
 			},
-			is_private: true
+			is_private: false
 		});
-	},
-	write_messages: function(data) {
-		this.page.main.find(".import-log").removeClass("hide");
-		var parent = this.page.main.find(".import-log-messages").empty();
-		// TODO render using template!
-		for (var i=0, l=data.length; i<l; i++) {
-			var v = data[i];
-			var $p = $('<p></p>').html(frappe.markdown(v)).appendTo(parent);
-			if(v.substr(0,5)=='Error') {
-				$p.css('color', 'red');
-			} else if(v.substr(0,8)=='Inserted') {
-				$p.css('color', 'green');
-			} else if(v.substr(0,7)=='Updated') {
-				$p.css('color', 'green');
-			} else if(v.substr(0,5)=='Valid') {
-				$p.css('color', '#777');
-			}
-		}
-	},
-	onerror: function(r) {
-		if(r.message) {
-			// bad design: moves r.messages to r.message.messages
-			r.messages = $.map(r.message.messages, function(v) {
-				var msg = v.replace("Inserted", "Valid")
-					.replace("Updated", "Valid").split("<");
-				if (msg.length > 1) {
-					v = msg[0] + (msg[1].split(">").slice(-1)[0]);
-				} else {
-					v = msg[0];
-				}
-				return v;
-			});
-
-			r.messages = ["<h4 style='color:red'>" + __("Import Failed") + "</h4>"]
-				.concat(r.messages);
-
-			r.messages.push("Please correct and import again.");
-
-			frappe.show_progress(__("Importing"), 1, 1);
-
-			this.write_messages(r.messages);
-		}
 	}
 })

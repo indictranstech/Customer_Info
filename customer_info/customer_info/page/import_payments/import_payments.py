@@ -1,12 +1,14 @@
 import frappe
 from frappe.utils.csvutils import read_csv_content_from_uploaded_file
-from frappe.utils import nowdate, getdate,add_months,add_days,get_last_day
+from frappe.utils import getdate
 from customer_info.customer_info.doctype.payments_management.payments_management import update_on_submit
 
 
 @frappe.whitelist()
 def upload():
 	csv_rows = read_csv_content_from_uploaded_file()
+	ret = []
+	error = False
 	for index,line in enumerate(csv_rows):
 		d = {key:'' for key in csv_rows[0]}
 		if index > 0:
@@ -20,19 +22,26 @@ def upload():
 			d['Agreement No'] = line[7]
 			d['Rental payment'] = line[8]
 			d['Customer'] = line[9]
-			made_payments(d)
-			
+			ret.append(made_payments(d))
+	return {"messages": ret,"error":error}		
+							
 def made_payments(d):
-	frappe.errprint(d['Agreement No'])
 	agreement_doc = frappe.get_doc("Customer Agreement",d['Agreement No'])
+	error = ""
 	for row in agreement_doc.payments_record:
+		if row.check_box == 1 and row.payment_id == d['Payment ID'] and getdate(row.due_date) == getdate(d['Payment due date']):
+			error += "Payment ID {0} of {1} agreement already Processed".format(d['Payment ID'],d['Agreement No'])
 		if row.payment_id == d['Payment ID'] and getdate(row.due_date) == getdate(d['Payment due date']) and row.check_box == 0:
 			row.update({
 				"check_box":1,
 				"payment_date":d['Payment date']
 			})
 			row.save(ignore_permissions = True)
+			error += "Payment Processed Successful for {0} of {1} agreement".format(d['Payment ID'],d['Agreement No'])
+		if row.payment_id == d['Payment ID'] and getdate(row.due_date) != getdate(d['Payment due date']):
+			error += "Payment due date {0} not match with Payment ID {1} of {2} agreement".format(d['Payment due date'],d['Payment ID'],d['Agreement No'])
 	agreement_doc.save(ignore_permissions=True)
+	
 	args = {
 	"values":{
 		'amount_paid_by_customer':d['Cash'],
@@ -55,8 +64,6 @@ def made_payments(d):
 	}
 
 	update_on_submit(args,"True")
-	
-	#frappe.errprint(frappe.get_traceback())
-	return "Sucess"
+	return error
 
 
