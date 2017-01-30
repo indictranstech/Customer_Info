@@ -24,7 +24,9 @@ def get_data(filters):
 			format(item.purchase_price_with_vat,2) as Purchase_price_with_VAT,
 			format(item.purchase_price_with_vat/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
 			item.purchase_date,item.sold_date,
-			concat(agreement.early_buy_discount_percentage,"% ",item.merchandise_status),agreement.name,
+			case when agreement.merchandise_status = "Early buy" then
+			concat(agreement.early_buy_discount_percentage,"% ",item.merchandise_status) else item.merchandise_status end as merchandise_status,
+			agreement.name,
 			agreement.customer,
 			(select replace(replace(replace(content,"<p></p>",""),"<p>",""),"</p>","") as content from `tabCommunication` where reference_doctype = "Item" 
 				 and reference_name = item.name order by creation desc limit 1) as Last_Comment

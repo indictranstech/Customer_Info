@@ -16,7 +16,7 @@ app_license = "GNU General Public License"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/customer_info/css/customer_info.css"
-# app_include_js = "/assets/customer_info/js/customer_info.js"
+app_include_js = "/assets/customer_info/js/customer_info.desk.min.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/customer_info/css/customer_info.css"
@@ -107,7 +107,7 @@ scheduler_events = {
 	"daily": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms"
 	],
-	"hourly": [
+	"all": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler"			
 	]
 }
