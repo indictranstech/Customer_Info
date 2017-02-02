@@ -44,6 +44,10 @@ frappe.ui.form.on("Customer Agreement",{
                         }
                     })
                     refresh_field("payments_record")
+                    cur_frm.set_value("current_due_date",cur_frm.doc.update_due_date)
+                    cur_frm.set_value("next_due_date",frappe.datetime.add_months(cur_frm.doc.update_due_date,1))
+                    cur_frm.doc.payment_day = String((cur_frm.doc.update_due_date).split("-")[2])
+                    refresh_field("payment_day")
                 }   
             });
         }        
