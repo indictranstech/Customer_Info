@@ -14,6 +14,7 @@ from datetime import datetime,date
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
+from customer_info.customer_info.doctype.customer_agreement.customer_agreement import update_due_dates_of_payments
 
 
 class PaymentsManagement(Document):
@@ -242,6 +243,20 @@ def calculate_total_charges(customer,flag,payment_date):
 # 	return {"amount_of_due_payments":sum(due_payment_list) - float(discount_amount_of_agreements), # deduct campaign discount of all agreements
 # 			"receivables":receivables,
 # 			"bonus":bonus}
+
+@frappe.whitelist()
+def update_due_date(agreement,update_due_date):
+	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+	date_dict = update_due_dates_of_payments(update_due_date,agreement)
+	for row_data in customer_agreement.payments_record:
+		if row_data.payment_id in date_dict.keys():
+			row_data.due_date = date_dict[row_data.payment_id]
+	customer_agreement.payment_day = str(update_due_date.split("-")[2])
+	customer_agreement.update_due_date = update_due_date
+	customer_agreement.current_due_date = update_due_date
+	customer_agreement.next_due_date = get_next_due_date(update_due_date,1)
+	customer_agreement.save(ignore_permissions=True)
+	return "True"
 
 @frappe.whitelist()
 def update_late_fees(agreement,late_fees):

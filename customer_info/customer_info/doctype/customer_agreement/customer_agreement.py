@@ -27,6 +27,7 @@ class CustomerAgreement(Document):
 			self.add_payments_record()	
 		self.change_default_warehouse()
 		self.changed_merchandise_status_according_to_agreement_status()
+		self.payment_date_comment()
 
 	def change_sold_date_of_item(self):
 		"""
@@ -115,7 +116,7 @@ class CustomerAgreement(Document):
 		item.save(ignore_permissions=True) 			
 
 	def on_update(self):
-		self.payment_date_comment()
+		#self.payment_date_comment()
 		self.get_agreement_closed_date()
 		self.changed_merchandise_status()
 
@@ -218,7 +219,7 @@ class CustomerAgreement(Document):
 		if self.payment_day and self.old_date and self.payment_day != self.old_date:
 			comment = """ Payment Day is Changed From '{0}' To '{1}' """.format(self.old_date,self.payment_day)
 			self.add_comment("Comment",comment)
-			self.old_date = self.payment_day	
+		self.old_date = self.payment_day	
 	
 	# get_agreement_closed_date
 	def get_agreement_closed_date(self):

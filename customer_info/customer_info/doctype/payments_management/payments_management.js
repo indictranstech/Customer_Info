@@ -205,6 +205,12 @@ render_agreements = function(flag){
 		}
 	}
 
+	var current_due_date_editable = function(row, cell, value, columnDef, dataContext){
+		var id = "current_due_date"+ String(row)
+		console.log(dataContext['current_due_date'],"dataContext['current_due_date']")
+		return "<a class='current_due_date' value="+dataContext['current_due_date']+">" + dataContext['current_due_date'] + "</a>";
+	}
+
 	var late_fees_editable = function(row, cell, value, columnDef, dataContext){
 		var id = "late_fee"+ String(row)
 		console.log(dataContext['late_fees'],"dataContext['late_fees']")
@@ -235,7 +241,7 @@ render_agreements = function(flag){
 	    {id: "product", name: "Product", field: "product",width: 120,toolTip: "Product"},
 	    {id: "number_of_payments", name: "# of Payments", field: "number_of_payments",width: 70,toolTip: "# of Payments"},
 	    {id: "monthly_rental_payment", name: "Rental Payments", field: "monthly_rental_payment",width: 90,toolTip: "Rental Payments"},
-	    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 90,toolTip: "Current Due Date"},
+	    {id: "current_due_date", name: "Current Due Date", field: "current_due_date",width: 90,toolTip: "Current Due Date",formatter:current_due_date_editable},
 	    {id: "next_due_date", name: "Next Due Date", field: "next_due_date",width: 90,toolTip: "Next Due Date"},
 	    {id: "payments_left", name: "Payments left", field: "payments_left",width: 70,toolTip: "Payments left"},
 	    {id: "balance", name: "Balance", field: "balance",width: 70,toolTip: "Balance"},
@@ -399,6 +405,10 @@ make_grid= function(data1,columns,options){
         	var id = $(e.target).attr('id')
         	//new manage_suspenison(id,item)
         	new call_commit(id,item)
+        }
+        if($(e.target).hasClass("current_due_date")) {
+        	var id = $(e.target).attr('id')
+        	new edit_current_due_date(id,item)
         }
         if($(e.target).hasClass("late_fees")) {
         	var id = $(e.target).attr('id')
@@ -699,6 +709,51 @@ edit_campaign_discount = Class.extend({
 	}	
 })
 
+edit_current_due_date = Class.extend({
+	init:function(id,item){
+		this.item = item;
+		this.id = id;
+		this.make_editable();
+	},
+	make_editable:function(){
+		var me = this;
+		this.dialog = new frappe.ui.Dialog({
+			title: "Update Current Due Date",
+			fields: [
+				{"fieldtype": "Date" , "fieldname": "current_due_date" , "label": "Current Due Date"}
+			],
+			primary_action_label: "Update",
+			primary_action: function(){
+				me.update_due_dates();
+			}
+		});
+		this.fd = this.dialog.fields_dict;
+		this.dialog.$wrapper.find('.modal-dialog').css("width", "500px");
+		this.dialog.$wrapper.find('.modal-dialog').css("height", "300px");
+		this.dialog.show();
+		this.set_current_due_date();
+	},
+	set_current_due_date:function(){
+		var me = this;
+		me.dialog.fields_dict.current_due_date.set_input(me.item['current_due_date']);
+	},
+	update_due_dates:function(){
+		var me = this;
+		frappe.call({
+	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_due_date",
+			args: {
+				"agreement":me.item['id'],
+				"update_due_date": me.fd.current_due_date.$input.val()
+			},
+			callback: function(r) {
+				if(r.message){
+					render_agreements();
+					me.dialog.hide();
+				}
+	        }
+	    });
+	}
+})
 
 
 edit_late_fees = Class.extend({
