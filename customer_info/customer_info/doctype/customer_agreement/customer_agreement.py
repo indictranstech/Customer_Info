@@ -394,13 +394,13 @@ def payments_done_by_scheduler():
 	process payments 
 	reduce receivables
 	"""
-	customer = frappe.db.sql("""select name from `tabCustomer`""",as_list=1)
+	customer_list = frappe.db.sql("""select name from `tabCustomer`""",as_list=1)
 
 	now_date = datetime.now().date()
 	firstDay_this_month = date(now_date.year, now_date.month, 1)
 	firstDay_next_month = get_last_day(now_date)#date(now_date.year, now_date.month+1, 1)
 	
-	for name in [i[0] for i in customer]:
+	for name in [i[0] for i in customer_list]:
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
 		
@@ -455,21 +455,21 @@ def payments_done_by_scheduler():
 			
 			customer_agreement.save(ignore_permissions = True)
 			set_values_in_agreement(customer_agreement)
-		args['customer'] = name
-		args['add_in_receivables'] = customer.receivables
-		args['payment_date'] = str(now_date)
-		args['rental_payment'] = sum(monthly_rental_amount)
-		args['payment_type'] = "Normal Payment"
-		args['late_fees'] = 0
-		args['values']['amount_paid_by_customer'] = 0
-		args['values']['bank_card'] = 0
-		args['values']['bank_transfer'] = 0
-		args['values']['discount'] = 0
-		args['values']['bonus'] = 0
-		args['new_bonus'] = 0
-		args['total_charges'] = 0
-		args['total_amount'] = 0
 		if len(payment_ids_list) > 0:
+			args['customer'] = name
+			args['add_in_receivables'] = frappe.get_doc("Customer",name).receivables
+			args['payment_date'] = str(now_date)
+			args['rental_payment'] = sum(monthly_rental_amount)
+			args['payment_type'] = "Normal Payment"
+			args['late_fees'] = 0
+			args['values']['amount_paid_by_customer'] = 0
+			args['values']['bank_card'] = 0
+			args['values']['bank_transfer'] = 0
+			args['values']['discount'] = 0
+			args['values']['bonus'] = 0
+			args['new_bonus'] = 0
+			args['total_charges'] = 0
+			args['total_amount'] = 0
 			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 	
 def set_values_in_agreement(customer_agreement):

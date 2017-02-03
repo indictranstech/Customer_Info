@@ -207,7 +207,7 @@ payoff_details = Class.extend({
 			}*/
 			if ((flt($(me.fd.bonus.input).val()) <= cur_frm.doc.static_bonus) 
 				&& (flt($(me.fd.bonus.input).val()) <= flt(me.payable_by_bonus))) {
-				if (flt($(me.fd.bonus.input).val()) > flt(cur_frm.doc.total_charges)) {
+				if (flt($(me.fd.bonus.input).val()) > flt(cur_frm.doc.total_charges)  && flt(cur_frm.doc.total_charges) >= 0) {
 					me.dialog.set_value("bonus",flt(cur_frm.doc.total_charges))	
 					me.init_for_commom_calculation();
 				}
