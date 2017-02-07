@@ -61,7 +61,7 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 			pmt = "Cash"
 		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) > 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bonus']) == 0:
 			pmt = "Bank Transfer"	
-		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
+		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0 and args['add_in_receivables'] == 0:
 			pmt = "Bonus"
 		elif float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bonus']) == 0:
 			pmt = "Receivables"			
