@@ -98,8 +98,10 @@ class CustomerAgreement(Document):
 		customer_agreement.save(ignore_permissions=True)
 
 	def add_bonus_for_this_agreement(self):
-		customer_agreement = frappe.db.get_value("Customer Agreement",{"customer":self.customer,"agreement_status":"Open"},"name")
-		if customer_agreement != self.name:
+		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+											where agreement_status = "Open" and  customer = '{0}'  
+											and name != "{1}" order by creation desc limit 1""".format(self.customer,self.name),as_list=1)
+		if  customer_agreement and customer_agreement[0][0] != self.name:
 			customer_agreement_doc = frappe.get_doc("Customer Agreement",self.name)
 			customer_agreement_doc.new_agreement_bonus = 20
 			customer_agreement_doc.bonus = 20

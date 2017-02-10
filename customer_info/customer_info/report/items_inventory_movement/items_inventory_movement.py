@@ -30,8 +30,9 @@ def get_data(filters):
 			agreement.customer,
 			(select replace(replace(replace(content,"<p></p>",""),"<p>",""),"</p>","") as content from `tabCommunication` where reference_doctype = "Item" 
 				 and reference_name = item.name order by creation desc limit 1) as Last_Comment
-			FROM `tabItem` item,`tabCustomer Agreement` agreement
-			WHERE item.name = agreement.product
+			FROM `tabItem` item left join `tabCustomer Agreement` agreement on 
+			item.name = agreement.product
+			WHERE 1=1
 			{0}""" .format(get_condtion(filters.get("sold_from_date"),filters.get("sold_to_date"),filters.get("purchase_from_date"),filters.get("purchase_to_date"))),as_list=1)
 	return result
 
