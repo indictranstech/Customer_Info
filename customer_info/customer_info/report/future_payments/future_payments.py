@@ -68,7 +68,6 @@ def get_data(filters):
 
 
 def get_condtion(from_date,to_date):
-	print from_date,to_date
 
 	cond = ""
 	if  from_date and to_date:
@@ -84,7 +83,6 @@ def get_condtion(from_date,to_date):
 
 
 def get_colums():
-	print "future_payments columns"
 	columns = [("Due Date") + ":Date:100"] + [("Customer") + ":Link/Customer:100"] + \
 			  [("Payment Id") + ":Data:170"] + \
 			  [("Receivables") + ":Data:90"] + \

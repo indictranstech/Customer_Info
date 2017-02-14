@@ -62,7 +62,6 @@ def get_condtion(from_date,to_date):
 
 
 def get_colums():
-	print "future_payments columns"
 	columns =  [("New agreement bonus") + ":Float:150"] + \
 				[("Early payments bonus") + ":Float:150"] + \
 				[("Payment on time bonus") + ":Float:150"] + \

@@ -277,114 +277,7 @@ def reset_contact_result_of_sent_sms():
 			agreement_doc.suspension_date = ""
 		agreement_doc.save(ignore_permissions=True)	
 
-# def payments_done_by_scheduler():
-# 	print "in update_payments_child_table"
-# 	now_date = datetime.now().date()
-# 	firstDay_this_month = date(now_date.year, now_date.month, 1)
-# 	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
-# 	due_payment_list = []
-# 	customer = frappe.db.sql("""select name from `tabCustomer`""",as_list=1)
-# 	for name in [i[0] for i in customer]:
-# 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
-# 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
-# 		customer = frappe.get_doc("Customer",name)
-# 		# customer.receivables
-# 		for agreement in [e[0] for e in customer_agreement]:
-# 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-# 			for row in customer_agreement.payments_record:
-# 				if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) < firstDay_next_month:
-# 					if customer.receivables >= row.monthly_rental_amount:
-# 						customer.receivables = customer.receivables - row.monthly_rental_amount
-# 						row.update({
-# 							"check_box":1,
-# 							"check_box_of_submit":1,
-# 							"payment_date":now_date
-# 						})
-# 					row.save(ignore_permissions=True)
-# 				if row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month:
-# 					if customer.receivables >= row.monthly_rental_amount:
-# 						customer.receivables = customer.receivables - row.monthly_rental_amount
-# 						row.update({
-# 							"check_box":1,
-# 							"check_box_of_submit":1,
-# 							"payment_date":now_date
-# 						})
-# 					row.save(ignore_permissions=True)
-# 			customer_agreement.save(ignore_permissions = True)
-# 			set_values_in_agreement(customer_agreement.name,customer.bonus,customer)
-	
-# def set_values_in_agreement(customer_agreement,frm_bonus,customer):
-# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-# 	now_date = datetime.now().date()
-# 	firstDay_this_month = date(now_date.year, now_date.month, 1)
-# 	firstDay_next_month = date(now_date.year, now_date.month+1, 1)
-# 	late_payments = []
-# 	calculate_due_days = []
-# 	amount_of_payment_left = []
-# 	add_bonus_of_one_eur = []
-# 	add_bonus_of_two_eur = []
-# 	no_of_late_days = 0
-# 	received_payments = []
-# 	if customer_agreement.payments_record:
-# 		for row in customer_agreement.payments_record:
-# 			if row.check_box_of_submit == 1:
-# 				received_payments.append(row.monthly_rental_amount)
-			
-# 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3:
-# 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
-# 				late_payments.append(row.monthly_rental_amount)	
-			
-# 			if (getdate(row.due_date) >= firstDay_next_month) and row.check_box == 0:
-# 			 	print "in amount_of_payment_left"
-# 			 	amount_of_payment_left.append(row.monthly_rental_amount)
-			
-# 			if row.due_date and firstDay_this_month <= getdate(row.due_date) < firstDay_next_month:
-# 				calculate_due_days.append(row.monthly_rental_amount)
-			
-# 			if row.payment_date and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0:
-# 				add_bonus_of_one_eur.append(row.idx)
-# 				row.update({
-# 					'add_bonus_to_this_payment':1
-# 					})
-# 				row.save(ignore_permissions = True)
 
-# 			elif row.payment_date and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0:
-# 				add_bonus_of_two_eur.append(row.idx)
-# 				row.update({
-# 					'add_bonus_to_this_payment':1
-# 					})
-# 				row.save(ignore_permissions = True)
-
-# 		for row in customer_agreement.payments_record:
-# 			if row.check_box == 0 and date_diff(row.due_date,datetime.now()) < 0:
-# 				customer_agreement.current_date = row.due_date
-# 				customer_agreement.next_due_date = customer_agreement.get_next_due_date(customer_agreement.current_due_date,1)
-# 				break
-# 			elif row.check_box == 0 and date_diff(row.due_date,datetime.now()) >= 0:
-# 				customer_agreement.current_due_date = row.due_date
-# 				customer_agreement.next_due_date = row.due_date	
-# 				break		
-
-# 	received_payments = map(float,received_payments)
-# 	amount_of_payment_left = map(float,amount_of_payment_left)
-# 	late_payments = map(float,late_payments)
-# 	bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-
-# 	if customer_agreement.payments_record and customer_agreement.date:
-# 		customer_agreement.payments_made = sum(received_payments)
-# 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(received_payments)) * customer_agreement.monthly_rental_payment
-# 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(received_payments)
-# 		customer_agreement.late_payments = sum(late_payments)
-# 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
-# 		customer_agreement.late_fees = no_of_late_days * customer_agreement.monthly_rental_payment * 0.02
-# 		customer_agreement.bonus = customer_agreement.bonus + bonus
-# 		customer_agreement.total_due = (len(calculate_due_days) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02)) - sum(received_payments)
-# 	customer_agreement.save(ignore_permissions=True)
-
-# 	total_bonus = float(frm_bonus) + bonus
-# 	print  total_bonus,"total_bonustype of total_bonus"
-# 	customer.bonus = float(frm_bonus) + bonus
-# 	customer.save(ignore_permissions=True)
 
 def payments_done_by_scheduler():
 	"""
@@ -414,31 +307,49 @@ def payments_done_by_scheduler():
 		args['receivables'] = frappe.get_doc("Customer",name).receivables
 		for agreement in [e[0] for e in customer_agreement]:
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-			
-			print customer_agreement.name,"name"
+			add_bonus_of_one_eur = []
+			add_bonus_of_two_eur = []
 			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 			for row in customer_agreement.payments_record:
-				if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month:
-					print "in month"
+				if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month and getdate(row.due_date) == now_date:
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
-					print "receivables",receivables,customer.name,row.monthly_rental_amount,"\n\n\n\n"
 					if float(receivables) >= float(row.monthly_rental_amount):
 						payment_ids_list.append(row.payment_id)
 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
 						monthly_rental_amount.append(row.monthly_rental_amount)
+						add_bonus_of_one_eur.append(row.idx)
 						row.update({
 							"check_box":1,
 							"check_box_of_submit":1,
-							"payment_date":now_date
+							"payment_date":now_date,
+							'add_bonus_to_this_payment':1 if customer_agreement.document_type == "New" else 0,
 						})
 						row.save(ignore_permissions = True)
 
 						customer.receivables = receivables - row.monthly_rental_amount
 						customer.save(ignore_permissions=True)	
 						
+				if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month and getdate(row.due_date) > now_date:
+					customer = frappe.get_doc("Customer",name)
+					receivables = customer.receivables
+					if float(receivables) >= float(row.monthly_rental_amount):
+						payment_ids_list.append(row.payment_id)
+						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
+						monthly_rental_amount.append(row.monthly_rental_amount)
+						add_bonus_of_two_eur.append(row.idx)
+						row.update({
+							"check_box":1,
+							"check_box_of_submit":1,
+							"payment_date":now_date,
+							'add_bonus_to_this_payment':1 if customer_agreement.document_type == "New" else 0,
+						})
+						row.save(ignore_permissions = True)
+
+						customer.receivables = receivables - row.monthly_rental_amount
+						customer.save(ignore_permissions=True)		
+						
 				if row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month:
-					print "not in month"
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
@@ -448,13 +359,38 @@ def payments_done_by_scheduler():
 						row.update({
 							"check_box":1,
 							"check_box_of_submit":1,
-							"payment_date":now_date
+							"payment_date":now_date,
 						})
 						row.save(ignore_permissions = True)
 
 						customer.receivables = receivables - row.monthly_rental_amount
 						customer.save(ignore_permissions=True)	
-			
+				# arg = {"name":name,"row":row,"payment_ids_list":payment_ids_list,
+				# 		"payments_detalis_list":payments_detalis_list,
+				# 		"monthly_rental_amount":monthly_rental_amount,
+				# 		"add_bonus_of_one_eur":add_bonus_of_one_eur,
+				# 		"add_bonus_of_two_eur":add_bonus_of_two_eur,
+				# 		"now_date":now_date}
+				# print arg,"arg","\n\n\n\n\n"
+				# #print row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month
+				# print getdate(row.due_date) == now_date		
+				# if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month and getdate(row.due_date) == now_date:
+				# 	print "inside add_bonus_of_one_eur"
+				# 	arg["bonus"] = "1"
+				# 	update_payments_record(arg)	
+
+				# if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= firstDay_next_month and getdate(row.due_date) > now_date:
+				# 	print "inside add_bonus_of_two_eur"
+				# 	arg["bonus"] = "2"
+				# 	update_payments_record(arg)
+						
+				# if row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month:
+				# 	print "inside with out add_bonus_of_two_eur"
+				# 	update_payments_record(arg)	
+			if customer_agreement.document_type == "New":	
+				customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
+				customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2	
+				customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 			customer_agreement.save(ignore_permissions = True)
 			set_values_in_agreement(customer_agreement)
 		if len(payment_ids_list) > 0:
@@ -474,6 +410,7 @@ def payments_done_by_scheduler():
 			args['total_amount'] = 0
 			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 	
+
 def set_values_in_agreement(customer_agreement):
 	payment_made = []
 
@@ -521,7 +458,6 @@ def get_primary_address(customer):
 
 @frappe.whitelist()
 def update_due_dates_of_payments(update_date,name):
-	frappe.errprint(update_date)
 	agreement = frappe.get_doc("Customer Agreement",name)
 	counter_of_row = 0
 	date_dict = {}

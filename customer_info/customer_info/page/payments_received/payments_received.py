@@ -8,7 +8,6 @@ from customer_info.customer_info.doctype.payments_management.payments_management
 
 @frappe.whitelist()
 def get_payments_details(customer,from_date,to_date):
-	#print customer,from_date,to_date
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -127,7 +126,7 @@ def make_refund_payment(payments_ids,ph_name):
 			campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
 			campaign_discount_of_agreements_list.sort()	
 		
-		print campaign_discount_of_agreements_list,"\n\n\n\n\n\n","ffffffff"		
+		
 
 
 		refund_bonus = []	
@@ -147,7 +146,6 @@ def make_refund_payment(payments_ids,ph_name):
 				customer_agreement.save(ignore_permissions=True)
 
 			if payment_history.payment_type == "Normal Payment" and agreement == merchandise_status_list[i].split("/")[0]:
-				print "inside 111111"
 				item_doc.sold_date = item_doc.old_sold_date
 				item_doc.old_sold_date = item_doc.old_sold_date
 				item_doc.save(ignore_permissions=True)
@@ -165,7 +163,6 @@ def make_refund_payment(payments_ids,ph_name):
 					customer_agreement.save(ignore_permissions=True)	
 				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
 		
-		print refund_bonus,"refund_bonus","\n\n\n\n\n","Customer bonus",customer.bonus		
 		#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
 		customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
 		customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)

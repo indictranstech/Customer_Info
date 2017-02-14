@@ -65,7 +65,6 @@ def get_condtion(sold_from_date,sold_to_date,purchase_from_date,purchase_to_date
 
 
 def get_colums():
-	print "inventory columns"
 	columns = [("Warehouse") + ":Link/Warehouse:100"] + [("Supplier") + ":Link/Supplier:100"] + \
 			  [("Invoice number") + "::170"] + \
 			  [("Product Category") + ":Link/Product Category:90"] + [("Product Model") + ":Link/Brand:90"] + \

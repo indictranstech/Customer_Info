@@ -60,10 +60,11 @@ def made_payments(d):
 	"used_bonus":0,
 	"new_bonus":0,
 	"add_in_receivables":0,
-	"receivables":0,
+	"receivables":0
 	}
+	flag = "from_import_payment"
 
-	update_on_submit(args,"True")
+	update_on_submit(args,flag)
 	return error
 
 

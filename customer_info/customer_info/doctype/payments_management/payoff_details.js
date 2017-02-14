@@ -484,7 +484,8 @@ payoff_details = Class.extend({
 					"receivables":cur_frm.doc.receivables,
 					"total_charges":cur_frm.doc.total_charges,
 					//"receivables":me.add_in_receivables,
-   		        }
+   		        },
+   		        "flag":"from_payoff"
 	       	},
 	       	callback: function(r){
 	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
