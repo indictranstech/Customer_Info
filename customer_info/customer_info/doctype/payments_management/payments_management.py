@@ -156,10 +156,8 @@ def calculate_total_charges(customer,flag,payment_date):
 			agreements_and_late_fees_dict[customer_agreement.name] = customer_agreement.late_fees	
 
 		customer_agreement.save(ignore_permissions=True)
-		
-		print agreements_and_late_fees_dict,"agreements_and_late_fees_dict","\n\n\n\n\n\n\n"				
+
 	discount_amount_of_agreements = "{0:.2f}".format(sum(agreements_discount_list))
-	print "\n\n\n\n\n\n\n\n",float(discount_amount_of_agreements),"\n\n\n\n\n\n\n\n"
 	agreements_due_amount_list.append(float("{0:.2f}".format(sum(agreements_and_late_fees_dict.values()))))
 	return {"amount_of_due_payments":sum(agreements_due_amount_list) - float(discount_amount_of_agreements), # deduct campaign discount of all agreements
 			"receivables":receivables,
@@ -297,7 +295,6 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1,debug=1)
 	}
 	for entry in data['list_of_agreement']:
-		print entry[14],"eeeeeeeeeeeeeeee",entry[1],"\n\n\n\n\n"
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
@@ -389,7 +386,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 			if row.check_box_of_submit == 1:
 				submitable_payments.append(row.idx)
 			
-			if customer_agreement.customer_group == "Individual" and flag != "Payoff":
+			if customer_agreement.customer_group == "Individual" and flag != "Payoff" and customer_agreement.document_type == "New":
 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
@@ -442,7 +439,6 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 	subtract_bonus = len(remove_bonus_of_one_eur)*1 + len(remove_bonus_of_two_eur)*2
 
-	print "\n\n\n\n\n",subtract_bonus,"subtract_bonus"
 
 
 	if customer_agreement.payments_record and customer_agreement.date:
@@ -501,10 +497,12 @@ def get_late_payment(agreements,payment_date):
 
 @frappe.whitelist()
 #def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,manual_bonus,used_bonus,new_bonus,total_charges,rental_payment,late_fees):
-def update_on_submit(args,flag=None):
-	args = json.loads(args) if not flag else args
+def update_on_submit(args,flag):
+	#args = json.loads(args) if not flag else args
+	args = json.loads(args) if flag == "from_payoff" else args
 	#values = json.loads(values)
-	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(args['customer'])
+	#cond = "(select name from `tabCustomer Agreement` where customer = '{0}' and agreement_status = 'Open')".format(args['customer'])
+	cond = "(select name from `tabCustomer Agreement` where customer = '{0}' {1})".format(args['customer'],"" if flag == "from_import_payment" else "and agreement_status = 'Open'")
 
 	submitted_payments_ids_info = frappe.db.sql("""select payment_id,due_date,
 							payment_date,monthly_rental_amount from `tabPayments Record` where 
@@ -517,13 +515,11 @@ def update_on_submit(args,flag=None):
 	if submitted_payments_ids_info:
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
-			print "inside 1","\n\n\n\n\n\n"
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
 			args['new_bonus'] = 0
 
 		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
-			print "inside 2","\n\n\n\n\n\n"
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
 			args['new_bonus'] = 0
@@ -799,7 +795,7 @@ def get_summary_records(agreement,receivable,late_fees):
 
 	elif agreement.today_plus_90_days < datetime.now().date():
 		balance = float(agreement.payments_left) * agreement.monthly_rental_payment
-		discount = (balance / 100) * float(agreement.early_buy_discount_percentage)
+		discount = ((balance - float(agreement.late_payment)) / 100) * float(agreement.early_buy_discount_percentage)
 		#Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + float(late_fees) - float(receivable)
 		#Total_payoff_amount = (balance - float(discount)) + float(agreement.late_payment) + float(late_fees) - float(receivable)
 		Total_payoff_amount = float(late_fees) + balance - float(discount)
@@ -842,7 +838,6 @@ def get_history_records(customer_agreement):
 			i["late_days"] = 0
 		elif date_diff(i['payment_date'],i['due_date']) < 0:
 			i["late_days"] = date_diff(i['payment_date'],i['due_date'])
-	print history_record_dict,"history_record_dict history_record_dict","\n\n\n\n\n\n"		
 	return history_record_dict
 
 	
