@@ -22,12 +22,18 @@ PaymentImportTool = Class.extend({
 		frappe.upload.make({
 			parent: this.page.main.find(".upload-area"),
 			btn: this.page.main.find(".btn-import"),
+			get_params: function() {
+				return {
+					update_due_date: me.page.main.find('[name="update_due_date"]').prop("checked")
+				}
+			},
 			args: {
-				method: 'customer_info.customer_info.page.import_payments.import_payments.upload',
+				method: 'customer_info.customer_info.page.import_payments.import_payments.upload'
 			},
 			callback: function(attachment, r) {
 				me.page.main.find(".import-log").removeClass("hide");
 				var parent = me.page.main.find(".import-log-messages").empty();
+				console.log(r.messages,"rrrrrr")
 				if(!r.messages) r.messages = [];
 				// replace links if error has occured
 				if(r.exc || r.error) {

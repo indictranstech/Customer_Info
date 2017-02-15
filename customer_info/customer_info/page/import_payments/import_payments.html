@@ -2,9 +2,11 @@
     <div class="page-form" style="padding-left: 30px;">
         <h3>{%= __("Import") %}</h3>
         <p class="text-muted">{%= __("Update the template and save in CSV (Comma Separate Values) format before attaching.") %}</p>
-        <div class="row">
+        <div class="row text-muted">
             <div class="col-md-6">
                 <div class="upload-area"></div>
+                <input type="checkbox" name="update_due_date"> Update Due Dates
+                <br>
                 <p>
                     <button class="btn btn-sm btn-primary btn-import">Import</button>
                 </p>
