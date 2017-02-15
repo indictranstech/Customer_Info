@@ -7,7 +7,6 @@ from customer_info.customer_info.doctype.payments_management.payments_management
 @frappe.whitelist()
 def upload(update_due_date = None):
 	params = json.loads(frappe.form_dict.get("params") or '{}')
-	frappe.errprint(params['update_due_date'])
 	csv_rows = read_csv_content_from_uploaded_file()
 	ret = []
 	error = False
@@ -31,7 +30,6 @@ def made_payments(d,params):
 	d['Customer'] = agreement_doc.customer
 	if params['update_due_date']:
 		for row in agreement_doc.payments_record:
-			frappe.errprint(d['Payment ID'])
 			if row.payment_id == d['Payment ID'] and row.check_box == 0:
 				row.due_date = d['Payment due date']
 				row.save(ignore_permissions=True)
@@ -50,6 +48,7 @@ def made_payments(d,params):
 			error += "Payment Processed Successful for {0} of {1} agreement".format(d['Payment ID'],d['Agreement No'])
 		if row.payment_id == d['Payment ID'] and getdate(row.due_date) != getdate(d['Payment due date']):
 			error += "Payment due date {0} not match with Payment ID {1} of {2} agreement".format(d['Payment due date'],d['Payment ID'],d['Agreement No'])
+	
 	agreement_doc.save(ignore_permissions=True)
 	
 	args = {

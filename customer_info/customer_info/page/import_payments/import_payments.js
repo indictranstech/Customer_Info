@@ -28,11 +28,12 @@ PaymentImportTool = Class.extend({
 				}
 			},
 			args: {
-				method: 'customer_info.customer_info.page.import_payments.import_payments.upload',
+				method: 'customer_info.customer_info.page.import_payments.import_payments.upload'
 			},
 			callback: function(attachment, r) {
 				me.page.main.find(".import-log").removeClass("hide");
 				var parent = me.page.main.find(".import-log-messages").empty();
+				console.log(r.messages,"rrrrrr")
 				if(!r.messages) r.messages = [];
 				// replace links if error has occured
 				if(r.exc || r.error) {
