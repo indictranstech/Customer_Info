@@ -103,12 +103,13 @@ class CustomerAgreement(Document):
 											and name != "{1}" order by creation desc limit 1""".format(self.customer,self.name),as_list=1)
 		if  customer_agreement and customer_agreement[0][0] != self.name:
 			customer_agreement_doc = frappe.get_doc("Customer Agreement",self.name)
-			customer_agreement_doc.new_agreement_bonus = 20
-			customer_agreement_doc.bonus = 20
-			customer_agreement_doc.save(ignore_permissions=True)
-			customer = frappe.get_doc("Customer",self.customer)
-			customer.bonus = customer.bonus + 20
-			customer.save(ignore_permissions=True)
+			if customer_agreement_doc.document_type == "New":
+				customer_agreement_doc.new_agreement_bonus = 20
+				customer_agreement_doc.bonus = 20
+				customer_agreement_doc.save(ignore_permissions=True)
+				customer = frappe.get_doc("Customer",self.customer)
+				customer.bonus = customer.bonus + 20
+				customer.save(ignore_permissions=True)
 
 
 	def change_sold_date_on_agreement_creation(self):
@@ -510,6 +511,9 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.suspension_date = ""
 	target_doc.amount_of_contact_result = 0
 	target_doc.call_commitment = ""
+	target_doc.bonus = 0
+	target_doc.early_payments_bonus = 0
+	target_doc.payment_on_time_bonus = 0
 
 	return target_doc
 

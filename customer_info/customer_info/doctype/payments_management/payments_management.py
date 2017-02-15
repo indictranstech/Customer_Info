@@ -798,7 +798,7 @@ def get_summary_records(agreement,receivable,late_fees):
 		discount = ((balance - float(agreement.late_payment)) / 100) * float(agreement.early_buy_discount_percentage)
 		#Total_payoff_amount = (balance - float(discount)) + float(agreement.total_late_payments) + float(late_fees) - float(receivable)
 		#Total_payoff_amount = (balance - float(discount)) + float(agreement.late_payment) + float(late_fees) - float(receivable)
-		Total_payoff_amount = float(late_fees) + balance - float(discount)
+		Total_payoff_amount = float(late_fees) + balance - float(discount) - float(receivable)
 		Total_payoff_amount = "{0:.2f}".format(Total_payoff_amount)
 		#format(Total_payoff_amount)
 		return {"cond":"90 day pay Off",#2,
