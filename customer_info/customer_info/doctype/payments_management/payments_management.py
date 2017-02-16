@@ -26,27 +26,35 @@ def get_bonus_summary(customer):
 	update early_payments_bonus and payment_on_time_bonus
 
 	"""
-	for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
-					 filters={"customer":customer})]:
-		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
-		# print frappe.db.sql("""select payment_id from `tabPayments Record` 
-		# 	where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
-		agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
-			(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
-			AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
-			AS bonus 
-			from `tabPayments Record` where parent = "{0}")I
-			""".format(agreement['name']),as_list=1)[0][0]
-		agreement_doc.payment_on_time_bonus = frappe.db.sql("""select sum(I.BONUS) from
-			(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
-			AND payment_date = due_date THEN add_bonus_to_this_payment * 1 ELSE 0 END 
-			AS bonus 
-			from `tabPayments Record` where parent = "{0}")I
-			""".format(agreement['name']),as_list=1)[0][0]		
-		agreement_doc.save(ignore_permissions=True)
+	# for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
+	# 				 filters={"customer":customer})]:
+	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
+	# 	# print frappe.db.sql("""select payment_id from `tabPayments Record` 
+	# 	# 	where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
+	# 	agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
+	# 		(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
+	# 		AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
+	# 		AS bonus 
+	# 		from `tabPayments Record` where parent = "{0}")I
+	# 		""".format(agreement['name']),as_list=1)[0][0]
+	# 	agreement_doc.payment_on_time_bonus = frappe.db.sql("""select sum(I.BONUS) from
+	# 		(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
+	# 		AND payment_date = due_date THEN add_bonus_to_this_payment * 1 ELSE 0 END 
+	# 		AS bonus 
+	# 		from `tabPayments Record` where parent = "{0}")I
+	# 		""".format(agreement['name']),as_list=1)[0][0]		
+	# 	agreement_doc.save(ignore_permissions=True)
 
-	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
+	# return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
+	# 							"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
+
+	# agreements_of_customers = frappe.db.sql("""select name from `tabCustomer Agreement`
+	# 	where customer = '{0}' and agreement_status = "Open" """.format(customer),as_list=1)
+	# for agreement in [agreements[0] for agreements in agreements_of_customers]:
+	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+	return frappe.db.get_values("Customer Agreement",{"customer":customer,"agreement_status":"Open"},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
+
 
 
 
