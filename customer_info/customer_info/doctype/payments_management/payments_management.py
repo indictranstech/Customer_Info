@@ -411,7 +411,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 				
-				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
+				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
 					remove_bonus_of_one_eur.append(row.idx)
 					row.update({
 						'add_bonus_to_this_payment':0,
@@ -419,7 +419,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 
-				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and row.check_box_of_submit==0:
+				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
 					remove_bonus_of_two_eur.append(row.idx)	
 					row.update({
 						'add_bonus_to_this_payment':0,
