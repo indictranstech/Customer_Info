@@ -521,6 +521,9 @@ def update_on_submit(args,flag):
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
 	if submitted_payments_ids_info:
+		if float(args['values']['bonus']) > 0:
+			add_assigned_bonus_to_agreement(args['customer'],float(args['values']['bonus']))
+
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
 			remove_new_bonus(submitted_payments_ids_info)
@@ -578,6 +581,28 @@ def update_on_submit(args,flag):
 	else:
 		args['total_amount'] = 0
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
+
+""" add assigned to agreement  which has the longest valid 90d SAC price.(date) """
+def add_assigned_bonus_to_agreement(customer,bonus):
+	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+		where customer = '{0}' and agreement_status = "Open" 
+		order by today_plus_90_days desc limit 1""".format(customer),as_list=1)[0][0]
+	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+	agreement_doc.assigned_bonus +=  bonus
+	agreement_doc.save(ignore_permissions=True)
+	# today_plus_90_days_date = ""
+	# frappe.errprint([agreement[0] for agreement in agreements])
+	# for agreement in [agreement[0] for agreement in agreements]:
+	# 	frappe.errprint(agreement)
+	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+	# 	if agreement_doc.today_plus_90_days and today_plus_90_days_date:
+	# 		if getdate(today_plus_90_days_date) < getdate(agreement_doc.today_plus_90_days):
+	# 			today_plus_90_days_date = agreement_doc.today_plus_90_days
+	# 	elif agreement_doc.today_plus_90_days and today_plus_90_days_date == "":
+	# 			today_plus_90_days_date = agreement_doc.today_plus_90_days
+
+	# frappe.errprint([today_plus_90_days_date,"today_plus_90_days_date"])
+
 
 """remove newly added bonus of payments"""
 
@@ -796,6 +821,7 @@ def get_summary_records(agreement,receivable,late_fees):
 				"s90d_SAC_price":"{0} EUR".format(agreement.s90d_sac_price),
 				"Expires":agreement.today_plus_90_days,
 				"Payments_made":"{0} EUR".format(payments_made),
+				"Bonus_payments":"{0} EUR".format(agreement.assigned_bonus),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
 				"s90_day_pay_Off":"{0} EUR".format(float(day_pay_Off)),
 				"Number_of_payments_left":agreement.payments_left
