@@ -394,7 +394,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 			if row.check_box_of_submit == 1:
 				submitable_payments.append(row.idx)
 			
-			if customer_agreement.customer_group == "Individual" and flag != "Payoff" and customer_agreement.document_type == "New":
+			if customer_agreement.customer_group == "Individual" and flag != "Payoff":# and customer_agreement.document_type == "New":
 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({
@@ -465,9 +465,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	customer_agreement.save(ignore_permissions=True)
 
 	#print frm_bonus,"frm_bonus","\n\n\n\n",bonus," add bonus","\n\n\n\n",subtract_bonus,"subtract_bonus","\n\n\n\n\n\n"
-	total_bonus = float(frm_bonus) + bonus - subtract_bonus
+	total_bonus = float(frm_bonus) + bonus - float(subtract_bonus)
 
-	#print  total_bonus,"total_bonus",type(total_bonus),"type of total_bonus"
 	return str(total_bonus)
 
 

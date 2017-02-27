@@ -162,7 +162,6 @@ def make_refund_payment(payments_ids,ph_name):
 					customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
 					customer_agreement.save(ignore_permissions=True)	
 				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
-		
 		#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
 		customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
 		customer.used_bonus = float(customer.used_bonus) - float(payment_history.bonus)
