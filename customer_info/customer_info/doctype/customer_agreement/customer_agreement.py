@@ -375,6 +375,7 @@ def payments_done_by_scheduler():
 
 						customer.receivables = receivables - row.monthly_rental_amount
 						customer.save(ignore_permissions=True)	
+						
 				# arg = {"name":name,"row":row,"payment_ids_list":payment_ids_list,
 				# 		"payments_detalis_list":payments_detalis_list,
 				# 		"monthly_rental_amount":monthly_rental_amount,
