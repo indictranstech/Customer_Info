@@ -82,6 +82,7 @@ frappe.ui.form.on("Customer Agreement",{
 		}
 	},
     onload:function(frm){
+        $('.page-icon-group').hide()
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_status","options",["","Open","Closed","Suspended"])
             cur_frm.set_df_property("agreement_update_date","hidden",1)
@@ -172,6 +173,7 @@ frappe.ui.form.on("Customer Agreement",{
         }*/         
     },
     refresh:function(frm){
+        $('.page-icon-group').hide();
         if(!cur_frm.doc.__islocal){
             cur_frm.add_custom_button(__('Update Agreement'),function(){
                 make_update_agreement();
