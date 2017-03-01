@@ -307,7 +307,9 @@ def payments_done_by_scheduler():
 		merchandise_status = ""
 		args = {'values':{}}
 		args['receivables'] = frappe.get_doc("Customer",name).receivables
+		print name,"name"
 		for agreement in [e[0] for e in customer_agreement]:
+			print agreement,"agreement"
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 			add_bonus_of_one_eur = []
 			add_bonus_of_two_eur = []
@@ -319,6 +321,7 @@ def payments_done_by_scheduler():
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
+						print "inside in receivables"
 						payment_ids_list.append(row.payment_id)
 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
 						monthly_rental_amount.append(row.monthly_rental_amount)

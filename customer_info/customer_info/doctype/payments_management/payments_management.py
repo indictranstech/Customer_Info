@@ -26,34 +26,34 @@ def get_bonus_summary(customer):
 	update early_payments_bonus and payment_on_time_bonus
 
 	"""
-	# for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
-	# 				 filters={"customer":customer})]:
-	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
-	# 	# print frappe.db.sql("""select payment_id from `tabPayments Record` 
-	# 	# 	where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
-	# 	agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
-	# 		(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
-	# 		AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
-	# 		AS bonus 
-	# 		from `tabPayments Record` where parent = "{0}")I
-	# 		""".format(agreement['name']),as_list=1)[0][0]
-	# 	agreement_doc.payment_on_time_bonus = frappe.db.sql("""select sum(I.BONUS) from
-	# 		(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
-	# 		AND payment_date = due_date THEN add_bonus_to_this_payment * 1 ELSE 0 END 
-	# 		AS bonus 
-	# 		from `tabPayments Record` where parent = "{0}")I
-	# 		""".format(agreement['name']),as_list=1)[0][0]		
-	# 	agreement_doc.save(ignore_permissions=True)
+	for agreement in [agreement for agreement in frappe.get_all("Customer Agreement",\
+					 filters={"customer":customer})]:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
+		# print frappe.db.sql("""select payment_id from `tabPayments Record` 
+		# 	where parent ='{0}' and add_bonus_to_this_payment =1 """.format(agreement['name']))
+		agreement_doc.early_payments_bonus = frappe.db.sql("""select sum(I.BONUS) from
+			(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
+			AND payment_date < due_date THEN add_bonus_to_this_payment * 2 ELSE 0 END 
+			AS bonus 
+			from `tabPayments Record` where parent = "{0}")I
+			""".format(agreement['name']),as_list=1)[0][0]
+		agreement_doc.payment_on_time_bonus = frappe.db.sql("""select sum(I.BONUS) from
+			(select  CASE WHEN add_bonus_to_this_payment = 1 AND check_box_of_submit = 1
+			AND payment_date = due_date THEN add_bonus_to_this_payment * 1 ELSE 0 END 
+			AS bonus 
+			from `tabPayments Record` where parent = "{0}")I
+			""".format(agreement['name']),as_list=1)[0][0]		
+		agreement_doc.save(ignore_permissions=True)
 
-	# return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
-	# 							"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
+	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
+								"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
 
 	# agreements_of_customers = frappe.db.sql("""select name from `tabCustomer Agreement`
 	# 	where customer = '{0}' and agreement_status = "Open" """.format(customer),as_list=1)
 	# for agreement in [agreements[0] for agreements in agreements_of_customers]:
 	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
-	return frappe.db.get_values("Customer Agreement",{"customer":customer,"agreement_status":"Open"},["name","new_agreement_bonus",\
-								"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
+	# return frappe.db.get_values("Customer Agreement",{"customer":customer,"agreement_status":"Open"},["name","new_agreement_bonus",\
+	# 							"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
 
 
 
@@ -520,8 +520,9 @@ def update_on_submit(args,flag):
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
 	if submitted_payments_ids_info:
-		if float(args['values']['bonus']) > 0:
-			add_assigned_bonus_to_agreement(args['customer'],float(args['values']['bonus']))
+		# if float(args['values']['bonus']) > 0:
+		# 	add_assigned_bonus_and_discount(args['customer'],float(args['values']['bonus']))
+		add_assigned_bonus_and_discount(args)
 
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
@@ -582,13 +583,23 @@ def update_on_submit(args,flag):
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
 
 """ add assigned to agreement  which has the longest valid 90d SAC price.(date) """
-def add_assigned_bonus_to_agreement(customer,bonus):
+def add_assigned_bonus_and_discount(args):
 	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 		where customer = '{0}' and agreement_status = "Open" 
-		order by today_plus_90_days desc limit 1""".format(customer),as_list=1)[0][0]
+		order by today_plus_90_days desc limit 1""".format(args['customer']),as_list=1)[0][0]
 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
-	agreement_doc.assigned_bonus +=  bonus
-	agreement_doc.save(ignore_permissions=True)
+	if float(args['values']['bonus']) > 0:	
+		agreement_doc.assigned_bonus +=  float(args['values']['bonus'] )
+	if float(args['values']['discount']) > 0:
+		agreement_doc.assigned_discount +=  float(args['values']['discount'] 	)
+	agreement_doc.save(ignore_permissions=True) 
+# def add_assigned_bonus_to_agreement(customer,bonus):
+# 	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+# 		where customer = '{0}' and agreement_status = "Open" 
+# 		order by today_plus_90_days desc limit 1""".format(customer),as_list=1)[0][0]
+# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+# 	agreement_doc.assigned_bonus +=  bonus
+# 	agreement_doc.save(ignore_permissions=True)
 	# today_plus_90_days_date = ""
 	# frappe.errprint([agreement[0] for agreement in agreements])
 	# for agreement in [agreement[0] for agreement in agreements]:
