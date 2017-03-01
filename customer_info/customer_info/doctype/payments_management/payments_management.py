@@ -577,12 +577,13 @@ def update_on_submit(args,flag):
 		#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
 		args['total_amount'] = 0
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
-		return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "","used_bonus_of_customer":used_bonus_of_customer}
+		return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "",
+				"used_bonus_of_customer":used_bonus_of_customer,"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False"}
 	else:
 		args['total_amount'] = 0
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
 
-""" add assigned to agreement  which has the longest valid 90d SAC price.(date) """
+""" add assigned bonus ,dicount to agreement  which has the longest valid 90d SAC price.(date) """
 def add_assigned_bonus_and_discount(args):
 	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 		where customer = '{0}' and agreement_status = "Open" 
@@ -804,6 +805,19 @@ def payoff_submit(args):
 	args['new_bonus'] = 0
 	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
 	make_payment_history(args,payments_detalis_list,payment_ids_list,"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
+	return checking_all_agreements_closed(agreement.customer)
+
+
+def checking_all_agreements_closed(customer):
+	customer_doc = frappe.get_doc("Customer",customer)
+	agreements_status = frappe.db.sql("""select agreement_status 
+								from `tabCustomer Agreement` where customer = '{0}' 
+								and agreement_status <> 'Updated' """.format(customer),as_list=1)
+	customer_doc.bonus = 0 if all(status == "Closed" for status in [s[0] for s in agreements_status]) else customer_doc.bonus
+	customer_doc.save(ignore_permissions=True)
+	return "True" if all(status == "Closed" for status in [s[0] for s in agreements_status]) else "False"
+
+
 
 @frappe.whitelist()
 def get_payments_record(customer_agreement,receivable,late_fees,payment_date):
