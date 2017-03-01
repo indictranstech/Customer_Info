@@ -445,20 +445,20 @@ bonus_summary = Class.extend({
 	},
 	get_bonus_summary:function(){
 		var me =this;
-		/*frappe.call({
+		frappe.call({
 		   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
 			args: {
 				"customer":	cur_frm.doc.customer
 			},
 			freeze: true,
-			freeze_message: __("Please Wait..."),*/
-		frappe.call({    
+			freeze_message: __("Please Wait..."),
+		/*frappe.call({    
 			method: "frappe.client.get_list",
 		   	args: {
 		    	doctype: "Customer Agreement",
 		       	fields: ["early_payments_bonus","payment_on_time_bonus","new_agreement_bonus","name"],
 		       	filters: {'agreement_status':'Open','customer':cur_frm.doc.customer},
-			},	
+			},*/	
 			callback: function(r){
 				if(r.message){
 					total_bonus = {

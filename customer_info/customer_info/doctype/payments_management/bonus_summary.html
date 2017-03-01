@@ -4,7 +4,7 @@
         <div class="col-xs-6">
             <p><b>Total bonus accumulated:</b> {{ total_bonus_accumulated }}  Eur</p>
             <p><b>Bonus used:</b> {{ used_bonus }}  Eur</p>
-            <p><b>Active bonus:</b> {{  active_bonus }}  Eur</p>
+            <p><b>Active bonus:</b> {{  (active_bonus).toFixed(2) }}  Eur</p>
             <br>
             <p><b>Assign Manually:</b> {{ assign_manual_bonus }} Eur</p>
         </div>
