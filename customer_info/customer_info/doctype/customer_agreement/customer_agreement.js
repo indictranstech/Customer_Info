@@ -201,14 +201,14 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(!cur_frm.doc.__islocal){
             cur_frm.set_df_property("update_due_date","hidden",0)
+            frm.add_custom_button(__('Customer Agreement'), 
+            frm.events.respond_with_customer_agreement, __("Generate PDF"));
+            for(i=1;i<=4;i++){
+                frm.add_custom_button(__('Delivery - receive note '+i),
+                frm.events.respond_with_customer_agreement, __("Generate PDF"));
+            }
         }
 
-        frm.add_custom_button(__('Customer Agreement'), 
-        frm.events.respond_with_customer_agreement, __("Generate PDF"));
-        for(i=1;i<=4;i++){
-            frm.add_custom_button(__('Delivery - receive note '+i),
-            frm.events.respond_with_customer_agreement, __("Generate PDF"));
-        }
     },
     respond_with_customer_agreement:function(frm){
         var url_to_generate_pdf = frappe.urllib.get_base_url()+"/api/method/frappe.templates.pages.print.download_pdf?doctype=Customer%20Agreement&name="+cur_frm.doc.name+"&format="+$(this).text()+"&no_letterhead=0"

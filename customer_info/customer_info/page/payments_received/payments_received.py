@@ -157,10 +157,12 @@ def make_refund_payment(payments_ids,ph_name):
 
 
 			if payment_history.payment_type == "Normal Payment":
+				customer_agreement.assigned_bonus = float(customer_agreement.assigned_bonus) - float(payment_history.bonus)
+				customer_agreement.assigned_discount = float(customer_agreement.assigned_discount) - float(payment_history.discount)			
 				if campaign_discount_of_agreements_list and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
 					customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
 					customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
-					customer_agreement.save(ignore_permissions=True)	
+				customer_agreement.save(ignore_permissions=True)	
 				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
 		#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)
 		customer.bonus = customer.bonus - float(payment_history.new_bonus) + float(payment_history.bonus)
