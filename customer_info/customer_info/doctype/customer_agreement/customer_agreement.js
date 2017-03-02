@@ -173,7 +173,7 @@ frappe.ui.form.on("Customer Agreement",{
         }*/         
     },
     refresh:function(frm){
-        $('.page-icon-group').hide()
+        $('.page-icon-group').hide();
         if(!cur_frm.doc.__islocal){
             cur_frm.add_custom_button(__('Update Agreement'),function(){
                 make_update_agreement();
