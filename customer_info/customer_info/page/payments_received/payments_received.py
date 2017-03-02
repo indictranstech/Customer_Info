@@ -43,7 +43,7 @@ def get_payments_details(customer,from_date,to_date):
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated,payment_type
 								from `tabPayments History` {0}
-								order by payment_date asc """.format(cond),as_dict=1,debug=1)
+								order by payment_date asc """.format(cond),as_dict=1)
 
 
 	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
@@ -157,8 +157,13 @@ def make_refund_payment(payments_ids,ph_name):
 
 
 			if payment_history.payment_type == "Normal Payment":
-				customer_agreement.assigned_bonus = float(customer_agreement.assigned_bonus) - float(payment_history.bonus)
-				customer_agreement.assigned_discount = float(customer_agreement.assigned_discount) - float(payment_history.discount)			
+				"""
+				deduct assigned bonus and discount from specific agreement
+				"""
+				if customer_agreement.name == payment_history.assigned_bonus_and_discount:
+					customer_agreement.assigned_bonus = float(customer_agreement.assigned_bonus) - float(payment_history.bonus)
+					customer_agreement.assigned_discount = float(customer_agreement.assigned_discount) - float(payment_history.discount)
+
 				if campaign_discount_of_agreements_list and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
 					customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
 					customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]

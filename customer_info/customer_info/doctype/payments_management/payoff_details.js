@@ -494,21 +494,26 @@ payoff_details = Class.extend({
 	       	callback: function(r){
 	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
-	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
+	       			console.log("insided 1")
+	       			//var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
+	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0 || flt(me.add_in_receivables) < 0){
+	       			console.log("insided 2")
 	       			var bonus_val = flt(cur_frm.doc.static_bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_val)
 	       			cur_frm.set_value("static_bonus",bonus_val)
 	       		}
 	       		else if(r.message && r.message['remove_bonus'] == "True"){
+	       			console.log("insided 3")
 	       			var bonus_value = 0
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 	       		else{
+	       			console.log("insided 4")
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
@@ -526,7 +531,7 @@ payoff_details = Class.extend({
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
 	            }
-	            
+
 	            if(flt(me.add_in_receivables) > 0){
 	            	cur_frm.set_value("receivables",flt(me.add_in_receivables))	
 	            }
