@@ -66,6 +66,10 @@ class CustomerAgreement(Document):
 	def change_default_warehouse(self):
 		item = frappe.get_doc("Item",self.product)
 		default_warehouse = item.default_warehouse
+		if self.document_type == "Updated":
+			old_agreement_item = frappe.get_doc("Item",frappe.get_doc("Customer Agreement",self.parent_name).product)	
+			old_agreement_item.default_warehouse = "101 - Be kredito sandėlys - BK"
+			old_agreement_item.save(ignore_permissions=True)
 		if self.agreement_status == "Open":
 			default_warehouse = "9101 – Prekė pas klientą - BK"
 		if self.agreement_status in  ["Closed","Suspended"] and self.agreement_closing_suspending_reason in ["Return","Upgrade","Financial Difficulties","Temporary Leave"]:
@@ -528,7 +532,7 @@ def make_update_agreement(source_name, target_doc=None):
 	target_doc.suspension_date = ""
 	target_doc.amount_of_contact_result = 0
 	target_doc.call_commitment = ""
-	target_doc.bonus = 0
+	target_doc.new_agreement_bonus = 0
 	target_doc.early_payments_bonus = 0
 	target_doc.payment_on_time_bonus = 0
 

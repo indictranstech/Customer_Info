@@ -300,7 +300,7 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										/* CASE WHEN discount_updated = "Yes" THEN campaign_discount ELSE 0 END as campaign_discount */
 										CASE WHEN discount_updated = "Yes" THEN discount ELSE 0 END as campaign_discount {2}
 										from `tabCustomer Agreement`
-										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1,debug=1)
+										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
 	for entry in data['list_of_agreement']:
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
@@ -520,9 +520,7 @@ def update_on_submit(args,flag):
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
 	if submitted_payments_ids_info:
-		# if float(args['values']['bonus']) > 0:
-		# 	add_assigned_bonus_and_discount(args['customer'],float(args['values']['bonus']))
-		add_assigned_bonus_and_discount(args)
+		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args)#return agreement name 
 
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0:
@@ -604,7 +602,8 @@ def add_assigned_bonus_and_discount(args):
 	
 	if float(args['values']['discount']) > 0:
 		agreement_doc.assigned_discount +=  float(args['values']['discount'] 	)
-	agreement_doc.save(ignore_permissions=True) 
+	agreement_doc.save(ignore_permissions=True)
+	return agreement 
 # def add_assigned_bonus_to_agreement(customer,bonus):
 # 	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 # 		where customer = '{0}' and agreement_status = "Open" 
