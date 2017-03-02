@@ -457,6 +457,7 @@ payoff_details = Class.extend({
 	       		if(r.message && r.message == "True"){
 	       			cur_frm.set_value("static_bonus",0)					
 	       		}
+	       		get_bonus_link();
 	       		me.dialog.hide();
 				me.old_dialog.hide();
 				calculate_total_charges("Payoff");
@@ -491,27 +492,28 @@ payoff_details = Class.extend({
    		        "flag":"from_payoff"
 	       	},
 	       	callback: function(r){
-	       		//if(flt(value.bonus) == cur_frm.doc.bonus){
 	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
-	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){	
-
-	       			//cur_frm.set_value("bonus",cur_frm.doc.static_bonus - flt(value.bonus))
-	       			console.log("in only bonus",flt(value.balance))
+	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
 	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0 || flt(me.add_in_receivables) < 0){
-	       			console.log("in late fee and negative receivables")
 	       			var bonus_val = flt(cur_frm.doc.static_bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_val)
 	       			cur_frm.set_value("static_bonus",bonus_val)
+	       		}
+	       		else if(r.message && r.message['remove_bonus'] == "True"){
+	       			var bonus_value = 0
+	       			cur_frm.set_value("bonus",bonus_value)
+		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 	       		else{
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
+
 	            if(r.message){ 
 	            	if(r.message["completed_agreement_list"]){
 	            		msgprint(r.message["completed_agreement_list"]+"\n"+"Agreement Payoff successfully")
@@ -519,14 +521,12 @@ payoff_details = Class.extend({
 	            	if(r.message["used_bonus_of_customer"]){	
 	       				cur_frm.set_value("used_bonus",flt(r.message['used_bonus_of_customer']))
 	        	    }
-	        	    if(r.message["remove_bonus"]){	
-	       				cur_frm.set_value("static_bonus",0)
-	       				cur_frm.set_value("bonus",0)
-	        	    }
 	        	}    
+
 	            if(flt(me.add_in_receivables) == 0){
 	            	cur_frm.set_value("receivables","0")
 	            }
+	            
 	            if(flt(me.add_in_receivables) > 0){
 	            	cur_frm.set_value("receivables",flt(me.add_in_receivables))	
 	            }
