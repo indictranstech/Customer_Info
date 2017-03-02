@@ -14,13 +14,14 @@ def upload(update_due_date = None):
 		d = {key:'' for key in csv_rows[0]}
 		if index > 0:
 			d['Migrated agreement ID'] = line[0]
-			d['Agreement No'] = line[7]
+			d['Agreement No'] = line[8]
 			d['Payment ID'] = d['Agreement No']+"-"+line[1]
 			d['Payment date'] = line[2]
 			d['Payment due date'] = line[3]
 			d['Cash'] = line[4]
 			d['Credit card'] = line[5]
 			d['Discount'] = line[6]
+			d['Late Fees'] = line[7]
 			ret.append(made_payments(d,params))
 	return {"messages": ret,"error":error}		
 							
@@ -63,7 +64,7 @@ def made_payments(d,params):
 	"payment_date":d['Payment date'],
 	"customer":d['Customer'],
 	"total_charges":d['Rental payment'],
-	"late_fees":0,
+	"late_fees":d['Late Fees'],
 	"bonus":0,
 	"manual_bonus":0,
 	"used_bonus":0,
