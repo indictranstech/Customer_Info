@@ -832,6 +832,7 @@ def get_summary_records(agreement,receivable,late_fees):
 				"Expires":agreement.today_plus_90_days,
 				"Payments_made":"{0} EUR".format(payments_made),
 				"Bonus_payments":"{0} EUR".format(agreement.assigned_bonus),
+				"Discount_payments":"{0} EUR".format(agreement.assigned_discount),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
 				"s90_day_pay_Off":"{0} EUR".format(float(day_pay_Off)),
 				"Number_of_payments_left":agreement.payments_left
