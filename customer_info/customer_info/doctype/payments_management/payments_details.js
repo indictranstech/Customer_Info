@@ -286,7 +286,7 @@ Payments_Details = Class.extend({
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){
-	        		cur_frm.set_value("bonus",r.message)
+	        		cur_frm.set_value("bonus",r.message["payments_management_bonus"])
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
 	        		me.dialog.hide();

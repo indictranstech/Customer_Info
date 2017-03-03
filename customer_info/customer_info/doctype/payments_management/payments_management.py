@@ -427,16 +427,6 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 
-		# for row in customer_agreement.payments_record:
-		# 	if row.check_box == 0 and row.idx > 1:
-		# 		customer_agreement.current_due_date = row.due_date
-		# 		customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
-		# 		break
-		# 	if row.check_box == 0 and row.idx == 1:
-		# 		customer_agreement.current_due_date = customer_agreement.date
-		# 		customer_agreement.next_due_date = get_next_due_date(customer_agreement.due_date_of_next_month,0)
-		# 		break
-
 	received_payments = map(float,received_payments)
 	
 	amount_of_payment_left = map(float,amount_of_payment_left)
@@ -467,6 +457,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	#print frm_bonus,"frm_bonus","\n\n\n\n",bonus," add bonus","\n\n\n\n",subtract_bonus,"subtract_bonus","\n\n\n\n\n\n"
 	total_bonus = float(frm_bonus) + bonus - float(subtract_bonus)
 
+	#{"payments_management_bonus":str(total_bonus), }
 	return str(total_bonus)
 
 
@@ -553,9 +544,12 @@ def update_on_submit(args,flag):
 			#discount_amount += customer_agreement.campaign_discount
 			campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
 			discount_amount += customer_agreement.discount
+
 		set_values_in_agreement_on_submit(customer_agreement)
+		
 		if float(customer_agreement.payments_left) == 0:
 			completed_agreement_list.append(customer_agreement.name)		
+		
 		if customer_agreement.late_fees_updated == "Yes":
 			late_fees_updated_status = "Yes"
 			customer_agreement.late_fees_updated = "No"
