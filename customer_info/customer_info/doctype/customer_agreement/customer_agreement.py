@@ -416,6 +416,7 @@ def payments_done_by_scheduler():
 			customer.save(ignore_permissions=True)
 			set_values_in_agreement(customer_agreement)
 		if len(payment_ids_list) > 0:
+			args['assigned_bonus_discount'] = ""
 			args['customer'] = name
 			args['add_in_receivables'] = frappe.get_doc("Customer",name).receivables
 			args['payment_date'] = str(now_date)

@@ -801,6 +801,7 @@ def payoff_submit(args):
 	payments_detalis_list = []
 	payment_ids_list = []
 	args['late_fees'] = data['late_fees']
+	args['assigned_bonus_discount'] = ""
 	for d in data['submitted_payments_ids']:	
 		payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 		payment_ids_list.append(d["payment_id"])
