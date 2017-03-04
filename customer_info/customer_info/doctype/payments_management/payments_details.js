@@ -276,6 +276,7 @@ Payments_Details = Class.extend({
 	           	callback: function(res){
 	        	}
 	        });
+	        console.log("me.row_to_uncheck123",me.row_to_uncheck,cur_frm.doc.bonus)
 	        frappe.call({
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
 		        async: false,
@@ -286,7 +287,8 @@ Payments_Details = Class.extend({
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){
-	        		cur_frm.set_value("bonus",r.message["payments_management_bonus"])
+	           		console.log(r.message,"r.message*****************888")
+	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
 	        		me.dialog.hide();

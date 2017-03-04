@@ -492,11 +492,11 @@ payoff_details = Class.extend({
    		        "flag":"from_payoff"
 	       	},
 	       	callback: function(r){
+	       		console.log("flt(cur_frm.doc.bonus)***********",flt(cur_frm.doc.bonus))
 	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
 	       			console.log("insided 1")
-	       			//var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
-	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
+	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
@@ -506,18 +506,20 @@ payoff_details = Class.extend({
 	       			cur_frm.set_value("bonus",bonus_val)
 	       			cur_frm.set_value("static_bonus",bonus_val)
 	       		}
-	       		else if(r.message && r.message['remove_bonus'] == "True"){
-	       			console.log("insided 3")
-	       			var bonus_value = 0
-	       			cur_frm.set_value("bonus",bonus_value)
-		       		cur_frm.set_value("static_bonus",bonus_value)
-	       		}
 	       		else{
 	       			console.log("insided 4")
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
+
+	       		if(r.message && r.message['remove_bonus'] == "True"){
+	       			console.log("insided 3")
+	       			var bonus_value = 0
+	       			cur_frm.set_value("bonus",bonus_value)
+		       		cur_frm.set_value("static_bonus",bonus_value)
+	       		}
+	       		
 
 	            if(r.message){ 
 	            	if(r.message["completed_agreement_list"]){

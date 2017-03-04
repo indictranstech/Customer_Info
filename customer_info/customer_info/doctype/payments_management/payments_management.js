@@ -31,6 +31,7 @@ frappe.ui.form.on("Payments Management", {
 		</table>");
 		if(cur_frm.doc.customer){
 			calculate_total_charges("Onload");
+			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
 			render_agreements();
@@ -41,6 +42,7 @@ frappe.ui.form.on("Payments Management", {
 		if(cur_frm.doc.customer){
 			get_bonus_link()
 			calculate_total_charges("Customer");
+			_get_bonus_summary();
 			get_address_of_customer();			
 			render_agreements();
 			render_suspended_agreements();
@@ -93,6 +95,21 @@ frappe.ui.form.on("Payments Management", {
 		}
 	}
 })
+
+
+_get_bonus_summary= function(frm){
+	console.log("inside _get_bonus_summary")
+	frappe.call({
+	   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
+		args: {
+			"customer":	cur_frm.doc.customer
+		},
+		callback: function(r){
+			console.log("_get_bonus_summary")
+		}
+	})	
+}
+
 
 
 render_suspended_agreements = function(frm){

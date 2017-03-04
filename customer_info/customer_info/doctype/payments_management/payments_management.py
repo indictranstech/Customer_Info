@@ -43,6 +43,8 @@ def get_bonus_summary(customer):
 			AS bonus 
 			from `tabPayments Record` where parent = "{0}")I
 			""".format(agreement['name']),as_list=1)[0][0]		
+		agreement_doc.bonus = agreement_doc.bonus  - agreement_doc.temporary_new_bonus + agreement_doc.payment_on_time_bonus + agreement_doc.early_payments_bonus
+		agreement_doc.temporary_new_bonus = 0
 		agreement_doc.save(ignore_permissions=True)
 
 	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
@@ -358,6 +360,7 @@ def set_check_and_uncheck(list_of_payment_id,parent,value=None,pre_select_unchec
 
 @frappe.whitelist()
 def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row_to_uncheck=None):
+	print customer_agreement,frm_bonus,"customer_agreement,frm_bonus\n\n\n\n\n\n\n"
 	if flag != "Make Refund" and row_to_uncheck:
 		row_to_uncheck = json.loads(row_to_uncheck)
 	now_date = datetime.now().date()
@@ -433,7 +436,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 	late_payments = map(float,late_payments)
 
-	bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+	add_bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 
 	subtract_bonus = len(remove_bonus_of_one_eur)*1 + len(remove_bonus_of_two_eur)*2
 
@@ -450,14 +453,14 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
-		customer_agreement.bonus = customer_agreement.bonus + bonus - subtract_bonus
+		customer_agreement.bonus = customer_agreement.bonus + add_bonus - subtract_bonus
+		customer_agreement.temporary_new_bonus = add_bonus - subtract_bonus
 		customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
 	customer_agreement.save(ignore_permissions=True)
 
 	#print frm_bonus,"frm_bonus","\n\n\n\n",bonus," add bonus","\n\n\n\n",subtract_bonus,"subtract_bonus","\n\n\n\n\n\n"
-	total_bonus = float(frm_bonus) + bonus - float(subtract_bonus)
+	total_bonus = float(frm_bonus) + add_bonus - float(subtract_bonus)
 
-	#{"payments_management_bonus":str(total_bonus), }
 	return str(total_bonus)
 
 
