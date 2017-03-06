@@ -482,7 +482,8 @@ bonus_summary = Class.extend({
 									"name":"Total",
 									"early_payments_bonus":0,
 									"payment_on_time_bonus":0,
-									"new_agreement_bonus":0
+									"new_agreement_bonus":0,
+									"status_list":[]
 								}
 					console.log(r.message,"aaa")			
 					$.each(r.message,function(i,d){
@@ -490,8 +491,13 @@ bonus_summary = Class.extend({
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
 						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"] 
+						total_bonus["status_list"].push(d["agreement_status"])
 					})
 					r.message.push(total_bonus)
+					var all_closed = "false"  
+					all_closed = r.message[r.message.length -1]["status_list"].every(function checkclosed(status) {
+					    return status == "Closed";
+					})
 					me.dialog.show();
 					var total_bonus_accumulated = r.message[r.message.length -1]["early_payments_bonus"] 
 												+ r.message[r.message.length -1]["new_agreement_bonus"] 
@@ -502,7 +508,8 @@ bonus_summary = Class.extend({
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
 						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
-						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2)
+						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2),
+						"all_closed":all_closed
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}
