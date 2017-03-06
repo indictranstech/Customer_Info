@@ -361,7 +361,6 @@ def set_check_and_uncheck(list_of_payment_id,parent,value=None,pre_select_unchec
 
 @frappe.whitelist()
 def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row_to_uncheck=None):
-	print customer_agreement,frm_bonus,"customer_agreement,frm_bonus\n\n\n\n\n\n\n"
 	if flag != "Make Refund" and row_to_uncheck:
 		row_to_uncheck = json.loads(row_to_uncheck)
 	now_date = datetime.now().date()
@@ -518,8 +517,9 @@ def update_on_submit(args,flag):
 							and payment_date = '{1}' order by idx """.format(cond,args['payment_date']),as_dict=1)
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
-	if submitted_payments_ids_info:
-		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args)#return agreement name 
+	args['assigned_bonus_discount'] = ""
+	if submitted_payments_ids_info and (float(args['values']['bonus']) > 0 or float(args['values']['discount']) > 0):
+		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args,submitted_payments_ids_info)#return agreement name 
 
 
 		"""
@@ -606,10 +606,19 @@ def update_on_submit(args,flag):
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
 
 """ add assigned bonus ,dicount to agreement  which has the longest valid 90d SAC price.(date) """
-def add_assigned_bonus_and_discount(args):
-	agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
-		where customer = '{0}' and agreement_status = "Open" 
-		order by today_plus_90_days desc limit 1""".format(args['customer']),as_list=1)[0][0]
+def add_assigned_bonus_and_discount(args,submitted_payments_ids_info):
+	agreement_name = []
+	for agreement_id in submitted_payments_ids_info:	
+		agreement_name.append(agreement_id["payment_id"].split("-P")[0])
+
+	agreement_name = tuple([x.encode('UTF8') for x in set(agreement_name) if x])
+	if len(agreement_name) > 1:
+		agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+		where customer = '{0}' and name in {1}
+		order by today_plus_90_days desc limit 1""".format(args['customer'],agreement_name),as_list=1)[0][0]
+	if len(agreement_name) == 1:
+		agreement = agreement_name[0]
+	
 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
 	if float(args['values']['bonus']) > 0:	
 		agreement_doc.assigned_bonus +=  float(args['values']['bonus'] )
