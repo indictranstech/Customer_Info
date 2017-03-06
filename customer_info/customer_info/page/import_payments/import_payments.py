@@ -29,6 +29,10 @@ def made_payments(d,params):
 	agreement_doc = frappe.get_doc("Customer Agreement",d['Agreement No'])
 	d['Rental payment'] = agreement_doc.monthly_rental_payment
 	d['Customer'] = agreement_doc.customer
+	
+	if d['Late Fees']:
+		agreement_doc.late_fees_updated = "Yes"
+
 	if params['update_due_date']:
 		for row in agreement_doc.payments_record:
 			if row.payment_id == d['Payment ID'] and row.check_box == 0:
