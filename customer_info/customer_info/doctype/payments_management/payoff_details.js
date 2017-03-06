@@ -454,9 +454,10 @@ payoff_details = Class.extend({
 	       		},
 	        	//"receivables":me.add_in_receivables,
 	       	callback: function(r){
-	       		if(r.message && r.message == "True"){
+	       		// remove all bonus when agreements status closed for payoff
+	       		/*if(r.message && r.message == "True"){
 	       			cur_frm.set_value("static_bonus",0)					
-	       		}
+	       		}*/
 	       		get_bonus_link();
 	       		me.dialog.hide();
 				me.old_dialog.hide();
@@ -492,11 +493,18 @@ payoff_details = Class.extend({
    		        "flag":"from_payoff"
 	       	},
 	       	callback: function(r){
-	       		if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
+	       		console.log("flt(cur_frm.doc.bonus)***********",flt(cur_frm.doc.bonus))
+	       		/*if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
 	       			console.log("insided 1")
-	       			//var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
-	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
+	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
+	       			cur_frm.set_value("bonus",bonus_value)
+	       			cur_frm.set_value("static_bonus",bonus_value)
+	       		}*/
+	       		if(flt(value.bonus) >= cur_frm.doc.amount_of_due_payments && flt(value.amount_paid_by_customer) == 0 
+	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
+	       			console.log("insided 1")
+	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
@@ -506,18 +514,20 @@ payoff_details = Class.extend({
 	       			cur_frm.set_value("bonus",bonus_val)
 	       			cur_frm.set_value("static_bonus",bonus_val)
 	       		}
-	       		else if(r.message && r.message['remove_bonus'] == "True"){
-	       			console.log("insided 3")
-	       			var bonus_value = 0
-	       			cur_frm.set_value("bonus",bonus_value)
-		       		cur_frm.set_value("static_bonus",bonus_value)
-	       		}
 	       		else{
 	       			console.log("insided 4")
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
+
+	       		if(r.message && r.message['remove_bonus'] == "True"){
+	       			console.log("insided 3")
+	       			var bonus_value = 0
+	       			cur_frm.set_value("bonus",bonus_value)
+		       		cur_frm.set_value("static_bonus",bonus_value)
+	       		}
+	       		
 
 	            if(r.message){ 
 	            	if(r.message["completed_agreement_list"]){

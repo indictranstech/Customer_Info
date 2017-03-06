@@ -54,8 +54,9 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 		
 		if payment_type == "Payoff Payment":
 			total_calculated_payment_amount = float(args['total_amount']) if args['total_amount'] else 0
-		else:	
-			total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])-float(args['receivables']) - float(bonus) - float(args['values']['discount'])
+		else:
+			total_calculated_payment_amount = float(args['rental_payment'])+float(args['late_fees'])- (float(args['receivables']) + float(bonus) + float(args['values']['discount']))
+
 		pmt = "Split"
 
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_transfer']) == 0  and float(args['values']['discount']) == 0 and float(args['values']['bank_card']) > 0 and float(args['values']['bonus']) == 0:

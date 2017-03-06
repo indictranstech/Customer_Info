@@ -107,9 +107,9 @@ scheduler_events = {
 	"daily": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms"
 	],
-	"all": [
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler"			
-	]
+	# "all": [
+	# 	"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler"			
+	# ]
 }
 
 # scheduler_events = {

@@ -31,6 +31,7 @@ frappe.ui.form.on("Payments Management", {
 		</table>");
 		if(cur_frm.doc.customer){
 			calculate_total_charges("Onload");
+			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
 			render_agreements();
@@ -41,6 +42,7 @@ frappe.ui.form.on("Payments Management", {
 		if(cur_frm.doc.customer){
 			get_bonus_link()
 			calculate_total_charges("Customer");
+			_get_bonus_summary();
 			get_address_of_customer();			
 			render_agreements();
 			render_suspended_agreements();
@@ -93,6 +95,21 @@ frappe.ui.form.on("Payments Management", {
 		}
 	}
 })
+
+
+_get_bonus_summary= function(frm){
+	console.log("inside _get_bonus_summary")
+	frappe.call({
+	   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
+		args: {
+			"customer":	cur_frm.doc.customer
+		},
+		callback: function(r){
+			console.log("_get_bonus_summary")
+		}
+	})	
+}
+
 
 
 render_suspended_agreements = function(frm){
@@ -465,7 +482,8 @@ bonus_summary = Class.extend({
 									"name":"Total",
 									"early_payments_bonus":0,
 									"payment_on_time_bonus":0,
-									"new_agreement_bonus":0
+									"new_agreement_bonus":0,
+									"status_list":[]
 								}
 					console.log(r.message,"aaa")			
 					$.each(r.message,function(i,d){
@@ -473,8 +491,13 @@ bonus_summary = Class.extend({
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
 						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"] 
+						total_bonus["status_list"].push(d["agreement_status"])
 					})
 					r.message.push(total_bonus)
+					var all_closed = "false"  
+					all_closed = r.message[r.message.length -1]["status_list"].every(function checkclosed(status) {
+					    return status == "Closed";
+					})
 					me.dialog.show();
 					var total_bonus_accumulated = r.message[r.message.length -1]["early_payments_bonus"] 
 												+ r.message[r.message.length -1]["new_agreement_bonus"] 
@@ -485,7 +508,8 @@ bonus_summary = Class.extend({
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
 						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
-						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2)
+						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2),
+						"all_closed":all_closed
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}
