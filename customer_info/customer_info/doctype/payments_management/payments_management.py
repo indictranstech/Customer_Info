@@ -832,6 +832,7 @@ def payoff_submit(args,from_import_payment=None):
 		_total_charges += d["monthly_rental_amount"]
 
 	args['total_charges'] = float(_total_charges)	
+	
 
 	#args['total_charges'] = float(args['total_charges']) + float(_total_charges)
 	args['total_amount'] = float(args['total_amount'].split(" ")[0]) if not from_import_payment else float(args['total_amount'])
