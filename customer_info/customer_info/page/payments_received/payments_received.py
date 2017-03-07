@@ -99,6 +99,7 @@ def make_refund_payment(payments_ids,ph_name):
 	payments_id_list = []
 	agreement_list = []
 	merchandise_status_list= []
+	campaign_discount_of_agreements_list = []
 	
 	if len(payments_ids) > 0:
 		for i in payments_ids:
@@ -123,7 +124,7 @@ def make_refund_payment(payments_ids,ph_name):
 
 		campaign_discount_of_agreements = payment_history.campaign_discount_of_agreements
 		if campaign_discount_of_agreements and payment_history.payment_type == "Normal Payment":
-			campaign_discount_of_agreements_list = []
+			
 			campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
 			campaign_discount_of_agreements_list.sort()
 			campaign_discount_of_agreements_dict = { agreement.split("/")[0]:[agreement.split("/")[1],agreement.split("/")[2]] for agreement in campaign_discount_of_agreements_list}

@@ -1029,6 +1029,7 @@ def add_notes_in_customer(customer,notes_on_customer_payments,summary_of_notes=N
 @frappe.whitelist()
 def get_payments_management_from_agreement(source_name, target_doc=None):
 	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
+	customer_doc = frappe.get_doc("Customer",customer_agreement.customer)
 	target_doc = get_mapped_doc("Customer Agreement", source_name,
 		{
 			"Customer Agreement": {
@@ -1038,6 +1039,10 @@ def get_payments_management_from_agreement(source_name, target_doc=None):
 
 	target_doc.customer = customer_agreement.customer
 	target_doc.customer_agreement = source_name
+	target_doc.bonus = customer_doc.bonus
+	target_doc.static_bonus = customer_doc.bonus
+	target_doc.used_bonus = customer_doc.used_bonus
+	target_doc.assign_manual_bonus = customer_doc.assign_manual_bonus
 	return target_doc
 
 @frappe.whitelist()
