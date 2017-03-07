@@ -685,8 +685,8 @@ edit_campaign_discount = Class.extend({
  			this.dialog.fields_dict.campaign_discount.set_input(0)
  		}      	
        	
-		me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
-	    me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
+		//me.dialog.fields_dict.due_amount.set_input(cur_frm.doc.amount_of_due_payments)
+	    //me.dialog.fields_dict.total_charges_amount.set_input(cur_frm.doc.total_charges)
 		//this.campaign_discount();
 	},
 	/*campaign_discount:function(){

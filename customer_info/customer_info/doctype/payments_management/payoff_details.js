@@ -446,7 +446,7 @@ payoff_details = Class.extend({
 							"add_in_receivables":me.add_in_receivables,
 							"values":value,//JSON.stringify(value),
 							"payment_date":cur_frm.doc.payment_date,
-							"total_charges":cur_frm.doc.total_charges,
+							//"total_charges":cur_frm.doc.total_charges,
 							"data":data,
 							"rental_payment":me.old_instance['values']['s90d_SAC_price'] ? me.old_instance['values']['s90d_SAC_price'] : me.old_instance['values']['Discounted_payment_amount'],
 							"total_amount":me.old_instance['values']['s90_day_pay_Off'] ? me.old_instance['values']['s90_day_pay_Off'] : me.old_instance['values']['Total_payoff_amount']

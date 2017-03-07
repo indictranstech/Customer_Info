@@ -99,7 +99,7 @@ def make_refund_payment(payments_ids,ph_name):
 	payments_id_list = []
 	agreement_list = []
 	merchandise_status_list= []
-	campaign_discount_of_agreements_list = []
+	
 	if len(payments_ids) > 0:
 		for i in payments_ids:
 			frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
@@ -123,11 +123,10 @@ def make_refund_payment(payments_ids,ph_name):
 
 		campaign_discount_of_agreements = payment_history.campaign_discount_of_agreements
 		if campaign_discount_of_agreements and payment_history.payment_type == "Normal Payment":
+			campaign_discount_of_agreements_list = []
 			campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_of_agreements.split(",")[0:-1] if x]	
-			campaign_discount_of_agreements_list.sort()	
-		
-		
-
+			campaign_discount_of_agreements_list.sort()
+			campaign_discount_of_agreements_dict = { agreement.split("/")[0]:[agreement.split("/")[1],agreement.split("/")[2]] for agreement in campaign_discount_of_agreements_list}
 
 		refund_bonus = []	
 		for i,agreement in enumerate(agreement_list):
@@ -164,9 +163,15 @@ def make_refund_payment(payments_ids,ph_name):
 					customer_agreement.assigned_bonus = float(customer_agreement.assigned_bonus) - float(payment_history.bonus)
 					customer_agreement.assigned_discount = float(customer_agreement.assigned_discount) - float(payment_history.discount)
 
-				if campaign_discount_of_agreements_list and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
-					customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
-					customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
+				# if campaign_discount_of_agreements_list and agreement == campaign_discount_of_agreements_list[i].split("/")[0]:
+				# 	customer_agreement.discount = campaign_discount_of_agreements_list[i].split("/")[1]
+				# 	customer_agreement.assigned_campaign_discount = customer_agreement.assigned_campaign_discount - float(campaign_discount_of_agreements_list[i].split("/")[1])
+				# 	customer_agreement.discounted_payments_left = campaign_discount_of_agreements_list[i].split("/")[2]
+
+				if campaign_discount_of_agreements_list and agreement in campaign_discount_of_agreements_dict.keys():
+					customer_agreement.discount = float(campaign_discount_of_agreements_dict[agreement][0])
+					customer_agreement.assigned_campaign_discount = customer_agreement.assigned_campaign_discount - float(campaign_discount_of_agreements_dict[agreement][0])
+					customer_agreement.discounted_payments_left = float(campaign_discount_of_agreements_dict[agreement][1])
 				customer_agreement.save(ignore_permissions=True)	
 				refund_bonus.append(float(set_values_in_agreement_temporary(agreement,customer.bonus,flag,payments_id_list)))
 		#customer.bonus = customer.bonus - sum(refund_bonus) + float(payment_history.bonus)

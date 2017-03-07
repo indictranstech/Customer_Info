@@ -51,15 +51,6 @@ def get_bonus_summary(customer):
 	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus","agreement_status"],as_dict=1)
 
-	# agreements_of_customers = frappe.db.sql("""select name from `tabCustomer Agreement`
-	# 	where customer = '{0}' and agreement_status = "Open" """.format(customer),as_list=1)
-	# for agreement in [agreements[0] for agreements in agreements_of_customers]:
-	# 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
-	# return frappe.db.get_values("Customer Agreement",{"customer":customer,"agreement_status":"Open"},["name","new_agreement_bonus",\
-	# 							"early_payments_bonus","payment_on_time_bonus"],as_dict=1)
-
-
-
 
 @frappe.whitelist()
 def update_bonus(customer,bonus,assign_manual_bonus,payment_date):
@@ -576,6 +567,12 @@ def update_on_submit(args,flag):
 			customer_agreement.save(ignore_permissions=True)
 		flag = "Process Payment"
 
+	""""
+	add_assigned_campaing_discount_discount		
+	"""
+	if campaign_discount_of_agreements:
+		add_assigned_campaing_discount_discount(campaign_discount_of_agreements)
+
 	#add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus,add_in_receivables,flag)
 	used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 
@@ -605,7 +602,22 @@ def update_on_submit(args,flag):
 		args['total_amount'] = 0
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
 
-""" add assigned bonus ,dicount to agreement  which has the longest valid 90d SAC price.(date) """
+"""
+add assigned_campaing_discount if campaign discount given
+"""
+def add_assigned_campaing_discount_discount(campaign_discount_data):
+	campaign_discount_of_agreements_list = []
+	campaign_discount_of_agreements_list = [x.encode('UTF8') for x in campaign_discount_data.split(",")[0:-1] if x]	
+	campaign_discount_of_agreements_list.sort()
+	for row in campaign_discount_of_agreements_list:
+		agreement_doc = frappe.get_doc("Customer Agreement",row.split("/")[0])
+		agreement_doc.assigned_campaign_discount += float(row.split("/")[1])
+		agreement_doc.save(ignore_permissions=True)
+
+""" 
+add assigned bonus ,dicount to agreement  
+which has the longest valid 90d SAC price.(date) 
+"""
 def add_assigned_bonus_and_discount(args,submitted_payments_ids_info):
 	agreement_name = []
 	for agreement_id in submitted_payments_ids_info:	
@@ -772,8 +784,8 @@ def update_payments_records_on_payoff_submit(payment_date,customer_agreement):
 
 @frappe.whitelist()
 #def payoff_submit(customer_agreement,agreement_status,condition,customer,receivables,add_in_receivables,values,payment_date,total_charges,data,rental_payment,total_amount):
-def payoff_submit(args):
-	args = json.loads(args)
+def payoff_submit(args,from_import_payment=None):
+	args = json.loads(args) if not from_import_payment else args
 	now_date = datetime.now().date()
 	discount_amount = 0
 	late_fees_updated_status = "No"
@@ -831,12 +843,15 @@ def payoff_submit(args):
 		payment_ids_list.append(d["payment_id"])
 		_total_charges += d["monthly_rental_amount"]
 
-	args['total_charges'] = float(args['total_charges']) + float(_total_charges)
-	args['total_amount'] = float(args['total_amount'].split(" ")[0])
+	args['total_charges'] = float(_total_charges)	
+	
+
+	#args['total_charges'] = float(args['total_charges']) + float(_total_charges)
+	args['total_amount'] = float(args['total_amount'].split(" ")[0]) if not from_import_payment else float(args['total_amount'])
 	if args['condition'] == "90 day pay Off":
-		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) + float(late_payment)
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) if not from_import_payment else float(args['rental_payment']) + float(late_payment)
 	else:
-		args['rental_payment'] = float(args['rental_payment'].split(" ")[0])	
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) if not from_import_payment else float(args['rental_payment'])	
 	args['new_bonus'] = 0
 	#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,total_amount,data['late_fees'],"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
 	make_payment_history(args,payments_detalis_list,payment_ids_list,"Payoff Payment",merchandise_status,late_fees_updated_status,payoff_cond,discount_amount)	
@@ -882,6 +897,7 @@ def get_summary_records(agreement,receivable,late_fees):
 				"Payments_made":"{0} EUR".format(payments_made),
 				"Bonus_payments":"{0} EUR".format(agreement.assigned_bonus),
 				"Discount_payments":"{0} EUR".format(agreement.assigned_discount),
+				"assigned_campaign_discount":"{0} EUR".format(agreement.assigned_campaign_discount),
 				"Late_fees":"{0} EUR".format(float(late_fees)),
 				"s90_day_pay_Off":"{0} EUR".format(float(day_pay_Off)),
 				"Number_of_payments_left":agreement.payments_left
