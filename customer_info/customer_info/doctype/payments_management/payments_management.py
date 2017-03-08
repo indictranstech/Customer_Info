@@ -494,6 +494,7 @@ def get_late_payment(agreements,payment_date):
 @frappe.whitelist()
 #def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,manual_bonus,used_bonus,new_bonus,total_charges,rental_payment,late_fees):
 def update_on_submit(args,flag):
+	print "insdie update_on_submit\n\n\n\n\n\n\n"
 	#args = json.loads(args) if not flag else args
 	args = json.loads(args) if flag == "from_payoff" else args
 	#values = json.loads(values)
@@ -800,7 +801,8 @@ def payoff_submit(args,from_import_payment=None):
 	late_payment = agreement.late_payment
 	set_values_in_agreement_on_submit(agreement,"Payoff Payment")
 	merchandise_status = agreement.merchandise_status
-	if args['condition'] == "90 day pay Off" and agreement.agreement_status == "Open":
+	#if args['condition'] == "90 day pay Off" and agreement.agreement_status == "Open":
+	if args['condition'] == "90 day pay Off":# and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
@@ -811,8 +813,8 @@ def payoff_submit(args,from_import_payment=None):
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
 	
-	elif args['condition'] == "pay off agreement" and agreement.agreement_status == "Open":
-		#print date_diff(payment_date,agreement.date),"date_diff(agreement.date,payment_date)","\n\n\n\n\n\n"
+	#elif args['condition'] == "pay off agreement" and agreement.agreement_status == "Open":
+	elif args['condition'] == "pay off agreement":# and agreement.agreement_status == "Open":
 		agreement.update({
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
