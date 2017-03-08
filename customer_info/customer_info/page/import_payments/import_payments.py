@@ -18,7 +18,7 @@ def upload(update_due_date = None):
 			d['Migrated agreement ID'] = line[0]
 			d['Agreement No'] = line[8]
 			d["Payoff"] = line[9]	
-			d['Payment ID'] = d['Agreement No']+"-"+line[1] if not d["Payoff"] else ""
+			d['Payment ID'] = d['Agreement No']+"-"+line[1]# if not d["Payoff"] else ""
 			d['Payment date'] = line[2]
 			d['Payment due date'] = line[3]
 			d['Cash'] = line[4]
@@ -37,16 +37,17 @@ def made_payments(d,params):
 		payoff_data = update_payments_records_on_payoff_submit(d['Payment date'],d['Agreement No'])
 		payoff_payment(payoff_data,agreement_doc,d)
 
+	if d['Late Fees']:
+		agreement_doc.late_fees_updated = "Yes"
+
 	else:
-		if d['Late Fees']:
-			agreement_doc.late_fees_updated = "Yes"
 
 		if params['update_due_date']:
 			for row in agreement_doc.payments_record:
 				if row.payment_id == d['Payment ID'] and row.check_box == 0:
 					row.due_date = d['Payment due date']
 					row.save(ignore_permissions=True)
-			agreement_doc.save(ignore_permissions=True)
+		agreement_doc.save(ignore_permissions=True)
 		regular_payment(agreement_doc,d)
 
 
