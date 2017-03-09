@@ -18,7 +18,7 @@ def upload(update_due_date = None):
 			d['Migrated agreement ID'] = line[0]
 			d['Agreement No'] = line[8]
 			d["Payoff"] = line[9]	
-			d['Payment ID'] = d['Agreement No']+"-"+line[1]# if not d["Payoff"] else ""
+			d['Payment ID'] = d['Agreement No']+"-"+line[1] if not d["Payoff"] else ""
 			d['Payment date'] = line[2]
 			d['Payment due date'] = line[3]
 			d['Cash'] = line[4]
@@ -26,30 +26,33 @@ def upload(update_due_date = None):
 			d['Discount'] = line[6]
 			d['Late Fees'] = line[7]
 			ret.append(made_payments(d,params))
+
 	return {"messages": ret,"error":error}		
 							
 def made_payments(d,params):
+	error = ""
 	agreement_doc = frappe.get_doc("Customer Agreement",d['Agreement No'])
 	d['Rental payment'] = agreement_doc.monthly_rental_payment
 	d['Customer'] = agreement_doc.customer
 
-	if d["Payoff"]:
-		payoff_data = update_payments_records_on_payoff_submit(d['Payment date'],d['Agreement No'])
-		payoff_payment(payoff_data,agreement_doc,d)
-
 	if d['Late Fees']:
 		agreement_doc.late_fees_updated = "Yes"
+		agreement_doc.save(ignore_permissions=True)
+
+	if d["Payoff"]:
+		payoff_data = update_payments_records_on_payoff_submit(d['Payment date'],d['Agreement No'])
+		error += payoff_payment(payoff_data,agreement_doc,d)
 
 	else:
-
 		if params['update_due_date']:
 			for row in agreement_doc.payments_record:
 				if row.payment_id == d['Payment ID'] and row.check_box == 0:
 					row.due_date = d['Payment due date']
 					row.save(ignore_permissions=True)
 		agreement_doc.save(ignore_permissions=True)
-		regular_payment(agreement_doc,d)
+		error += regular_payment(agreement_doc,d)
 
+	return error
 
 
 def regular_payment(agreement_doc,d):
@@ -96,7 +99,7 @@ def regular_payment(agreement_doc,d):
 
 
 def payoff_payment(payoff_data,agreement_doc,d):
-	error = ""
+	error = "Successful"
 	balance = float(agreement_doc.payments_left) * agreement_doc.monthly_rental_payment
 	discount = ((balance - float(agreement_doc.late_payment)) / 100) * float(agreement_doc.early_buy_discount_percentage)
 
@@ -109,8 +112,8 @@ def payoff_payment(payoff_data,agreement_doc,d):
 		"add_in_receivables":0,
 		"values":{
 			'amount_paid_by_customer':d['Cash'],
-			'bank_card':0,
-			'discount':0,
+			'bank_card':d['Credit card'],
+			'discount':d['Discount'],
 			'bank_transfer':0,
 			'bonus':0
 		},
@@ -128,7 +131,7 @@ def payoff_payment(payoff_data,agreement_doc,d):
 		args['rental_payment'] =  balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
 		args['total_amount'] = balance - float(discount)#Total_payoff_amount
 
-	else:
+	if d["Payoff"] == "90d SAC":
 		args['condition'] = "pay off agreement"
 		args['rental_payment'] = agreement_doc.s90d_sac_price#s90d_sac_price
 		args['total_amount'] = agreement_doc.s90d_sac_price - agreement_doc.payments_made#s90_day_pay_Off
