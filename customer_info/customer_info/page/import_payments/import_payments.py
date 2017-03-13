@@ -27,7 +27,7 @@ def upload(update_due_date = None):
 			d['Late Fees'] = line[7]
 			ret.append(made_payments(d,params))
 
-	return {"messages": ret,"error":error}		
+	return {"messages": ret,"error":False}		
 							
 def made_payments(d,params):
 	error = ""
@@ -99,6 +99,7 @@ def regular_payment(agreement_doc,d):
 
 
 def payoff_payment(payoff_data,agreement_doc,d):
+	error = ""
 	if agreement_doc.agreement_closing_suspending_reason not in ["Early buy offer","90d SAC","Contract Term is over"]:
 		error = "Agreement {0} Payoff Successful".format(agreement_doc.name)
 
@@ -134,7 +135,7 @@ def payoff_payment(payoff_data,agreement_doc,d):
 			args['condition'] = "pay off agreement"
 			args['rental_payment'] = agreement_doc.s90d_sac_price#s90d_sac_price
 			args['total_amount'] = agreement_doc.s90d_sac_price - agreement_doc.payments_made + float(d["Late Fees"])\
-									float(agreement_doc.assigned_bonus) + float(agreement_doc.assigned_discount) + float(agreement_doc.assigned_campaign_discount) #s90_day_pay_Off
+									+ float(agreement_doc.assigned_bonus) + float(agreement_doc.assigned_discount) + float(agreement_doc.assigned_campaign_discount) #s90_day_pay_Off
 
 		# if 90d sac is past date
 		# if d["Payoff"] == "Early buy":

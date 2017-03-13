@@ -509,6 +509,8 @@ def update_on_submit(args,flag):
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
 	args['assigned_bonus_discount'] = ""
+	#print "inside update_on_submit\n\n\n\n\n\n\n\n",args['values']['discount'],type(args['values']['discount'])
+
 	if submitted_payments_ids_info and (float(args['values']['bonus']) > 0 or float(args['values']['discount']) > 0):
 		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args,submitted_payments_ids_info)#return agreement name 
 
@@ -529,7 +531,6 @@ def update_on_submit(args,flag):
 		remove_bonus from all payments when any payments have late_fees	
 
 		"""	
-
 		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
