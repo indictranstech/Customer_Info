@@ -50,8 +50,7 @@ def get_bonus_summary(customer):
 
 	data = frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus","agreement_status"],as_dict=1)
-	data[0]['cancelled_bonus']	= frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus")
-	return data 
+	return {"data":data,"cancelled_bonus":frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus")} 
 
 
 @frappe.whitelist()
@@ -714,7 +713,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 			# 	break	
 	payment_made = map(float,payment_made)
-	
+
 	#print sum(payment_made),"sum of payments_made"
 
 	if customer_agreement.payments_record and customer_agreement.date:

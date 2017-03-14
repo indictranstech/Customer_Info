@@ -488,31 +488,32 @@ bonus_summary = Class.extend({
 									"status_list":[]
 								}
 					console.log(r.message)
-					$.each(r.message,function(i,d){
+					$.each(r.message['data'],function(i,d){
 						total_bonus["name"] = "Total"
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
 						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"] 
 						total_bonus["status_list"].push(d["agreement_status"])
 					})
-					r.message.push(total_bonus)
+					r.message['data'].push(total_bonus)
 					var all_closed = "false"  
-					all_closed = r.message[r.message.length -1]["status_list"].every(function checkclosed(status) {
+					all_closed = r.message['data'][r.message['data'].length -1]["status_list"].every(function checkclosed(status) {
 					    return status == "Closed";
 					})
 					me.dialog.show();
-					var total_bonus_accumulated = r.message[r.message.length -1]["early_payments_bonus"] 
-												+ r.message[r.message.length -1]["new_agreement_bonus"] 
-												+ r.message[r.message.length -1]["payment_on_time_bonus"] 
+					var total_bonus_accumulated = r.message['data'][r.message['data'].length -1]["early_payments_bonus"] 
+												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
+												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"] 
 												+ cur_frm.doc.assign_manual_bonus
+					console.log("sdfsdffdsfdsf",total_bonus_accumulated)							
 					html = $(frappe.render_template("bonus_summary",{
-						"bonus":r.message,
+						"bonus":r.message['data'],
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
 						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
 						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2),
 						"all_closed":all_closed,
-						"cancelled_bonus":r.message[0]['cancelled_bonus']
+						"cancelled_bonus":r.message['cancelled_bonus']
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}
