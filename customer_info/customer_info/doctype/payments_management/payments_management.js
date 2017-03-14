@@ -7,9 +7,9 @@ cur_frm.add_fetch('customer', 'company_phone_1', 'company_phone_1');
 cur_frm.add_fetch('customer', 'company_phone_2', 'company_phone_2');
 cur_frm.add_fetch('customer', 'prersonal_code', 'prersonal_code');
 cur_frm.add_fetch('customer', 'summary_of_notes', 'summary_of_notes');
+cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
 cur_frm.add_fetch('customer','bonus','bonus')
 cur_frm.add_fetch('customer','bonus','static_bonus')
-cur_frm.add_fetch('customer','company_email_id_1','company_email_id_1')
 cur_frm.add_fetch('customer','assign_manual_bonus','assign_manual_bonus')
 cur_frm.add_fetch('customer','used_bonus','used_bonus')
 
@@ -191,10 +191,12 @@ calculate_total_charges = function(flag){
               	if(flag != "Process Payment"){
 	           		cur_frm.doc.static_bonus = r.message['bonus'] > 0 ? r.message['bonus'] : "0";
               		refresh_field('static_bonus')	
-	           	}	
+	           	}
+	           	console.log("inside tempory",r.message)	
               	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
            		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables']);
            		cur_frm.doc.receivables = r.message['receivables'] == 0 ? "0":r.message['receivables'];
+           		cur_frm.doc.bonus = r.message['pre_select_payment_bonus'] // add bonus of pre select id on time bonus
            		cur_frm.refresh_fields();
             }
             else{
@@ -485,7 +487,7 @@ bonus_summary = Class.extend({
 									"new_agreement_bonus":0,
 									"status_list":[]
 								}
-					console.log(r.message,"aaa")			
+					console.log(r.message)
 					$.each(r.message,function(i,d){
 						total_bonus["name"] = "Total"
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
@@ -509,7 +511,8 @@ bonus_summary = Class.extend({
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
 						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
 						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2),
-						"all_closed":all_closed
+						"all_closed":all_closed,
+						"cancelled_bonus":r.message[0]['cancelled_bonus']
 					})).appendTo(me.fd.bonus_summary.wrapper);
 				}
 			}

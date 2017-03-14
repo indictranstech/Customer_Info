@@ -22,6 +22,7 @@ def get_data(filters=None):
 											COALESCE(sum(IF(bonus_type = "Adding Manual Bonus",amount,0)),0) as manual_bonus,
 											0,
 											COALESCE(sum(IF(bonus_type = "Used Bonus",amount,0)),0) as used_bonus,
+											0,
 											0
 											from `tabBonus Records` where
 											parent in (select name from `tabCustomer` where customer_group = "Individual") 
@@ -30,6 +31,7 @@ def get_data(filters=None):
 	if result:
 		result[0][4] = result[0][0]+result[0][1]+result[0][2]+result[0][3]
 		result[0][6] = result[0][0]+result[0][1]+result[0][2]+result[0][3] - result[0][5]
+		result[0][7] = frappe.db.sql("""select sum(cancelled_bonus) from `tabCustomer` where customer_group ='Individual' """,as_list=1)[0][0]
 		return result
 	
 
@@ -62,11 +64,13 @@ def get_condtion(from_date,to_date):
 
 
 def get_colums():
-	columns =  [("New agreement bonus") + ":Float:150"] + \
-				[("Early payments bonus") + ":Float:150"] + \
-				[("Payment on time bonus") + ":Float:150"] + \
-				[("Assign manual bonus") + ":Float:150"] + \
-				[("Total bonus accumulated") + ":Float:160"] + \
-				[("Used bonus") + ":Float:90"] + \
-				[("Active bonus") + ":Float:90"]
+	columns =  [("New agreement bonus") + ":Float:150",
+				("Early payments bonus") + ":Float:150",
+				("Payment on time bonus") + ":Float:150",
+				("Assign manual bonus") + ":Float:150",
+				("Total bonus accumulated") + ":Float:160",
+				("Used bonus") + ":Float:90",
+				("Active bonus") + ":Float:90",
+				("Cancelled bonus") + ":Float:150"
+				]
 	return columns

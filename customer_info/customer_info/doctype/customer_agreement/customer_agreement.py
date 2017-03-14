@@ -262,6 +262,7 @@ class CustomerAgreement(Document):
 	def comment_for_agreement_status_change(self):
 		if self.agreement_status != self.old_agreement_status:
 			comment = """ Agreement Status Changed From '{0}' To '{1}' """.format(self.old_agreement_status,self.agreement_status)
+			self.agreement_status_changed_date = datetime.now().date()
 			self.add_comment("Comment",comment)
 			self.old_agreement_status = self.agreement_status
 
