@@ -227,6 +227,9 @@ frappe.ui.form.on("Customer Agreement",{
     },
     respond_with_customer_agreement:function(frm){
         var url_to_generate_pdf = frappe.urllib.get_base_url()+"/api/method/frappe.templates.pages.print.download_pdf?doctype=Customer%20Agreement&name="+cur_frm.doc.name+"&format="+print_format_mapper[$(this).text()]+"&no_letterhead=0"
+        if($(this).text() == "Customer Agreement"){
+            var url_to_generate_pdf = frappe.urllib.get_base_url()+"/api/method/frappe.templates.pages.print.download_pdf?doctype=Customer%20Agreement&name="+cur_frm.doc.name+"&format="+$(this).text()+"&no_letterhead=0"                
+        }
         window.open(url_to_generate_pdf)
     },
     agreement_status:function(frm){
