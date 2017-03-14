@@ -48,8 +48,10 @@ def get_bonus_summary(customer):
 		#agreement_doc.temporary_new_bonus = 0
 		agreement_doc.save(ignore_permissions=True)
 
-	return frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
+	data = frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus","agreement_status"],as_dict=1)
+	data[0]['cancelled_bonus']	= frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus")
+	return data 
 
 
 @frappe.whitelist()
@@ -104,7 +106,7 @@ def calculate_total_charges(customer,flag,payment_date):
 	agreements_due_amount_list = []
 	agreements_and_late_fees_dict = {}
 	agreements_discount_list = []
-
+	pre_select_payment_bonus = bonus
 
 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 									where customer = '{0}' 
@@ -158,12 +160,14 @@ def calculate_total_charges(customer,flag,payment_date):
 			agreements_and_late_fees_dict[customer_agreement.name] = customer_agreement.late_fees	
 
 		customer_agreement.save(ignore_permissions=True)
+		pre_select_payment_bonus = float(set_values_in_agreement_temporary(customer_agreement.name,pre_select_payment_bonus))
 
 	discount_amount_of_agreements = "{0:.2f}".format(sum(agreements_discount_list))
 	agreements_due_amount_list.append(float("{0:.2f}".format(sum(agreements_and_late_fees_dict.values()))))
 	return {"amount_of_due_payments":sum(agreements_due_amount_list) - float(discount_amount_of_agreements), # deduct campaign discount of all agreements
 			"receivables":receivables,
-			"bonus":bonus}
+			"bonus":bonus,
+			"pre_select_payment_bonus":pre_select_payment_bonus}
 
 # @frappe.whitelist()
 # def calculate_total_charges(customer,flag,payment_date):
@@ -405,21 +409,22 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 				
-				if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
-					remove_bonus_of_one_eur.append(row.idx)
-					row.update({
-						'add_bonus_to_this_payment':0,
-						'bonus_type':""
-						})
-					row.save(ignore_permissions = True)
+				if row_to_uncheck:	
+					if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
+						remove_bonus_of_one_eur.append(row.idx)
+						row.update({
+							'add_bonus_to_this_payment':0,
+							'bonus_type':""
+							})
+						row.save(ignore_permissions = True)
 
-				elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
-					remove_bonus_of_two_eur.append(row.idx)	
-					row.update({
-						'add_bonus_to_this_payment':0,
-						'bonus_type':""
-						})
-					row.save(ignore_permissions = True)
+					elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
+						remove_bonus_of_two_eur.append(row.idx)	
+						row.update({
+							'add_bonus_to_this_payment':0,
+							'bonus_type':""
+							})
+						row.save(ignore_permissions = True)
 
 	received_payments = map(float,received_payments)
 	
@@ -509,6 +514,8 @@ def update_on_submit(args,flag):
 	
 	# checking  all payment done by bonus then update payments record remove new given bonus
 	args['assigned_bonus_discount'] = ""
+	#print "inside update_on_submit\n\n\n\n\n\n\n\n",args['values']['discount'],type(args['values']['discount'])
+
 	if submitted_payments_ids_info and (float(args['values']['bonus']) > 0 or float(args['values']['discount']) > 0):
 		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args,submitted_payments_ids_info)#return agreement name 
 
@@ -529,7 +536,6 @@ def update_on_submit(args,flag):
 		remove_bonus from all payments when any payments have late_fees	
 
 		"""	
-
 		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
@@ -588,9 +594,11 @@ def update_on_submit(args,flag):
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
 		
 
-		# remove customer bonus when all agreements are closed
+		"""remove customer bonus when all agreements are closed"""
+
 		if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
 			customer_doc = frappe.get_doc("Customer",args['customer'])
+			customer_doc.cancelled_bonus += customer_doc.bonus
 			customer_doc.bonus = 0
 			customer_doc.save(ignore_permissions=True)
 
@@ -706,6 +714,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 			# 	break	
 	payment_made = map(float,payment_made)
+	
 	#print sum(payment_made),"sum of payments_made"
 
 	if customer_agreement.payments_record and customer_agreement.date:

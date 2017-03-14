@@ -6,6 +6,15 @@ cur_frm.add_fetch('product', 'product_category', 'product_category');
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
 cur_frm.add_fetch('customer','customer_group','customer_group')
 
+
+var print_format_mapper = {
+                "Perdavimo-priėmimo aktas":"Delivery - receive note 1",
+                "Grąžinimo aktas":"Delivery - receive note 2",
+                "Sutarties sustabdymo aktas":"Delivery - receive note 3",
+                "Prekės keitimo aktas":"Delivery - receive note 4"
+            }
+
+
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
 		if(cur_frm.doc.payment_day && cur_frm.doc.__islocal){
@@ -176,7 +185,8 @@ frappe.ui.form.on("Customer Agreement",{
         $('.page-icon-group').hide();
         if(!cur_frm.doc.__islocal){
             cur_frm.add_custom_button(__('Update Agreement'),function(){
-                make_update_agreement();
+                //make_update_agreement();
+                make_new_child_agreement(frm);
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
             refresh_field("agreement_no")
@@ -203,15 +213,20 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_df_property("update_due_date","hidden",0)
             frm.add_custom_button(__('Customer Agreement'), 
             frm.events.respond_with_customer_agreement, __("Generate PDF"));
-            for(i=1;i<=4;i++){
+            
+            $.each(print_format_mapper,function(index,data){
+                frm.add_custom_button(__(index),
+                frm.events.respond_with_customer_agreement, __("Generate PDF"));                 
+            })
+            /*for(i=1;i<=print_format_mapper;i++){
                 frm.add_custom_button(__('Delivery - receive note '+i),
                 frm.events.respond_with_customer_agreement, __("Generate PDF"));
-            }
+            }*/
         }
 
     },
     respond_with_customer_agreement:function(frm){
-        var url_to_generate_pdf = frappe.urllib.get_base_url()+"/api/method/frappe.templates.pages.print.download_pdf?doctype=Customer%20Agreement&name="+cur_frm.doc.name+"&format="+$(this).text()+"&no_letterhead=0"
+        var url_to_generate_pdf = frappe.urllib.get_base_url()+"/api/method/frappe.templates.pages.print.download_pdf?doctype=Customer%20Agreement&name="+cur_frm.doc.name+"&format="+print_format_mapper[$(this).text()]+"&no_letterhead=0"
         window.open(url_to_generate_pdf)
     },
     agreement_status:function(frm){
@@ -243,13 +258,25 @@ cur_frm.fields_dict['product'].get_query = function(doc) {
     }
 }
 
-make_update_agreement  = function() {
+make_update_agreement = function() {
     frappe.model.open_mapped_doc({
         method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.make_update_agreement",
         frm: cur_frm
     })
 }
 
+
+function make_new_child_agreement(frm){
+    tn = frappe.model.make_new_doc_and_get_name('Customer Agreement');
+    locals['Customer Agreement'][tn].today_plus_90_days = cur_frm.doc.today_plus_90_days
+    locals['Customer Agreement'][tn].duplicate_today_plus_90_days = cur_frm.doc.today_plus_90_days
+    locals['Customer Agreement'][tn].document_type = "Updated"
+    locals['Customer Agreement'][tn].agreement_status = "Open"
+    locals['Customer Agreement'][tn].parent_name = cur_frm.doc.name
+    locals['Customer Agreement'][tn].agreement_no = cur_frm.doc.name
+    locals['Customer Agreement'][tn].date = frappe.datetime.nowdate()
+    frappe.set_route('Form', 'Customer Agreement', tn);
+}
 
 //date_of_next_month_according_to_payment_day
 /*date_of_next_month_according_to_payment_day = function(frm){
@@ -288,22 +315,22 @@ date_of_next_month_according_to_payment_day = function(frm){
         //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,-c))
         refresh_field("due_date_of_next_month")
-        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)*/    
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
     if(a < b){
         var c = b - a
         //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,+c))
         refresh_field("due_date_of_next_month")
-        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    */
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
     if(a == b){
         cur_frm.doc.due_date_of_next_month = newDate
         refresh_field("due_date_of_next_month")
-        /*cur_frm.set_value("current_due_date",cur_frm.doc.date)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    */
+        cur_frm.set_value("current_due_date",cur_frm.doc.date)
+        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
     }
     if(cur_frm.doc.__islocal){
         cur_frm.set_value("current_due_date",cur_frm.doc.date)
