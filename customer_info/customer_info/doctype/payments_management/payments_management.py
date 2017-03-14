@@ -714,6 +714,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 			# 	break	
 	payment_made = map(float,payment_made)
+	
 	#print sum(payment_made),"sum of payments_made"
 
 	if customer_agreement.payments_record and customer_agreement.date:
