@@ -860,7 +860,8 @@ def payoff_submit(args,from_import_payment=None):
 	#args['total_charges'] = float(args['total_charges']) + float(_total_charges)
 	args['total_amount'] = float(args['total_amount'].split(" ")[0]) if not from_import_payment else float(args['total_amount'])
 	if args['condition'] == "90 day pay Off":
-		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) if not from_import_payment else float(args['rental_payment']) + float(late_payment)
+		#args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) if not from_import_payment else float(args['rental_payment']) + float(late_payment)
+		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) + float(late_payment) if not from_import_payment else float(args['rental_payment'])	
 	else:
 		args['rental_payment'] = float(args['rental_payment'].split(" ")[0]) if not from_import_payment else float(args['rental_payment'])	
 	args['new_bonus'] = 0

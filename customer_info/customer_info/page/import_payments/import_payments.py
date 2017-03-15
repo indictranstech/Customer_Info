@@ -100,51 +100,52 @@ def regular_payment(agreement_doc,d):
 
 def payoff_payment(payoff_data,agreement_doc,d):
 	error = ""
-	if agreement_doc.agreement_closing_suspending_reason not in ["Early buy offer","90d SAC","Contract Term is over"]:
-		error = "Agreement {0} Payoff Successful".format(agreement_doc.name)
+	#if agreement_doc.agreement_closing_suspending_reason not in ["Early buy offer","90d SAC","Contract Term is over"]:
+	error = "Agreement {0} Payoff Successful".format(agreement_doc.name)
 
-		balance = float(agreement_doc.payments_left) * agreement_doc.monthly_rental_payment
+	balance = float(agreement_doc.payments_left) * agreement_doc.monthly_rental_payment
 
-		discount = ((balance - float(agreement_doc.late_payment)) / 100) * float(agreement_doc.early_buy_discount_percentage)
+	discount = ((balance - float(agreement_doc.late_payment)) / 100) * float(agreement_doc.early_buy_discount_percentage)
 
-		args = {
-			"customer_agreement":d['Agreement No'],
-			"agreement_status":"Closed",
-			"condition": "90 day pay Off",
-			"customer":d['Customer'],
-			"receivables":0,
-			"add_in_receivables":0,
-			"values":{
-				'amount_paid_by_customer':d['Cash'],
-				'bank_card':d['Credit card'],
-				'discount':d['Discount'],
-				'bank_transfer':0,
-				'bonus':0
-			},
-			"late_fees":0,
-			"bonus":0,
-			"manual_bonus":0,
-			"used_bonus":0,
-			"new_bonus":0,
-			"payment_date":d['Payment date'],
-			"data":payoff_data
-		}
+	args = {
+		"customer_agreement":d['Agreement No'],
+		"agreement_status":"Closed",
+		"condition": "90 day pay Off",
+		"customer":d['Customer'],
+		"receivables":0,
+		"add_in_receivables":0,
+		"values":{
+			'amount_paid_by_customer':d['Cash'],
+			'bank_card':d['Credit card'],
+			'discount':d['Discount'],
+			'bank_transfer':0,
+			'bonus':0
+		},
+		"late_fees":0,
+		"bonus":0,
+		"manual_bonus":0,
+		"used_bonus":0,
+		"new_bonus":0,
+		"payment_date":d['Payment date'],
+		"data":payoff_data
+	}
 
-		# if 90d sac not past date
-		if d["Payoff"] == "90d SAC":
-			args['condition'] = "pay off agreement"
-			args['rental_payment'] = agreement_doc.s90d_sac_price#s90d_sac_price
-			args['total_amount'] = agreement_doc.s90d_sac_price - agreement_doc.payments_made + float(d["Late Fees"])\
-									+ float(agreement_doc.assigned_bonus) + float(agreement_doc.assigned_discount) + float(agreement_doc.assigned_campaign_discount) #s90_day_pay_Off
+	"""if 90d sac not past date"""
 
-		# if 90d sac is past date
-		# if d["Payoff"] == "Early buy":
-		# 	args['condition'] = "90 day pay Off"
-		# 	args['rental_payment'] =  balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
-		# 	args['total_amount'] = balance - float(discount)#Total_payoff_amount
-		
-		flag = "from_import_payment"
-		payoff_submit(args,flag)
-	else:
-		error = "Agreement {0} already Payoff Using {1}".format(agreement_doc.name,d["Payoff"])	
+	if d["Payoff"] == "90d SAC":
+		args['condition'] = "pay off agreement"
+		args['rental_payment'] = agreement_doc.s90d_sac_price#s90d_sac_price
+		args['total_amount'] = agreement_doc.s90d_sac_price - agreement_doc.payments_made + float(d["Late Fees"])\
+								+ float(agreement_doc.assigned_bonus) + float(agreement_doc.assigned_discount) + float(agreement_doc.assigned_campaign_discount) #s90_day_pay_Off
+
+	"""if 90d sac is past date"""
+
+	if d["Payoff"] == "Early buy":
+		args['condition'] = "90 day pay Off"
+		args['rental_payment'] =  float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
+		args['total_amount'] = float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - float(discount)#Total_payoff_amount	
+	flag = "from_import_payment"
+	payoff_submit(args,flag)
+	# else:
+	# 	error = "Agreement {0} already Payoff Using {1}".format(agreement_doc.name,d["Payoff"])	
 	return error
