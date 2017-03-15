@@ -262,7 +262,6 @@ class CustomerAgreement(Document):
 	def comment_for_agreement_status_change(self):
 		if self.agreement_status != self.old_agreement_status:
 			comment = """ Agreement Status Changed From '{0}' To '{1}' """.format(self.old_agreement_status,self.agreement_status)
-			self.agreement_status_changed_date = datetime.now().date()
 			self.add_comment("Comment",comment)
 			self.old_agreement_status = self.agreement_status
 
@@ -496,49 +495,49 @@ def update_due_dates_of_payments(update_date,name):
 			# 	counter_of_row += 1
 	return date_dict
 
-@frappe.whitelist()
-def make_update_agreement(source_name, target_doc=None):
-	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
-	target_doc = get_mapped_doc("Customer Agreement", source_name,
-		{
-			"Customer Agreement": {
-				"doctype": "Customer Agreement",
-			},
-		}, target_doc)
+# @frappe.whitelist()
+# def make_update_agreement(source_name, target_doc=None):
+# 	customer_agreement = frappe.get_doc("Customer Agreement",source_name)
+# 	target_doc = get_mapped_doc("Customer Agreement", source_name,
+# 		{
+# 			"Customer Agreement": {
+# 				"doctype": "Customer Agreement",
+# 			},
+# 		}, target_doc)
 
-	target_doc.document_type = "Updated"	
-	target_doc.payments_left = ""
-	target_doc.balance = 0
-	target_doc.payments_made = 0
-	target_doc.amonut_of_payment_left = ""
-	target_doc.late_payments = 0
-	target_doc.total_due = 0
-	target_doc.late_fees = 0
-	target_doc.number_of_payments = 0
-	target_doc.bonus = 0
-	target_doc.product = ""
-	target_doc.product_category = ""
-	#target_doc.concade_product_name_and_category = ""
-	target_doc.agreement_status_changed_date = ""
-	target_doc.suspended_until = ""
-	target_doc.suspended_from = ""
-	target_doc.merchandise_status = ""
-	target_doc.old_merchandise_status = ""
-	target_doc.flag = 0
-	target_doc.due_date_of_next_month = ""
-	target_doc.payments_record = []
-	target_doc.payment_day = ""
-	target_doc.agreement_status = "Open"
-	target_doc.duplicate_today_plus_90_days = customer_agreement.today_plus_90_days
-	target_doc.contact_result = ""
-	target_doc.suspension_date = ""
-	target_doc.amount_of_contact_result = 0
-	target_doc.call_commitment = ""
-	target_doc.new_agreement_bonus = 0
-	target_doc.early_payments_bonus = 0
-	target_doc.payment_on_time_bonus = 0
+# 	target_doc.document_type = "Updated"	
+# 	target_doc.payments_left = ""
+# 	target_doc.balance = 0
+# 	target_doc.payments_made = 0
+# 	target_doc.amonut_of_payment_left = ""
+# 	target_doc.late_payments = 0
+# 	target_doc.total_due = 0
+# 	target_doc.late_fees = 0
+# 	target_doc.number_of_payments = 0
+# 	target_doc.bonus = 0
+# 	target_doc.product = ""
+# 	target_doc.product_category = ""
+# 	#target_doc.concade_product_name_and_category = ""
+# 	target_doc.agreement_status_changed_date = ""
+# 	target_doc.suspended_until = ""
+# 	target_doc.suspended_from = ""
+# 	target_doc.merchandise_status = ""
+# 	target_doc.old_merchandise_status = ""
+# 	target_doc.flag = 0
+# 	target_doc.due_date_of_next_month = ""
+# 	target_doc.payments_record = []
+# 	target_doc.payment_day = ""
+# 	target_doc.agreement_status = "Open"
+# 	target_doc.duplicate_today_plus_90_days = customer_agreement.today_plus_90_days
+# 	target_doc.contact_result = ""
+# 	target_doc.suspension_date = ""
+# 	target_doc.amount_of_contact_result = 0
+# 	target_doc.call_commitment = ""
+# 	target_doc.new_agreement_bonus = 0
+# 	target_doc.early_payments_bonus = 0
+# 	target_doc.payment_on_time_bonus = 0
 
-	return target_doc
+# 	return target_doc
 
 
 # filter Product

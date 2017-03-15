@@ -278,6 +278,7 @@ function make_new_child_agreement(frm){
     locals['Customer Agreement'][tn].parent_name = cur_frm.doc.name
     locals['Customer Agreement'][tn].agreement_no = cur_frm.doc.name
     locals['Customer Agreement'][tn].date = frappe.datetime.nowdate()
+    locals['Customer Agreement'][tn].agreement_status_changed_date = frappe.datetime.nowdate()
     frappe.set_route('Form', 'Customer Agreement', tn);
 }
 
