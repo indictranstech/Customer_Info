@@ -597,7 +597,7 @@ def update_on_submit(args,flag):
 
 		if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
 			customer_doc = frappe.get_doc("Customer",args['customer'])
-			customer_doc.cancelled_bonus += customer_doc.bonus
+			customer_doc.cancelled_bonus = float(customer_doc.cancelled_bonus) + float(customer_doc.bonus) - float(args['values']['bonus'])
 			customer_doc.bonus = 0
 			customer_doc.save(ignore_permissions=True)
 
