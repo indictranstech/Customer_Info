@@ -455,9 +455,10 @@ payoff_details = Class.extend({
 	        	//"receivables":me.add_in_receivables,
 	       	callback: function(r){
 	       		// remove all bonus when agreements status closed for payoff
-	       		/*if(r.message && r.message == "True"){
-	       			cur_frm.set_value("static_bonus",0)					
-	       		}*/
+				if(r.message && r.message == "True"){
+					cur_frm.set_value("bonus",0)
+					cur_frm.set_value("static_bonus",0)
+				}
 	       		get_bonus_link();
 	       		me.dialog.hide();
 				me.old_dialog.hide();
