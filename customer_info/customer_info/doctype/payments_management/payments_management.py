@@ -876,8 +876,12 @@ def checking_all_agreements_closed(customer):
 	agreements_status = frappe.db.sql("""select agreement_status 
 								from `tabCustomer Agreement` where customer = '{0}' 
 								and agreement_status <> 'Updated' """.format(customer),as_list=1)
-	customer_doc.bonus = 0 if all(status == "Closed" for status in [s[0] for s in agreements_status]) else customer_doc.bonus
-	customer_doc.save(ignore_permissions=True)
+
+	if all(status == "Closed" for status in [s[0] for s in agreements_status]):
+		customer_doc.cancelled_bonus = float(customer_doc.cancelled_bonus) + float(customer_doc.bonus)
+		customer_doc.bonus = 0
+		customer_doc.save(ignore_permissions=True)
+
 	return "True" if all(status == "Closed" for status in [s[0] for s in agreements_status]) else "False"
 
 
