@@ -311,21 +311,17 @@ def payments_done_by_scheduler():
 		merchandise_status = ""
 		args = {'values':{}}
 		args['receivables'] = frappe.get_doc("Customer",name).receivables
-		print name,"name"
 		for agreement in [e[0] for e in customer_agreement]:
-			print agreement,"agreement"
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 			add_bonus_of_one_eur = []
 			add_bonus_of_two_eur = []
 			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 			for row in customer_agreement.payments_record:
 				#if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) == now_date:
-				if row.check_box_of_submit == 0 and firstDay_this_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) == now_date:			
-					print "inside one eur"
+				if row.check_box_of_submit == 0 and firstDay_this_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) == now_date:
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
-						print "inside in receivables"
 						payment_ids_list.append(row.payment_id)
 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(row.payment_date))
 						monthly_rental_amount.append(row.monthly_rental_amount)
@@ -344,8 +340,7 @@ def payments_done_by_scheduler():
 						customer.save(ignore_permissions=True)	
 
 				#if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_this_month and getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
-				if row.check_box_of_submit == 0 and firstDay_this_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:				
-					print "inside two eur"
+				if row.check_box_of_submit == 0 and firstDay_this_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
