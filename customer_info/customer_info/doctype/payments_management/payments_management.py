@@ -49,7 +49,7 @@ def get_bonus_summary(customer):
 		agreement_doc.save(ignore_permissions=True)
 
 	data = frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
-								"early_payments_bonus","payment_on_time_bonus","agreement_status"],as_dict=1)
+								"early_payments_bonus","payment_on_time_bonus","agreement_status","agreement_closing_suspending_reason"],as_dict=1)
 	return {"data":data,"cancelled_bonus":frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus")} 
 
 
