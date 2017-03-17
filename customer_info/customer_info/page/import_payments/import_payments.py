@@ -92,9 +92,8 @@ def regular_payment(agreement_doc,d):
 	"add_in_receivables":0,
 	"receivables":0
 	}
-	flag = "from_import_payment"
-
-	update_on_submit(args,flag)
+	from_import_payment = "from_import_payment"
+	update_on_submit(args,from_import_payment=from_import_payment)
 	return error
 
 
@@ -144,8 +143,8 @@ def payoff_payment(payoff_data,agreement_doc,d):
 		args['condition'] = "90 day pay Off"
 		args['rental_payment'] =  float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
 		args['total_amount'] = float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - float(discount)#Total_payoff_amount	
-	flag = "from_import_payment"
-	payoff_submit(args,flag)
+	from_import_payment = "from_import_payment"
+	payoff_submit(args,from_import_payment=from_import_payment)
 	# else:
 	# 	error = "Agreement {0} already Payoff Using {1}".format(agreement_doc.name,d["Payoff"])	
 	return error

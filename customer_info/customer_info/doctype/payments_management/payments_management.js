@@ -487,19 +487,22 @@ bonus_summary = Class.extend({
 									"new_agreement_bonus":0,
 									"status_list":[]
 								}
-					console.log(r.message)
+					var closed_status_count = []
 					$.each(r.message['data'],function(i,d){
 						total_bonus["name"] = "Total"
-						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]  
+						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
-						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"] 
-						total_bonus["status_list"].push(d["agreement_status"])
+						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"]
+						if(inList(["90d SAC","Early buy offer","Contact Term is over"], d["agreement_closing_suspending_reason"])) {
+							closed_status_count.push(d['agreement_status'])
+						}
 					})
+					var all_closed = "false"
+					if(closed_status_count.length == Object.keys(r.message['data']).length){
+						all_closed = "true"
+					}
+					console.log(closed_status_count,"closed_status_count",all_closed)	
 					r.message['data'].push(total_bonus)
-					var all_closed = "false"  
-					all_closed = r.message['data'][r.message['data'].length -1]["status_list"].every(function checkclosed(status) {
-					    return status == "Closed";
-					})
 					me.dialog.show();
 					var total_bonus_accumulated = r.message['data'][r.message['data'].length -1]["early_payments_bonus"] 
 												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
