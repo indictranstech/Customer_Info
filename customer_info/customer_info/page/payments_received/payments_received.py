@@ -7,7 +7,7 @@ import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer,from_date,to_date):
+def get_payments_details(customer,from_date,to_date,agreement):
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -41,7 +41,7 @@ def get_payments_details(customer,from_date,to_date):
 								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 	    						format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
-								late_fees_updated,payment_type
+								late_fees_updated,payment_type,merchandise_status
 								from `tabPayments History` {0}
 								order by payment_date asc """.format(cond),as_dict=1)
 
@@ -54,13 +54,19 @@ def get_payments_details(customer,from_date,to_date):
 								from `tabPayments History` {0}""".format(cond),as_dict=1)
 	total,"total"
 	total_payment_received = []
-	for i in data:
-		total_payment_received.append(i['total_payment_received'].replace(",",""))
+	agreement_list = []
+	filter_data = []
+
+	for row in data:
+		total_payment_received.append(row['total_payment_received'].replace(",",""))
+		if agreement and agreement in [i.split('/')[0] for i in row['merchandise_status'].split(',')[0:-1]]:
+			filter_data.append(row)
+
 	total[0]["payment_date"] = "Total"
 	total[0]["customer"] = "-"
 	total[0]["payoff_cond"] = "-"
 	total[0]['total_payment_received'] = "{0:.2f}".format(sum(map(float,total_payment_received)))
-	return {"data":data,"total":total}
+	return {"data":filter_data if agreement else data,"total":total}
 
 @frappe.whitelist()
 def create_csv(data):
@@ -81,15 +87,50 @@ def add_data(w,data):
 	if len(data) > 0:
 		w.writerow('\n')
 		w.writerow(['Payment Received'])
-		w.writerow(['', 'Payment Date','Customer', 'Rental Payment','Late Fees','Receivables','Total Rental Payment','Bank Transfer','Cash','Bank Card','Balance','Discount','Bonus'])
+		w.writerow(['', 'Payment Date', 'Customer Name', 'Payment Type', 'Payment Amount',\
+					 'Late Fees Amount', 'Receivables Amount','Discount Amount',\
+					 'Campaign Discount Amount', 'Bonus Amount', 'Total Calculated Payment Amount',\
+					  'Bank Transfer Amount', 'Receivables Collected', 'Cash Amount', 'Bank Card Amount'])
 		for i in data:
-			row = ['',i['payment_date'], i['customer'], i['rental_payment'],i['late_fees'],i['receivables'],i['total_payment_received'],i['bank_transfer'],i['cash'],i['bank_card'],i['balance'],i['discount'],i['bonus']]
+			row = ['',i['payment_date'], i['customer'], i['payment_type'],i['rental_payments']\
+				,i['late_fees'],i['receivables'],i['discount'],\
+				i['campaign_discount'],i['bonus'],i['total_payment_received'],i['bank_transfer']\
+				,i['receivables_collected'],i['cash'],i['bank_card']]
 			w.writerow(row)	
 			w.writerow(['','Payment id','Due Date','Rental Payment','Late Fees','Total','','Payment id','Due Date','Rental Payment','Late Fees','Total'])
 			for j in i['payments_ids']:
 				row = ['', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total'],'', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
 				w.writerow(row)
 	return w
+
+# @frappe.whitelist()
+# def create_csv(data):
+# 	w = UnicodeWriter()
+# 	w = add_header(w)
+# 	w = add_data(w, data)
+# 	# write out response as a type csv
+# 	frappe.response['result'] = cstr(w.getvalue())
+# 	frappe.response['type'] = 'csv'
+# 	frappe.response['doctype'] = "Payment Received Report"
+
+# def add_header(w):
+# 	w.writerow(["Payment Received Report"])
+# 	return w
+
+# def add_data(w,data):
+# 	data = json.loads(data)
+# 	if len(data) > 0:
+# 		w.writerow('\n')
+# 		w.writerow(['Payment Received'])
+# 		w.writerow(['', 'Payment Date','Customer', 'Rental Payment','Late Fees','Receivables','Total Rental Payment','Bank Transfer','Cash','Bank Card','Balance','Discount','Bonus'])
+# 		for i in data:
+# 			row = ['',i['payment_date'], i['customer'], i['rental_payment'],i['late_fees'],i['receivables'],i['total_payment_received'],i['bank_transfer'],i['cash'],i['bank_card'],i['balance'],i['discount'],i['bonus']]
+# 			w.writerow(row)	
+# 			w.writerow(['','Payment id','Due Date','Rental Payment','Late Fees','Total','','Payment id','Due Date','Rental Payment','Late Fees','Total'])
+# 			for j in i['payments_ids']:
+# 				row = ['', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total'],'', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
+# 				w.writerow(row)
+# 	return w
 	 
 @frappe.whitelist()
 def make_refund_payment(payments_ids,ph_name):

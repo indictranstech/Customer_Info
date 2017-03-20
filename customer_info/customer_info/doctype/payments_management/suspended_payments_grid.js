@@ -76,7 +76,6 @@ suspended_payments = Class.extend({
 	},
 	make_grid:function(){
 		var me = this;
-		console.log("inisde make_grid")
 		var grid_data = [];
 		/*var index = 0;*/
 		for (var i = 0; i<me.agreement_data.list_of_agreement.length; i++) {

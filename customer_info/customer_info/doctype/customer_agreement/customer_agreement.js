@@ -210,7 +210,7 @@ frappe.ui.form.on("Customer Agreement",{
             }
         }
         if(!cur_frm.doc.__islocal){
-            cur_frm.set_df_property("update_due_date","hidden",0)
+            //cur_frm.set_df_property("update_due_date","hidden",0)
             frm.add_custom_button(__('Customer Agreement'), 
             frm.events.respond_with_customer_agreement, __("Generate PDF"));
             

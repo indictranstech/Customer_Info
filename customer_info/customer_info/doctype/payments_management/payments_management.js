@@ -54,7 +54,6 @@ frappe.ui.form.on("Payments Management", {
 		}
 	},*/
 	bonus_summary:function(){
-		console.log("in bonus_summary")
 		new bonus_summary()
 	},
 	submit:function(){
@@ -98,14 +97,13 @@ frappe.ui.form.on("Payments Management", {
 
 
 _get_bonus_summary= function(frm){
-	console.log("inside _get_bonus_summary")
 	frappe.call({
 	   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
 		args: {
 			"customer":	cur_frm.doc.customer
 		},
 		callback: function(r){
-			console.log("_get_bonus_summary")
+
 		}
 	})	
 }
@@ -124,7 +122,6 @@ render_suspended_agreements = function(frm){
     	},
     	callback: function(r){
 			if(r.message){
-				console.log("dsdddd",r.message,r.message['list_of_agreement'],r.message['list_of_agreement'].length)
 				agreement_data = []
 				agreement_data = r.message;
 				if(r.message['list_of_agreement'].length > 0){
@@ -140,7 +137,6 @@ render_suspended_agreements = function(frm){
 }
 
 get_bonus_link = function(){
-	console.log("callback from payoff_details")
 	$('[data-fieldname="bonus_link"]').empty();
 	html = '<div class="row">\
             <label class="control-label" style="margin-left: 16px;">Active Bonus</label></div>\
@@ -192,7 +188,6 @@ calculate_total_charges = function(flag){
 	           		cur_frm.doc.static_bonus = r.message['bonus'] > 0 ? r.message['bonus'] : "0";
               		refresh_field('static_bonus')	
 	           	}
-	           	console.log("inside tempory",r.message)	
               	cur_frm.doc.amount_of_due_payments = r.message['amount_of_due_payments'] > 0 ? r.message['amount_of_due_payments']:"0";
            		cur_frm.doc.total_charges = (r.message['amount_of_due_payments'] - r.message['receivables']) == 0 ? "0": (r.message['amount_of_due_payments'] - r.message['receivables']);
            		cur_frm.doc.receivables = r.message['receivables'] == 0 ? "0":r.message['receivables'];
@@ -226,19 +221,16 @@ render_agreements = function(flag){
 
 	var current_due_date_editable = function(row, cell, value, columnDef, dataContext){
 		var id = "current_due_date"+ String(row)
-		console.log(dataContext['current_due_date'],"dataContext['current_due_date']")
 		return "<a class='current_due_date' value="+dataContext['current_due_date']+">" + dataContext['current_due_date'] + "</a>";
 	}
 
 	var late_fees_editable = function(row, cell, value, columnDef, dataContext){
 		var id = "late_fee"+ String(row)
-		console.log(dataContext['late_fees'],"dataContext['late_fees']")
 		return "<a class='late_fees' value="+dataContext['late_fees']+">" + dataContext['late_fees'] + "</a>";
 	}
 
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
-		console.log(dataContext['campaign_discount'],"dataContext['campaign_discount']")
 		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){			
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
 		}
@@ -291,7 +283,6 @@ render_agreements = function(flag){
             },
             callback: function(r){
 				if(r.message && r.message['list_of_agreement'].length > 0){
-					console.log(r.message,"r.message1111222333")
 					this.data = r.message;
 					cur_frm.set_df_property("open_agreements","hidden",0)
 					cur_frm.set_df_property("process_payment_section","hidden",0)
@@ -301,7 +292,6 @@ render_agreements = function(flag){
 			        	$.each($("#payments_grid").find(".slick-row"),function(i,d){
 							total_due_amount += flt($($(d).children()[10]).text())
 						});
-						console.log(total_due_amount,"total_due_amount")
 						cur_frm.set_value("amount_of_due_payments",flt(total_due_amount) > 0 ? flt(total_due_amount):"0.00")
 			     		cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)) > 0 ? flt(total_due_amount)-flt(cur_frm.doc.receivables):"0.00")      		
 					}
@@ -319,7 +309,6 @@ render_agreements = function(flag){
 
 					if(cur_frm.doc.customer_agreement){
 						$.each($("#payments_grid").find(".slick-row"),function(i,d){
-							console.log(String($($(d).children()[13]).find(".detail").attr("agreement")))
 							if(String($($(d).children()[13]).find(".detail").attr("agreement")) == cur_frm.doc.customer_agreement){
 								$(".detail[agreement="+cur_frm.doc.customer_agreement+"]").click();
 								cur_frm.set_value("customer_agreement","")
@@ -501,14 +490,12 @@ bonus_summary = Class.extend({
 					if(closed_status_count.length == Object.keys(r.message['data']).length){
 						all_closed = "true"
 					}
-					console.log(closed_status_count,"closed_status_count",all_closed)	
 					r.message['data'].push(total_bonus)
 					me.dialog.show();
 					var total_bonus_accumulated = r.message['data'][r.message['data'].length -1]["early_payments_bonus"] 
 												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
 												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"] 
 												+ cur_frm.doc.assign_manual_bonus
-					console.log("sdfsdffdsfdsf",total_bonus_accumulated)							
 					html = $(frappe.render_template("bonus_summary",{
 						"bonus":r.message['data'],
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
@@ -655,7 +642,6 @@ edit_campaign_discount = Class.extend({
 	},
 	make_campaign_discount_edit:function(){
 		var me = this;
-		console.log(me.item["campaign_discount"])
 		me.options_list = ["0"]
 		if (flt(me.item["campaign_discount"].split("-")[1]) > 0){
 			//me.item["campaign_discount"].split("-")[1]
@@ -663,7 +649,6 @@ edit_campaign_discount = Class.extend({
 				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[0]))
 			}*/
 			for(i=1;i<=flt(me.item["campaign_discount"].split("-")[2]);i++){
-				console.log(i*flt(me.item["campaign_discount"].split("-")[1]))
 				me.options_list.push(i*flt(me.item["campaign_discount"].split("-")[1]))
 			}
 		}
@@ -720,7 +705,6 @@ edit_campaign_discount = Class.extend({
 	},*/
 	update_campaign_discount:function(){
 		var me = this;
-		console.log(me.fd.campaign_discount.$input.val())		
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_campaign_discount",
 	        args: {
@@ -850,7 +834,6 @@ edit_late_fees = Class.extend({
 	},
 	update_late_fees:function(){
 		var me = this;
-		console.log(me.fd.late_fees.$input.val())		
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_late_fees",
 	        args: {
@@ -998,7 +981,6 @@ call_commit = Class.extend({
 				me.add_comment();
 			}
 			if(me.fd.contact_result.$input.val() == "Sent SMS/Email"){
-				console.log(me.item["current_due_date"],"current_due_date1232212")
 				me.dialog.fields_dict.date_picker.set_input(nowdate)
 				me.dialog.fields_dict.amount.set_input("")
 				$(me.dialog.body).find("[data-fieldname ='date_picker'],[data-fieldname ='amount']").hide();
@@ -1061,7 +1043,6 @@ call_commit = Class.extend({
 	},
 	update_call_commitment_data_in_agreement:function(){
 		var me  = this;
-		console.log(me.agreements_name,"agreements")
 		frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.update_call_commitment_data_in_agreement",
             args: {

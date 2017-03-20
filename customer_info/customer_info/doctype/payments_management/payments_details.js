@@ -3,7 +3,6 @@
 
 Payments_Details = Class.extend({
 	init:function(item, index, flag){
-		console.log(flag,"flag")
 		this.item = item;
 		this.index = index;
 		this.flag = flag
@@ -35,7 +34,6 @@ Payments_Details = Class.extend({
 	},
 	render_payment_management:function(){
 		var me = this;
-		console.log("item",me.item,this.item,"eeeeeee")
 		var counter = 0
 		$('button[data-fieldname="pay_off_agreement"]').hide();
 		$('button[data-fieldname="s90_day_pay_Off"]').hide();
@@ -59,7 +57,6 @@ Payments_Details = Class.extend({
 			freeze_message: __("Please Wait..."),
 			callback:function(r){
 				if(r.message && me.template_name == "common_template"){
-					console.log(r.message,"aaaaaaaaaaaaa")
 					me.rendering_data = r.message
 					me.check_pre_select = "Yes"
 					html = $(frappe.render_template("common_template",{
@@ -183,7 +180,6 @@ Payments_Details = Class.extend({
 	   		else{
 	   			me.payments_record_list[0][i]['paid'] = "No"		
 	   		}
-	   		console.log(due_date_dateformat,today)
 	   		
 	   		if((me.payments_record_list[0][i]['check_box_of_submit'] == 0 && (due_date_dateformat <= today && due_date_dateformat >= firstDay) && me.payments_record_list[0][i]['pre_select_uncheck'] == 0) || (me.payments_record_list[0][i]['check_box_of_submit'] == 0 && due_date_dateformat < firstDay && me.payments_record_list[0][i]['pre_select_uncheck'] == 0)){
 	   			me.payments_record_list[0][i]['check_box'] = 1
@@ -219,24 +215,15 @@ Payments_Details = Class.extend({
                 me.row_to_uncheck.push($(item).val());
     		}
         });
-        
-        //console.log(me.row_to_pre_select_uncheck,"me.row_to_pre_select_uncheck")
-        console.log(me.row_to_update,"row_to_update")
-        //console.log(me.row_to_uncheck,"row_to_uncheck")
-        console.log(me.row_to_check,"row_to_check")
-	    //console.log(cur_frm.doc.bonus,"bonus")
 	    var add_list = []
-	    console.log((me.dialog.$wrapper).find(".select"),"me 12321132111")
 	    $.each((me.dialog.$wrapper).find(".select"),function(i,d){
 	    	if ($(d).is(':checked')){
 	    		add_list.push($(d).attr("value").split(" ")[1])
 	    	}
 	    });
 	    var checking_sequence = ""
-	    console.log(add_list,"add_list")
 	    if(add_list.length > 1){
 	    	for(i=0;i<add_list.length-1;i++){
-		    	console.log(add_list[i+1],add_list[i])
 		    	if(flt(add_list[i+1]) - flt(add_list[i]) != 1){
 		    		frappe.throw("Error Please Add Payment In sequence")
 		    		checking_sequence = "false"
@@ -244,7 +231,6 @@ Payments_Details = Class.extend({
 		    	}
 	    	}
 	    }
-	    console.log("checking_sequence",checking_sequence)
 	    /*if(checking_sequence == ""){
 	    	me.common_function_for_add_checkbox();
 	    }*/
@@ -276,7 +262,6 @@ Payments_Details = Class.extend({
 	           	callback: function(res){
 	        	}
 	        });
-	        console.log("me.row_to_uncheck123",me.row_to_uncheck,cur_frm.doc.bonus)
 	        frappe.call({
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.set_values_in_agreement_temporary",
 		        async: false,
@@ -287,7 +272,6 @@ Payments_Details = Class.extend({
 	            	"row_to_uncheck":me.row_to_uncheck
 	            },
 	           	callback: function(r){
-	           		console.log(r.message,"r.message*****************888")
 	        		cur_frm.set_value("bonus",r.message)
 	        		render_agreements()
 	            	me.update_total_charges_and_due_payments()
@@ -356,7 +340,6 @@ Payments_Details = Class.extend({
 	},
 	add_and_subtract_from_total_and_due_charges:function(){
 		var me = this;
-		console.log(me.late_fee,"late_fee")
 		var factor = me.payments_record_list[0][1].monthly_rental_amount;
 		if(me.add == "Yes"){
 			me.total_charges = parseFloat($(me.dialog.body).find('div.total_charges').text()) + parseFloat(factor) + flt(me.late_fee)

@@ -27,7 +27,8 @@ payments_received = Class.extend({
 				<div class='col-xs-2 customer'></div>\
 				<div class='col-xs-2 from_date'></div>\
   				<div class='col-xs-2 to_date'></div>\
-  				<div class='col-xs-6'></div>\
+  				<div class='col-xs-2 agreement'></div>\
+  				<div class='col-xs-4'></div>\
   				</div>\
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
@@ -82,6 +83,17 @@ payments_received = Class.extend({
 			render_input: true
 		});
 		me.to_date.refresh();
+		me.agreement = frappe.ui.form.make_control({
+			parent: me.page.find(".agreement"),
+			df: {
+				fieldtype: "Link",
+				fieldname: "agreement",
+				placeholder: "Customer Agreement",
+				options:"Customer Agreement"
+			},
+			render_input: true
+		});
+		me.agreement.refresh();
 
 		me.customer_link.$input.on("change", function(){
 			var old_me = me;
@@ -97,6 +109,11 @@ payments_received = Class.extend({
 			var old_me = me;
 			old_me.render_payments_details()
 		});
+
+		me.agreement.$input.on("change", function(){
+			var old_me = me;
+			old_me.render_payments_details()
+		});
 				
 	},
 	render_payments_details: function() {
@@ -108,11 +125,11 @@ payments_received = Class.extend({
 				"customer": me.customer_link.$input.val(),
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
+				"agreement":me.agreement.$input.val()
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
-				console.log(r.message["data"],"r.message")
         	   	me.page.find(".data").empty();
 				$.each(r.message["data"], function(i, d) {
 					if(d["payoff_cond"]){
@@ -161,7 +178,6 @@ payments_received = Class.extend({
 					"late_fees":late_fees,
 					"total": total
 		   		})
-				console.log("__dict_of_payments_ids",__dict_of_payments_ids)
 				return __dict_of_payments_ids
 			}
 			else{
@@ -232,7 +248,6 @@ payments_received = Class.extend({
 	},
 	show_dialog:function(){
 		var me = this;
-		console.log(me,"me inside show_dialog")
 		this.dialog = new frappe.ui.Dialog({
             		title: "Refund Process",
                 	fields: [
