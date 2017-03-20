@@ -512,18 +512,16 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 							and check_box_of_submit = 0 
 							and payment_date = '{1}' order by idx """.format(cond,args['payment_date']),as_dict=1)
 	
-	# checking  all payment done by bonus then update payments record remove new given bonus
 	args['assigned_bonus_discount'] = ""
-	#print "inside update_on_submit\n\n\n\n\n\n\n\n",args['values']['discount'],type(args['values']['discount'])
+
 
 	if submitted_payments_ids_info and (float(args['values']['bonus']) > 0 or float(args['values']['discount']) > 0):
+		
+		"""Add assigned bonus and discount"""
 		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args,submitted_payments_ids_info)#return agreement name 
 		
-		"""
-		remove bonus when payment only done by bonus with no receivables
-
-		"""
-
+		
+		"""remove bonus when payment only done by bonus with no receivables"""
 		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0 and float(args['receivables']) == 0:
 			remove_new_bonus(submitted_payments_ids_info)
@@ -531,14 +529,13 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 			args['new_bonus'] = 0
 
 
-		"""
-		remove_bonus from all payments when any payments have late_fees	
-
-		"""	
+		"""remove_bonus from all payments when any payments have late_fees"""	
 		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
 			args['new_bonus'] = 0
+
+	
 
 	frappe.db.sql("""update `tabPayments Record` 
 						set check_box_of_submit = 1
@@ -557,7 +554,6 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		if customer_agreement.discount_updated == "Yes":
-			#discount_amount += customer_agreement.campaign_discount
 			campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
 			discount_amount += customer_agreement.discount
 
@@ -571,23 +567,26 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 			customer_agreement.late_fees_updated = "No"
 			customer_agreement.save(ignore_permissions=True)
 
-	""""
-	add_assigned_campaing_discount_discount		
-	"""
+	"""add assigned campaing discount discount"""
 	if campaign_discount_of_agreements:
 		add_assigned_campaing_discount_discount(campaign_discount_of_agreements)
-
-	#add_bonus_and_receivables_to_customer(customer,bonus,manual_bonus,used_bonus,add_in_receivables,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
 
+
+	"""
+	if we have payment_ids then 
+	then payment type is Rental Payment else
+	Modification of receivables
+	in payments receivabled report
+	"""
 	if submitted_payments_ids_info:
 		for d in submitted_payments_ids_info:
 			payments_detalis_list.append(str(d["payment_id"])+"/"+str(d["due_date"])+"/"+str(d["monthly_rental_amount"])+"/"+str(d["payment_date"]))
 			payment_ids_list.append(d["payment_id"])
 
-		#make_payment_history(values,customer,receivables,add_in_receivables,payment_date,total_charges,payments_detalis_list,payment_ids_list,rental_payment,0,late_fees,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,new_bonus)	
+		"""make payment history"""
 		args['total_amount'] = 0
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,late_fees_updated_status,"Rental Payment",discount_amount,campaign_discount_of_agreements)	
 		
@@ -605,12 +604,11 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 
 		return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "",
 				"used_bonus_of_customer":used_bonus_of_customer,
-				"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False"}
-
+				"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False"}			
 	else:
 		if flag == "from_payoff":
 			args['total_amount'] = 0
-			make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)		
+			make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)
 
 """
 add assigned_campaing_discount if campaign discount given
@@ -671,7 +669,6 @@ def add_assigned_bonus_and_discount(args,submitted_payments_ids_info):
 
 
 """remove newly added bonus of payments"""
-
 def remove_new_bonus(submitted_payments_ids_info):
 	submitted_payments_ids = []
 	for d in submitted_payments_ids_info:	
@@ -685,8 +682,6 @@ def remove_new_bonus(submitted_payments_ids_info):
 	frappe.db.sql("""update `tabPayments Record` 
 					set add_bonus_to_this_payment = 0,bonus_type=""
 					{0} and add_bonus_to_this_payment=1""".format(condi))
-
-
 
 
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
@@ -1079,9 +1074,11 @@ def get_payments_management(source_name, target_doc=None):
 	return target_doc
 
 
+"""
+customer can pay less than Payment Amount
+"""
 @frappe.whitelist()
 def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,receivables,late_fees):
-	#print late_fees,"\n\n\n\n"
 	agreements = json.loads(agreements)
 
 	id_list = tuple([x.encode('UTF8') for x in list(agreements) if x])

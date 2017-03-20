@@ -126,8 +126,6 @@ payoff_details = Class.extend({
 		});
 		this.rental_payment = total_due - late_fees;
        	this.late_fees = late_fees;
-       	console.log(this.late_fees,"late_fees my console 11111")
-       	console.log(this.rental_payment,"rental_payment my console 11111")
        	if(flt(this.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0){
        		me.fd.bonus.df.hidden=1;
    			me.fd.bonus.refresh();
@@ -191,7 +189,6 @@ payoff_details = Class.extend({
 			me.init_for_commom_calculation();
 		})
 		$(me.fd.bonus.input).change(function(){
-			console.log(me.payable_by_bonus)
 			if($(me.fd.bonus.input).val() == ""){
 				me.dialog.set_value("bonus","0.0")	
 			}
@@ -236,7 +233,6 @@ payoff_details = Class.extend({
 																				  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
 																				  + flt(cur_dialog.fields_dict.discount.$input.val())
 																				  + flt(me.val_balance)
-			console.log("bal", val_of_balance)
 		}
 		else{
 			/*var val_of_balance = flt(me.fd.amount_paid_by_customer.$input.val()) - flt(cur_frm.doc.total_charges)
@@ -248,7 +244,6 @@ payoff_details = Class.extend({
 																			  + flt(cur_dialog.fields_dict.bank_transfer.$input.val())
 																			  + flt(cur_dialog.fields_dict.bonus.$input.val())
 																			  + flt(cur_dialog.fields_dict.discount.$input.val())
-			console.log("in else - bal", val_of_balance)
 		}
 		cur_dialog.fields_dict.balance.set_input(val_of_balance.toFixed(2))
 		me.dialog.fields_dict.msg.$wrapper.empty()
@@ -330,7 +325,6 @@ payoff_details = Class.extend({
 			frappe.throw(__("No Bonus For Partial Payment"));
 		}
 		else{
-			console.log(value.amount_paid_by_customer,"values")
 			frappe.call({
 		        method: "customer_info.customer_info.doctype.payments_management.payments_management.calculate_underpayment",
 		       	args: {
@@ -375,7 +369,6 @@ payoff_details = Class.extend({
 			}*/
 			me.hide_other_and_show_complete_payment();
 			me.click_on_submit();
-			console.log(me.add_in_receivables,"add_in_receivables")
 		})
 	},
 	click_on_return_to_customer:function(){
@@ -396,12 +389,9 @@ payoff_details = Class.extend({
 	},
 	click_on_submit:function(){
 		var me = this;
-		console.log(me.add_in_receivables,"add_in_receivables")
-		console.log(me.rental_payment,"rental_payment")
 		/*console.log(me.old_instance)
 		console.log(me.old_instance['values']['s90d_SAC_price'],"old_dialog")
 		console.log(me.old_instance['values']['s90_day_pay_Off'],"old_dialog")*/
-		console.log(me.number_of_payments,"number_of_payments1111111111111")
 		me.dialog.fields_dict.submit_payment.$input.click(function(){
 			if(me.old_instance == "Process Payments" && me.number_of_payments > 0){
 				me.update_payments_records();
@@ -416,7 +406,6 @@ payoff_details = Class.extend({
 		});
 	},
 	payoff_submit:function(){
-		console.log("inside payoff_submit")
 		var me = this;
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_records_on_payoff_submit",
@@ -426,7 +415,6 @@ payoff_details = Class.extend({
 	        },
 	       	callback: function(r){
 	    		if(r.message){
-	    			console.log(r.message,"aaaaaaaaaaaa")		
 	    			me.update_on_payoff(r.message)
 	    		}
 	    	}
@@ -469,7 +457,6 @@ payoff_details = Class.extend({
 	    });
 	},
 	update_payments_records:function(){
-		console.log("in update_payments_records")
 		var me = this;
 		value = me.dialog.get_values();
 		frappe.call({
@@ -494,7 +481,6 @@ payoff_details = Class.extend({
    		        "flag":"from_payoff"
 	       	},
 	       	callback: function(r){
-	       		console.log("flt(cur_frm.doc.bonus)***********",flt(cur_frm.doc.bonus))
 	       		/*if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
 	       			console.log("insided 1")
@@ -504,26 +490,22 @@ payoff_details = Class.extend({
 	       		}*/
 	       		if(flt(value.bonus) >= cur_frm.doc.amount_of_due_payments && flt(value.amount_paid_by_customer) == 0 
 	       			&& flt(value.bank_card) == 0 && flt(value.bank_transfer) == 0 && flt(value.discount) == 0){
-	       			console.log("insided 1")
 	       			var bonus_value = flt(cur_frm.doc.static_bonus) - flt(value.bonus) //+ flt(value.balance)
 	       			cur_frm.set_value("bonus",bonus_value)
 	       			cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 	       		else if(flt(me.late_fees) > 0 || flt(cur_frm.doc.receivables) < 0 || flt(me.add_in_receivables) < 0){
-	       			console.log("insided 2")
 	       			var bonus_val = flt(cur_frm.doc.static_bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_val)
 	       			cur_frm.set_value("static_bonus",bonus_val)
 	       		}
 	       		else{
-	       			console.log("insided 4")
 	       			var bonus_value = flt(cur_frm.doc.bonus) - flt(value.bonus)
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
 	       		}
 
 	       		if(r.message && r.message['remove_bonus'] == "True"){
-	       			console.log("insided 3")
 	       			var bonus_value = 0
 	       			cur_frm.set_value("bonus",bonus_value)
 		       		cur_frm.set_value("static_bonus",bonus_value)
