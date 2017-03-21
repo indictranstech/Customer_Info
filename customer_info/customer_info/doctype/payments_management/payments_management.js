@@ -478,6 +478,7 @@ bonus_summary = Class.extend({
 								}
 					var closed_status_count = []
 					$.each(r.message['data'],function(i,d){
+						console.log(d["agreement_closing_suspending_reason"])
 						total_bonus["name"] = "Total"
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
@@ -487,7 +488,7 @@ bonus_summary = Class.extend({
 						}
 					})
 					var all_closed = "false"
-					if(closed_status_count.length == Object.keys(r.message['data']).length){
+					if(closed_status_count.length && closed_status_count.length == Object.keys(r.message['data']).length){
 						all_closed = "true"
 					}
 					r.message['data'].push(total_bonus)
@@ -496,6 +497,7 @@ bonus_summary = Class.extend({
 												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
 												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"] 
 												+ cur_frm.doc.assign_manual_bonus
+					console.log("flt(total_bonus_accumulated).toFixed(2)",flt(total_bonus_accumulated).toFixed(2),all_closed)							
 					html = $(frappe.render_template("bonus_summary",{
 						"bonus":r.message['data'],
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
