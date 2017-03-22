@@ -59,7 +59,7 @@ def get_payments_details(customer,from_date,to_date,agreement):
 
 	for row in data:
 		total_payment_received.append(row['total_payment_received'].replace(",",""))
-		if agreement and agreement in [i.split('/')[0] for i in row['merchandise_status'].split(',')[0:-1]]:
+		if agreement and row['payments_ids'] and agreement in [i.split('-P')[0] for i in str(row['payments_ids'])[1::].split(',')[0:-1]]:
 			filter_data.append(row)
 
 	total[0]["payment_date"] = "Total"
