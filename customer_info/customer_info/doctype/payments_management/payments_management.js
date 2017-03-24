@@ -231,8 +231,12 @@ render_agreements = function(flag){
 
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
-		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){			
+		console.log(cell,"cell campaign_discount",value,row)
+		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
+		}
+		else if(flt(dataContext['campaign_discount'].split("-")[2]) == 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0) {
+			return "<span style='background: red;padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
 		}
 		else{
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a>";
@@ -460,13 +464,6 @@ bonus_summary = Class.extend({
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
-		/*frappe.call({    
-			method: "frappe.client.get_list",
-		   	args: {
-		    	doctype: "Customer Agreement",
-		       	fields: ["early_payments_bonus","payment_on_time_bonus","new_agreement_bonus","name"],
-		       	filters: {'agreement_status':'Open','customer':cur_frm.doc.customer},
-			},*/	
 			callback: function(r){
 				if(r.message){
 					total_bonus = {

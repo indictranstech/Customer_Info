@@ -22,7 +22,8 @@ def upload(update_due_date = None):
 			d['Payment date'] = line[2]
 			d['Payment due date'] = line[3]
 			d['Cash'] = line[4]
-			d['Credit card'] = line[5]
+			#d['Credit card'] = line[5]
+			d['Bank Transfer'] = line[5]
 			d['Discount'] = line[6]
 			d['Late Fees'] = line[7]
 			ret.append(made_payments(d,params))
@@ -75,9 +76,9 @@ def regular_payment(agreement_doc,d):
 	args = {
 	"values":{
 		'amount_paid_by_customer':d['Cash'],
-		'bank_card':d['Credit card'],
+		'bank_card':0,
 		'discount':d['Discount'],
-		'bank_transfer':0,
+		'bank_transfer':d['Bank Transfer'],
 		'bonus':0
 	},
 	"rental_payment":d['Rental payment'],
@@ -115,9 +116,9 @@ def payoff_payment(payoff_data,agreement_doc,d):
 		"add_in_receivables":0,
 		"values":{
 			'amount_paid_by_customer':d['Cash'],
-			'bank_card':d['Credit card'],
+			'bank_card':0,
 			'discount':d['Discount'],
-			'bank_transfer':0,
+			'bank_transfer':d['Bank Transfer'],
 			'bonus':0
 		},
 		"late_fees":0,

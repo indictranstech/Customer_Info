@@ -28,6 +28,7 @@ class CustomerAgreement(Document):
 		self.change_default_warehouse()
 		self.changed_merchandise_status_according_to_agreement_status()
 		self.payment_date_comment()
+		self.remove_bonus_of_customer()
 
 	def change_sold_date_of_item(self):
 		"""
@@ -62,7 +63,9 @@ class CustomerAgreement(Document):
 			self.agreement_close_date = ""				
 
 
-			
+	"""
+	change default ware house of item according to agreement_status
+	"""		
 	def change_default_warehouse(self):
 		item = frappe.get_doc("Item",self.product)
 		default_warehouse = item.default_warehouse
@@ -269,6 +272,20 @@ class CustomerAgreement(Document):
 		#comment = """The agreement {0} is started on the {1}  """.format(self.name,datetime.now().date())
 		comment = """The agreement {0} is started on the {1}  """.format(self.name,self.date)
 		self.add_comment("Comment",comment)
+
+
+	def remove_bonus_of_customer(self):
+		if self.agreement_status == "Closed":
+			agreements_status = frappe.db.sql("""select agreement_status 
+										from `tabCustomer Agreement` where customer = '{0}' 
+										and name <> '{1}'
+										and agreement_status <> 'Updated' """.format(self.customer,self.name),as_list=1)
+			if all(status == "Closed" for status in [s[0] for s in agreements_status]):
+				customer_doc = frappe.get_doc("Customer",self.customer)
+				customer_doc.cancelled_bonus = float(customer_doc.cancelled_bonus) + float(customer_doc.bonus)
+				customer_doc.bonus = 0
+				customer_doc.save(ignore_permissions=True)
+
 
 
 
