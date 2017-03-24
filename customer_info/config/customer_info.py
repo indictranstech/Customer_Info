@@ -16,8 +16,8 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Brand",
-					"label":"Product models",
-					"description": _("Product model"),
+					"label":"Product model",
+					"description": _("Product models"),
 				},
 				{
 					"type": "doctype",

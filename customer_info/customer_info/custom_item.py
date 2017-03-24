@@ -47,7 +47,7 @@ def add_comment_for_customer_creation(self,method):
 	comment = """Customer {0} is made on the {1}  """.format(self.name,datetime.now().date())
 	self.add_comment("Comment",comment)
 	if self.bonus and self.assign_manual_bonus and self.bonus == self.assign_manual_bonus:
-		comment = """Bonus Modified From 0 To {0}""".format(self.bonus)
+		comment = "{0} - [{1}] Bonus Modified From 0 To {2}".format(datetime.now().date(),frappe.session.user,self.bonus)
 		self.add_comment("Comment",comment)		
 
 @frappe.whitelist(allow_guest = True)

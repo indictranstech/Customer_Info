@@ -21,8 +21,9 @@ def get_data(filters):
 			item.invoice_number,
 			item.product_category,item.brand,
 			item.serial_number,item.imei_number,
-			format(item.purchase_price_with_vat,2) as Purchase_price_with_VAT,
-			format(item.purchase_price_with_vat/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
+			format(item.purchase_price_with_vat,2) as Basic_calculation_price,
+			format(item.wholesale_price,2) as Purchase_price_with_VAT,
+			format(item.wholesale_price/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
 			item.purchase_date,item.sold_date,
 			case when agreement.merchandise_status = "Early buy" then
 			concat(agreement.early_buy_discount_percentage,"% ",item.merchandise_status) else item.merchandise_status end as merchandise_status,
@@ -65,12 +66,22 @@ def get_condtion(sold_from_date,sold_to_date,purchase_from_date,purchase_to_date
 
 
 def get_colums():
-	columns = [("Warehouse") + ":Link/Warehouse:100"] + [("Supplier") + ":Link/Supplier:100"] + \
-			  [("Invoice number") + "::170"] + \
-			  [("Product Category") + ":Link/Product Category:90"] + [("Product Model") + ":Link/Brand:90"] + \
-			  [("Serial number") + "::90"] + [("IMEI number") + "::90"] + \
-			  [("Purchase price with VAT") + ":Data:90"] + [("Purchase price without VAT") + ":Data:90"] + \
-			  [("Purchase Date") + ":Date:100"] + [("Merchandise transfer date") + ":Date:80"] + \
-			  [("Merchandise status") + "::90"]	+ [("Customer Agreement") + ":Link/Customer Agreement:90"] + [("Customer") + ":Link/Customer:90"] + \
-			  [("Last Comment") + ":Data:150"]	
+	columns = [
+				("Warehouse") + ":Link/Warehouse:100",
+				("Supplier") + ":Link/Supplier:100",
+				("Invoice number") + "::170",
+				("Product Category") + ":Link/Product Category:90",
+				("Product Model") + ":Link/Brand:90",
+				("Serial number") + "::90",
+				("IMEI number") + "::90",
+				("Basic calculation price") + "::120",
+				("Purchase price with VAT") + ":Data:90",
+				("Purchase price without VAT") + ":Data:90",
+				("Purchase Date") + ":Date:100",
+				("Merchandise transfer date") + ":Date:80",
+				("Merchandise status") + "::90",
+				("Customer Agreement") + ":Link/Customer Agreement:90",
+				("Customer") + ":Link/Customer:90",
+				("Last Comment") + ":Data:150"
+			]	
 	return columns
