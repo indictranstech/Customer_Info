@@ -236,7 +236,7 @@ render_agreements = function(flag){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
 		}
 		else if(flt(dataContext['campaign_discount'].split("-")[2]) == 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0) {
-			return "<span style='background: red;padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
+			return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
 		}
 		else{
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a>";
@@ -474,13 +474,14 @@ bonus_summary = Class.extend({
 									"status_list":[]
 								}
 					var closed_status_count = []
+					var closing_reason_list = ["90d SAC","Early buy offer","Contact Term is over","Return","Fraud/Stolen","Contract term is over"]
 					$.each(r.message['data'],function(i,d){
 						console.log(d["agreement_closing_suspending_reason"])
 						total_bonus["name"] = "Total"
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
 						total_bonus["new_agreement_bonus"] += d["new_agreement_bonus"]
-						if(inList(["90d SAC","Early buy offer","Contact Term is over"], d["agreement_closing_suspending_reason"])) {
+						if(inList(closing_reason_list, d["agreement_closing_suspending_reason"])) {
 							closed_status_count.push(d['agreement_status'])
 						}
 					})

@@ -48,7 +48,8 @@ def add_comment_for_customer_creation(self,method):
 	self.add_comment("Comment",comment)
 	if self.bonus and self.assign_manual_bonus and self.bonus == self.assign_manual_bonus:
 		comment = "{0} - [{1}] Bonus Modified From 0 To {2}".format(datetime.now().date(),frappe.session.user,self.bonus)
-		self.add_comment("Comment",comment)		
+		self.add_comment("Comment",comment)
+		frappe.db.set_value("Customer", self.name, "summary_of_notes", comment)
 
 @frappe.whitelist(allow_guest = True)
 def add_comment_for_change_receivables(self,method):
