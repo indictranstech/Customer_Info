@@ -19,8 +19,11 @@ def get_data(filters):
 		result = frappe.db.sql("""select t1.due_date, 
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0
 									THEN DATEDIFF('{1}',t1.due_date) ELSE 0 END AS difference,
-									t1.payment_id,t1.monthly_rental_amount,concat(t2.product," ",t2.product_category),
-									t2.customer AS customer,
+									t1.payment_id,
+									t1.monthly_rental_amount,
+									concat(t2.product," ",t2.product_category),
+									t3.first_name AS customer,
+									t3.last_name AS sur_name,
 									t3.company_phone_1,t3.bonus,
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 3 
 									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02 ELSE 0 END AS late_fees,
@@ -40,15 +43,15 @@ def get_data(filters):
 										and t1.check_box_of_submit != 1
 											order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1)
 		for l in result:
-			if float(l[8]):
-				total_due = l[8] + l[3]
-				l[9] = "{0:.2f}".format(total_due)
+			if float(l[9]):
+				total_due = l[9] + l[3]
+				l[10] = "{0:.2f}".format(total_due)
 			else:
 				total_due = 0.00
-				l[9] = "{0:.2f}".format(total_due)
-			l[8] = "{0:.2f}".format(float(l[8]))
+				l[10] = "{0:.2f}".format(total_due)
+			l[9] = "{0:.2f}".format(float(l[9]))
 			l[3] = "{0:.2f}".format(float(l[3]))
-			l[7] = "{0:.2f}".format(float(l[7]))
+			l[8] = "{0:.2f}".format(float(l[8]))
 
 		return result
 	else:
@@ -58,7 +61,7 @@ def get_colums():
 	columns = [("Due Date") + ":Date:80"] + [("Late Days") + ":Int:70"] + \
 			  [("Payment Id") + ":Data:150"] + \
 			  [("Rental Payment") + ":Data:100"] + [("Product") + ":Data:200"] + \
-			  [("Customer") + ":Data:80"] + [("Phone") + ":Data:80"] + \
+			  [("Name") + ":Data:80"] + [("Surname") + ":Data:80"] + [("Phone") + ":Data:80"] + \
 			  [("Bonus") + ":Data:90"] + [("Late Fees") + ":Data:80"] + \
 			  [("Total Due") + ":Data:90"] + [("Contact Result") + ":Data:140"] + [("Email") + ":Data:140"]	
 	return columns

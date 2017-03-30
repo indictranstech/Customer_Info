@@ -97,9 +97,9 @@ def add_data(w,data):
 				i['campaign_discount'],i['bonus'],i['total_payment_received'],i['bank_transfer']\
 				,i['receivables_collected'],i['cash'],i['bank_card']]
 			w.writerow(row)	
-			w.writerow(['','Payment id','Due Date','Rental Payment','Late Fees','Total','','Payment id','Due Date','Rental Payment','Late Fees','Total'])
+			w.writerow(['','','Payment id','Due Date','Rental Payment','Late Fees','Total'])
 			for j in i['payments_ids']:
-				row = ['', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total'],'', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
+				row = ['','', j['payments_id'],j['due_date'],j['rental_payment'],j['late_fees'],j['total']]
 				w.writerow(row)
 	return w
 
