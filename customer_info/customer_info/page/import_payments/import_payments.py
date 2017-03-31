@@ -142,8 +142,8 @@ def payoff_payment(payoff_data,agreement_doc,d):
 
 	if d["Payoff"] == "Early buy":
 		args['condition'] = "90 day pay Off"
-		args['rental_payment'] =  float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
-		args['total_amount'] = float(d['Cash']) + float(d['Credit card']) + float(d['Discount'])#balance - float(discount)#Total_payoff_amount	
+		args['rental_payment'] =  float(d['Cash']) + float(d['Bank Transfer']) + float(d['Discount'])#balance - (float(discount) + float(agreement_doc.late_payment))#Discounted_payment_amount
+		args['total_amount'] = float(d['Cash']) + float(d['Bank Transfer']) + float(d['Discount'])#balance - float(discount)#Total_payoff_amount	
 	from_import_payment = "from_import_payment"
 	payoff_submit(args,from_import_payment=from_import_payment)
 	# else:
