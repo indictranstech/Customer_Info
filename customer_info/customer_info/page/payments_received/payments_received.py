@@ -46,27 +46,41 @@ def get_payments_details(customer,from_date,to_date,agreement):
 								order by payment_date asc """.format(cond),as_dict=1)
 
 
-	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
-								format(sum(rental_payment),2) as rental_payment,
-								format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
-								format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
-								format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
-								from `tabPayments History` {0}""".format(cond),as_dict=1)
-	total,"total"
-	total_payment_received = []
-	agreement_list = []
+
 	filter_data = []
+	filter_payments_history = []
+	for row in data:
+		if agreement and row['payments_ids'] and agreement in [i.split('-P')[0] for i in str(row['payments_ids'])[1::].split(',')[0:-1]]:
+			filter_data.append(row)
+			filter_payments_history.append(row['refund'])
+
+	filter_payments_history = [name.encode('utf-8') for name in filter_payments_history]
+
+	if agreement:
+		if filter_payments_history:
+			if len(filter_payments_history) == 1:
+				cond += " and name = '{0}' ".format(filter_payments_history[0])
+			elif len(filter_payments_history) > 1:
+				cond += " and name in {0}".format(filter_payments_history)
+		if filter_data:
+			data = filter_data
+
+	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
+						format(sum(rental_payment),2) as rental_payment,
+						format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
+						format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
+						format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
+						from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
+	total_payment_received = []
 
 	for row in data:
 		total_payment_received.append(row['total_payment_received'].replace(",",""))
-		if agreement and row['payments_ids'] and agreement in [i.split('-P')[0] for i in str(row['payments_ids'])[1::].split(',')[0:-1]]:
-			filter_data.append(row)
 
 	total[0]["payment_date"] = "Total"
 	total[0]["customer"] = "-"
 	total[0]["payoff_cond"] = "-"
 	total[0]['total_payment_received'] = "{0:.2f}".format(sum(map(float,total_payment_received)))
-	return {"data":filter_data if agreement else data,"total":total}
+	return {"data":data,"total":total}
 
 @frappe.whitelist()
 def create_csv(data):
