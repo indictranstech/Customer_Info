@@ -61,7 +61,7 @@ def get_payments_details(customer,from_date,to_date,agreement):
 			if len(filter_payments_history) == 1:
 				cond += " and name = '{0}' ".format(filter_payments_history[0])
 			elif len(filter_payments_history) > 1:
-				cond += " and name in {0}".format(filter_payments_history)
+				cond += " and name in {0}".format(tuple(filter_payments_history))
 		if filter_data:
 			data = filter_data
 
