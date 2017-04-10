@@ -235,7 +235,7 @@ render_agreements = function(flag){
 		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
 		}
-		else if(flt(dataContext['campaign_discount'].split("-")[2]) == 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0) {
+		else if(flt(dataContext['campaign_discount'].split("-")[2]) > 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0) {
 			return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
 		}
 		else{

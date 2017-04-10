@@ -23,8 +23,9 @@ max-height: 400px;
                 <td width="11%" >{{data[i]["bank_transfer"]}}</td>
                 <td width="5%" >{{data[i]["receivables_collected"]}}</td>
                 <td width="5%" >{{data[i]["cash"]}}</td>
-                <td width="5%" >{{data[i]["bank_card"]}}</td>
-                <td width="5%"><input class= "refund" style="margin-left: -11px;"type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></td>
+                <td width="3%" >{{data[i]["bank_card"]}}</td>
+                <td width="5%" >{{data[i]["associate"]}}</td>
+                <td width="3%"><input class= "refund" style="margin-left: -11px;"type="button" value="Refund" ph-name= {{ data[i]["refund"] }}></td>
             </tr>
             <tr id={{ data[i]["refund"] }}>
                 <td colspan="13" class="hiddenRow data" style="padding: 2px;">
