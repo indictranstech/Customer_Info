@@ -46,8 +46,9 @@ payments_received = Class.extend({
 			                <th width='11%'>Bank Transfer Amount</th>\
 			                <th width='5%'>Receivables Collected</th>\
 			                <th width='5%'>Cash Amount</th>\
-			                <th width='5%'>Bank Card Amount</th>\
-			                <th width='5%'>Refund Payment</th>\
+			                <th width='3%'>Bank Card Amount</th>\
+			                <th width='4%'>Associate</th>\
+			                <th width='3%'>Refund Payment</th>\
 			                <th width='2%'></th>\
 			            </tr>\
 			        </thead></table>"
