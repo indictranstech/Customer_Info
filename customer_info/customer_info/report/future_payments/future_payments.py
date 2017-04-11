@@ -23,7 +23,7 @@ def get_data(filters):
 								t3.receivables,
 								t1.monthly_rental_amount,
 								CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3
-								THEN format((DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * 0.02,2) ELSE 0 END AS late_fees,
+								THEN format((DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (t2.late_fees_rate/100), 2) ELSE 0 END AS late_fees,
 								"a",
 								replace(t1.payment_id,concat(t2.name,"-Payment "),'') as payment_id_number,
 								replace(t2.name,"BK-",'') as agreement_number

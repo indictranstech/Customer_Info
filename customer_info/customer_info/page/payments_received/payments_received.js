@@ -222,8 +222,8 @@ payments_received = Class.extend({
 				   			"payments_id":d.split("/")[0],
 							"due_date":d.split("/")[1],
 							"rental_payment":d.split("/")[2],
-							"late_fees":parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
-							"total": parseFloat(me.get_late_fees(d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
+							"late_fees":parseFloat(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
+							"total": flt(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])) + flt(d.split("/")[2])//parseFloat(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
 				   		})
 			   		});
 				}
@@ -231,14 +231,31 @@ payments_received = Class.extend({
 			}
 		}	
 	},
-	get_late_fees : function(date1,date2,rental_payment){
+	get_late_fees : function(agreement_name,date1,date2,rental_payment){
 		var date_diff = frappe.datetime.get_diff(date2,date1)
-		if(flt(date_diff) > 3){
-			return (flt(date_diff) - 3) * rental_payment * 0.02	
+		var late_fees_amount = 0
+		frappe.call({
+			async:false,
+            method: "frappe.client.get_value",
+            args: {
+                doctype: "Customer Agreement",
+                fieldname: "late_fees_rate",
+                filters: { name: agreement_name },
+            },
+            callback: function(res){
+                if (res && res.message){
+					if(flt(date_diff) > 3){
+						late_fees_amount = (flt(date_diff) - 3) * rental_payment * (flt(res.message.late_fees_rate)/100)
+					}
+                }
+            }
+        });
+		if(flt(date_diff) > 3 && late_fees_amount){
+			return late_fees_amount.toFixed(2)
 		}
 		else{
 			return 0
-		}	
+		}
 	},
 	refund:function(){
 		var me = this;		
