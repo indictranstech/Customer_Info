@@ -123,7 +123,11 @@ def calculate_total_charges(customer,flag,payment_date):
 				row.check_box = 1
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
+					"""
+					changed leter fees formula
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
+					"""
+					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)
 					if agreement in agreements_and_late_fees_dict.keys():
 						agreements_and_late_fees_dict[agreement] += late_fee
 					else:
@@ -135,7 +139,11 @@ def calculate_total_charges(customer,flag,payment_date):
 				row.check_box = 1
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
+					"""
+					changed leter fees formula
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
+					"""
+					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)
 					late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
 					if agreement in agreements_and_late_fees_dict.keys(): # for adding late fees of all agreements
 						agreements_and_late_fees_dict[agreement] += late_fee
@@ -146,7 +154,6 @@ def calculate_total_charges(customer,flag,payment_date):
 		#print rental_amount_of_late_payments,"rental_amount_of_late_payments","\n\n\n\n\n\n\n"				
 		customer_agreement.late_payment = sum(rental_amount_of_late_payments)	# 	updating by addition of rental payment of late payment of agreement
 		#customer_agreement.total_late_payments = sum(rental_amount_of_late_payments)
-
 
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
@@ -299,6 +306,7 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										from `tabCustomer Agreement`
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
+
 	for entry in data['list_of_agreement']:
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
@@ -447,7 +455,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  (len(add_bonus_of_two_eur)*2 - len(remove_bonus_of_two_eur)*2) # update on time payment bonus
 		
 		if customer_agreement.late_fees_updated == "No":
-			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
+			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 
 		customer_agreement.bonus = customer_agreement.bonus + add_bonus - subtract_bonus
 		# if  flag != "Make Refund":
@@ -575,6 +583,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 	payment_ids_list = []
 
 
+	used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 	"""
 	if we have payment_ids then 
 	then payment type is Rental Payment else
@@ -593,7 +602,6 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 
 		"""add bonus and receivables to customer_doc"""
 		flag = "Process Payment"
-		used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 
 		"""remove customer bonus when all agreements are closed"""
 		if flag == "Process Payment" and set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
@@ -734,7 +742,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 
 def add_bonus_and_receivables_to_customer(args,flag):
 	customer_doc = frappe.get_doc("Customer",args['customer'])
-	if flag == "Process Payment":
+	if flag == "Process Payment" or flag == "from_payoff":
 		if args['bonus'] >= 0 and customer_doc.customer_group == "Individual":
 			#added_bonus = float(bonus) - customer_doc.bonus
 			now_date = datetime.now().date()
