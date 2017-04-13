@@ -28,7 +28,8 @@ payments_received = Class.extend({
 				<div class='col-xs-2 from_date'></div>\
   				<div class='col-xs-2 to_date'></div>\
   				<div class='col-xs-2 agreement'></div>\
-  				<div class='col-xs-4'></div>\
+  				<div class='col-xs-2 data_limit'></div>\
+  				<div class='col-xs-2'></div>\
   				</div>\
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
@@ -59,6 +60,7 @@ payments_received = Class.extend({
 			fieldtype: "Link",
 			options: "Customer",
 			fieldname: "customer",
+			label:"Customer",
 			placeholder: "Select Customer"
 			},
 			render_input: true
@@ -69,6 +71,7 @@ payments_received = Class.extend({
 			df: {
 				fieldtype: "Date",
 				fieldname: "from_date",
+				label:"From Date",
 				placeholder: "From Date"
 			},
 			render_input: true
@@ -79,6 +82,7 @@ payments_received = Class.extend({
 			df: {
 				fieldtype: "Date",
 				fieldname: "to_date",
+				label:"To Date",
 				placeholder: "To Date"
 			},
 			render_input: true
@@ -89,12 +93,27 @@ payments_received = Class.extend({
 			df: {
 				fieldtype: "Link",
 				fieldname: "agreement",
+				label:"Customer Agreement",
 				placeholder: "Customer Agreement",
 				options:"Customer Agreement"
 			},
 			render_input: true
 		});
 		me.agreement.refresh();
+
+		me.data_limit = frappe.ui.form.make_control({
+			parent: me.page.find(".data_limit"),
+			df: {
+				fieldtype: "Select",
+				fieldname: "data_limit",
+				label:"Data Limit",
+				placeholder: "Data Limit",
+				options:["","0-100","0-200","0-300","0-400","0-500","All"]
+			},
+			render_input: true
+		});
+		me.data_limit.refresh();
+
 
 		me.customer_link.$input.on("change", function(){
 			var old_me = me;
@@ -115,7 +134,11 @@ payments_received = Class.extend({
 			var old_me = me;
 			old_me.render_payments_details()
 		});
-				
+
+		me.data_limit.$input.on("change", function(){
+			var old_me = me;
+			old_me.render_payments_details()
+		});
 	},
 	render_payments_details: function() {
 		var me = this;
@@ -126,19 +149,22 @@ payments_received = Class.extend({
 				"customer": me.customer_link.$input.val(),
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
-				"agreement":me.agreement.$input.val()
+				"agreement":me.agreement.$input.val(),
+				"data_limit":me.data_limit.$input.val()	
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
         	   	me.page.find(".data").empty();
 				$.each(r.message["data"], function(i, d) {
-					if(d["payoff_cond"]){
+					/*if(d["payoff_cond"]){
 						me.payoff_cond = d["payoff_cond"]
 					}
 					if(d["payment_type"]){
 						me.payment_type = d["payment_type"]
-					}
+					}*/
+					me.payoff_cond = d["payoff_cond"] ? d["payoff_cond"] : ""
+					me.payment_type = d["payment_type"] ? d["payment_type"]: ""
 					me.payments_ids = d["payments_ids"]
 					me.late_fees_updated = d["late_fees_updated"]
 					me.updated_late_fees = d["late_fees"]
@@ -157,7 +183,8 @@ payments_received = Class.extend({
 		var dict_of_payments_ids = []
 		var __dict_of_payments_ids = []
 		if(me.payment_type != "Modification Of Receivables"){
-			var formatted_list_of_payment_ids = JSON.parse("[" + me.payments_ids.slice(0,-1) + '"' + "]")[0].split(",")
+			//console.log(me.payments_ids,"payments_ids12122121",String(me.payments_ids.slice(1,-1)).split(","))
+			var formatted_list_of_payment_ids = String(me.payments_ids.slice(1,-1)).split(",")//JSON.parse("[" + me.payments_ids.slice(0,-1) + '"' + "]")[0].split(",")
 			if(me.payoff_cond != "Rental Payment"){
 				late_fees = ""
 				rental_payment = 0
@@ -183,9 +210,11 @@ payments_received = Class.extend({
 			}
 			else{
 				if(me.late_fees_updated == "Yes"){
-					oldest_date = {"payments_id":"","due_date":""}
+					console.log("inside late_fees_updated")
+					/*oldest_date = {"payments_id":"","due_date":""}
 					var due_date_list = []
 					$.each(formatted_list_of_payment_ids, function(i, d) {
+						console.log(d.split("/")[0],i,"$$$$$$$$%%%%%%%%%%%%%%")
 						due_date_list.push(d.split("/")[1])
 						function dmyOrdA(a,b){ return myDate(a) - myDate(b);}
 						function myDate(s){var a=s.split(/-|\//); return new Date(a[0],a[1]-1,a[2]);}
@@ -194,9 +223,10 @@ payments_received = Class.extend({
 						if(oldest_date["due_date"] == d.split("/")[1]){
 							oldest_date["payments_id"] = d.split("/")[0]
 						}
-					})
+					})*/
 				   	$.each(formatted_list_of_payment_ids, function(i, d) {
-				   		if (d.split("/")[0] == oldest_date["payments_id"]){
+				   		//if (d.split("/")[0] == oldest_date["payments_id"]){
+				   		if (i == 0){
 				   			dict_of_payments_ids.push({
 				   				"late_fees": me.updated_late_fees,
 				   				"payments_id":d.split("/")[0],
@@ -217,6 +247,7 @@ payments_received = Class.extend({
 			   		});
 				}
 				else{
+					//console.log("in else inside late_fees_updated")
 					$.each(formatted_list_of_payment_ids, function(i, d) {
 				   		dict_of_payments_ids.push({
 				   			"payments_id":d.split("/")[0],

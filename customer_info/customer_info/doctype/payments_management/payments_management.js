@@ -501,7 +501,7 @@ bonus_summary = Class.extend({
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),
 						"assign_manual_bonus":cur_frm.doc.assign_manual_bonus.toFixed(2),
 						"used_bonus":cur_frm.doc.used_bonus.toFixed(2),
-						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2),
+						"active_bonus":flt(total_bonus_accumulated).toFixed(2) - flt(cur_frm.doc.used_bonus).toFixed(2) - flt(r.message['cancelled_bonus']).toFixed(2),
 						"all_closed":all_closed,
 						"cancelled_bonus":r.message['cancelled_bonus']
 					})).appendTo(me.fd.bonus_summary.wrapper);

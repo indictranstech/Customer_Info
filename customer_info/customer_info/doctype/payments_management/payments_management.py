@@ -277,12 +277,13 @@ def update_late_fees(agreement,late_fees):
 
 @frappe.whitelist()
 def update_campaign_discount(agreement,campaign_discount):
-	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	customer_agreement.discount_updated = "Yes"
-	#customer_agreement.campaign_discount = campaign_discount
-	customer_agreement.discount = campaign_discount
-	customer_agreement.save(ignore_permissions=True)		
-	return customer_agreement.campaign_discount
+	if float(campaign_discount) > 0:
+		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+		customer_agreement.discount_updated = "Yes"
+		#customer_agreement.campaign_discount = campaign_discount
+		customer_agreement.discount = campaign_discount
+		customer_agreement.save(ignore_permissions=True)
+		return customer_agreement.campaign_discount
 
 
 @frappe.whitelist()
