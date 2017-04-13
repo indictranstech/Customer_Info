@@ -7,7 +7,7 @@ import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer,from_date,to_date,agreement):
+def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -33,7 +33,14 @@ def get_payments_details(customer,from_date,to_date,agreement):
 	else:
 		cond = " where refund = 'No' "
 
-	
+	_cond = "limit 50" if not agreement	else " "
+	if data_limit and not agreement and not from_date and not to_date and not customer:
+		if data_limit != "All":
+			_cond = "limit {0}".format(data_limit.split('-')[1])
+		else:
+			_cond = " "
+
+
 	data = frappe.db.sql("""select payment_date,customer,payoff_cond,
 								format(rental_payment+campaign_discount,2) as rental_payments,
 								format(1*late_fees,2) as late_fees,receivables,
@@ -43,7 +50,7 @@ def get_payments_details(customer,from_date,to_date,agreement):
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated,payment_type,merchandise_status,owner as associate
 								from `tabPayments History` {0}
-								order by payment_date asc """.format(cond),as_dict=1)
+								order by payment_date asc {1} """.format(cond,_cond),as_dict=1,debug=1)
 
 
 
@@ -62,15 +69,15 @@ def get_payments_details(customer,from_date,to_date,agreement):
 				cond += " and name = '{0}' ".format(filter_payments_history[0])
 			elif len(filter_payments_history) > 1:
 				cond += " and name in {0}".format(tuple(filter_payments_history))
-		if filter_data:
-			data = filter_data
+
+		data = filter_data
 
 	total = frappe.db.sql("""select "payment_date" as payment_date,"customer" as customer,"payoff_cond" as payoff_cond,
 						format(sum(rental_payment),2) as rental_payment,
 						format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
 						format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
 						format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
-						from `tabPayments History` {0}""".format(cond),as_dict=1,debug=1)
+						from `tabPayments History` {0}""".format(cond,_cond),as_dict=1,debug=1)
 	total_payment_received = []
 
 	for row in data:

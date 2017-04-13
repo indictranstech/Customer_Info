@@ -62,6 +62,6 @@ def get_colums():
 			  [("Payment Id") + ":Data:150"] + \
 			  [("Rental Payment") + ":Data:100"] + [("Product") + ":Data:200"] + \
 			  [("Name") + ":Data:80"] + [("Surname") + ":Data:80"] + [("Phone") + ":Data:80"] + \
-			  [("Bonus") + ":Data:90"] + [("Late Fees") + ":Data:80"] + \
+			  [("Customer level bonus") + ":Data:90"] + [("Late Fees") + ":Data:80"] + \
 			  [("Total Due") + ":Data:90"] + [("Contact Result") + ":Data:140"] + [("Email") + ":Data:140"]	
 	return columns
