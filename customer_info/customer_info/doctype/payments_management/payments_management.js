@@ -231,7 +231,7 @@ render_agreements = function(flag){
 
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
 		var id = "campaign_discount"+ String(row)
-		console.log(cell,"cell campaign_discount",value,row)
+		//console.log(cell,"cell campaign_discount",value,row)
 		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
 		}
@@ -297,7 +297,8 @@ render_agreements = function(flag){
 							total_due_amount += flt($($(d).children()[10]).text())
 						});
 						cur_frm.set_value("amount_of_due_payments",flt(total_due_amount) > 0 ? flt(total_due_amount):"0.00")
-			     		cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)) > 0 ? flt(total_due_amount)-flt(cur_frm.doc.receivables):"0.00")      		
+			     		//cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)) > 0 ? flt(total_due_amount)-flt(cur_frm.doc.receivables):"0.00")      		
+						cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)))
 					}
 					/*cur_frm.doc.payment_management_record = []
 					$.each($(".slick-row"),function(i,d){
@@ -476,7 +477,6 @@ bonus_summary = Class.extend({
 					var closed_status_count = []
 					var closing_reason_list = ["90d SAC","Early buy offer","Contact Term is over","Return","Fraud/Stolen","Contract term is over"]
 					$.each(r.message['data'],function(i,d){
-						console.log(d["agreement_closing_suspending_reason"])
 						total_bonus["name"] = "Total"
 						total_bonus["early_payments_bonus"] += d["early_payments_bonus"]
 						total_bonus["payment_on_time_bonus"] += d["payment_on_time_bonus"]
@@ -495,7 +495,6 @@ bonus_summary = Class.extend({
 												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
 												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"] 
 												+ cur_frm.doc.assign_manual_bonus
-					console.log("flt(total_bonus_accumulated).toFixed(2)",flt(total_bonus_accumulated).toFixed(2),all_closed)							
 					html = $(frappe.render_template("bonus_summary",{
 						"bonus":r.message['data'],
 						"total_bonus_accumulated":total_bonus_accumulated.toFixed(2),

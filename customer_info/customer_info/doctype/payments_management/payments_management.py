@@ -277,13 +277,13 @@ def update_late_fees(agreement,late_fees):
 
 @frappe.whitelist()
 def update_campaign_discount(agreement,campaign_discount):
-	if float(campaign_discount) > 0:
-		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		customer_agreement.discount_updated = "Yes"
-		#customer_agreement.campaign_discount = campaign_discount
-		customer_agreement.discount = campaign_discount
-		customer_agreement.save(ignore_permissions=True)
-		return customer_agreement.campaign_discount
+	#if float(campaign_discount) > 0:
+	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+	customer_agreement.discount_updated = "Yes"
+	#customer_agreement.campaign_discount = campaign_discount
+	customer_agreement.discount = campaign_discount
+	customer_agreement.save(ignore_permissions=True)
+	return customer_agreement.campaign_discount
 
 
 @frappe.whitelist()
@@ -727,11 +727,13 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.number_of_payments = 0
 		customer_agreement.late_fees = 0
 		customer_agreement.late_payment = 0
+		if customer_agreement.discount_updated == "Yes" and customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
+			customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
 		customer_agreement.discount_updated = "No"
 		#customer_agreement.temporary_new_bonus = 0
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
-		if customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
-			customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
+		#if customer_agreement.discount_updated == "No" and customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
+		#	customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
 	#customer_agreement.save(ignore_permissions=True)
