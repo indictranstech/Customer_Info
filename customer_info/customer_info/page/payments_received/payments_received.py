@@ -50,7 +50,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated,payment_type,merchandise_status,owner as associate
 								from `tabPayments History` {0}
-								order by payment_date asc {1} """.format(cond,_cond),as_dict=1,debug=1)
+								order by payment_date asc {1} """.format(cond,_cond),as_dict=1)
 
 
 
@@ -77,7 +77,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 						format(sum(1*late_fees),2) as late_fees,format(sum(receivables),2) as receivables,"total_payment_received" as total_payment_received,
 						format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
 						format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
-						from `tabPayments History` {0}""".format(cond,_cond),as_dict=1,debug=1)
+						from `tabPayments History` {0}""".format(cond,_cond),as_dict=1)
 	total_payment_received = []
 
 	for row in data:

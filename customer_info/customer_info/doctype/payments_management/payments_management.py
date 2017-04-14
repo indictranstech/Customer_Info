@@ -895,14 +895,16 @@ def checking_all_agreements_closed(customer):
 
 @frappe.whitelist()
 def get_payments_record(customer_agreement,receivable,late_fees,payment_date):
+	late_fees_rate = frappe.get_doc("Customer Agreement",customer_agreement).late_fees_rate
+	
 	return {
 	"payments_record" : frappe.db.sql("""select no_of_payments,monthly_rental_amount,
 										due_date,payment_date,payment_id,check_box,check_box_of_submit,pre_select_uncheck,
 										CASE WHEN due_date < '{1}' AND DATEDIFF('{1}',due_date) > 3 
-										THEN (DATEDIFF('{1}',due_date) - 3) * monthly_rental_amount * 0.02 ELSE 0 END AS late_fee
+										THEN (DATEDIFF('{1}',due_date) - 3) * monthly_rental_amount * ({2}/100) ELSE 0 END AS late_fee
 										from `tabPayments Record` 
 										where parent = '{0}' 
-										order by idx """.format(customer_agreement,payment_date),as_dict=1),
+										order by idx """.format(customer_agreement,payment_date,late_fees_rate),as_dict=1),
 	"summary_records" : get_summary_records(customer_agreement,receivable,late_fees),
 	"history_record" : get_history_records(customer_agreement)
 	}
