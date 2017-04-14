@@ -104,11 +104,11 @@ frappe.ui.form.on("Customer",{
             cur_frm.doc.prersonal_code = "",
             refresh_field("prersonal_code")
         }
-        /*else if (cur_frm.doc.prersonal_code.length < 11){
+        else if (cur_frm.doc.prersonal_code.length < 11){
             msgprint(__("Personal Code Should Be Of 11 Digits"))
             cur_frm.doc.prersonal_code = "",
             refresh_field("prersonal_code")
-        }*/
+        }
     }
 })
 

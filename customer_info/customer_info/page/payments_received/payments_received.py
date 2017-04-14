@@ -50,7 +50,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
 								late_fees_updated,payment_type,merchandise_status,owner as associate
 								from `tabPayments History` {0}
-								order by payment_date asc {1} """.format(cond,_cond),as_dict=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
 
 
 
