@@ -1,6 +1,8 @@
 frappe.ui.form.on("Customer",{
     refresh:function(frm){
         $("[data-fieldname='customer_name']").hide()
+        setTimeout(function(){ $('input[data-fieldname="company_phone_1"]').attr("placeholder","+370...");
+        $('input[data-fieldname="company_phone_2"]').attr("placeholder","+370..."); }, 100);
         if(!cur_frm.doc.__islocal){
             cur_frm.add_custom_button(__('Payments Management'),function(){
                 go_to_payments_management();
