@@ -57,4 +57,5 @@ def add_comment_for_change_receivables(self,method):
 		comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
 		self.add_comment("Comment",comment)
 		self.old_receivables = self.receivables
-
+		summary_of_notes = self.summary_of_notes+"\n"+comment if self.summary_of_notes else comment
+		self.summary_of_notes = summary_of_notes
