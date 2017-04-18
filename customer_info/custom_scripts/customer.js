@@ -93,24 +93,12 @@ frappe.ui.form.on("Customer",{
         this.get_url(frm)
     },
     prersonal_code: function(frm){
-        var tempVal = cur_frm.doc.prersonal_code;
-        if(!/^\d+$/.test(tempVal)){
-            msgprint(__("Enter Digits From [0-9] Only"))
-            cur_frm.doc.prersonal_code = "",
-            refresh_field("prersonal_code")  
-        }
-        else if (!/^[0-9]{1,11}$/.test(tempVal)){ // OR if (/^[0-9]{1,10}$/.test(+tempVal) && tempVal.length<=10) 
-            msgprint(__("Personal Code Length Not Greater Than 11 Digits"))
-            cur_frm.doc.prersonal_code = "",
-            refresh_field("prersonal_code")
-        }
-        else if (cur_frm.doc.prersonal_code.length < 11){
-            msgprint(__("Personal Code Should Be Of 11 Digits"))
-            cur_frm.doc.prersonal_code = "",
-            refresh_field("prersonal_code")
-        }
+        valid_personal_code();
     }
 })
+
+
+
 
 get_url = function(frm){
     if(cur_frm.doc.customer_is_interested_in){
@@ -135,4 +123,23 @@ go_to_payments_management = function(frm){
         method: "customer_info.customer_info.doctype.payments_management.payments_management.get_payments_management",
         frm: cur_frm
     })
+}
+
+function valid_personal_code(frm){
+    var tempVal = cur_frm.doc.prersonal_code;
+    if(!/^\d+$/.test(tempVal)){
+        msgprint(__("Enter Digits From [0-9] Only"))
+        /*cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")  */
+    }
+    else if (!/^[0-9]{1,11}$/.test(tempVal)){ // OR if (/^[0-9]{1,10}$/.test(+tempVal) && tempVal.length<=10) 
+        msgprint(__("Personal Code Length Not Greater Than 11 Digits"))
+        /*cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")*/
+    }
+    else if (cur_frm.doc.prersonal_code.length < 11){
+        msgprint(__("Personal Code Should Be Of 11 Digits"))
+        /*cur_frm.doc.prersonal_code = "",
+        refresh_field("prersonal_code")*/
+    }
 }

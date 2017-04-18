@@ -24,7 +24,8 @@ def get_data(filters):
 									concat(t2.product," ",t2.product_category),
 									t3.first_name AS customer,
 									t3.last_name AS sur_name,
-									t3.company_phone_1,t3.bonus,
+									REPLACE(t3.company_phone_1,'+',''),
+									t3.bonus,
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 3 
 									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * (t2.late_fees_rate/100) ELSE 0 END AS late_fees,
 									"a",
