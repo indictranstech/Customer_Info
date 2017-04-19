@@ -53,7 +53,7 @@ def add_comment_for_customer_creation(self,method):
 
 @frappe.whitelist(allow_guest = True)
 def add_comment_for_change_receivables(self,method):
-	if self.old_receivables and self.receivables and self.old_receivables != self.receivables:
+	if self.old_receivables >= 0 and self.receivables and self.old_receivables != self.receivables:
 		comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
 		self.add_comment("Comment",comment)
 		self.old_receivables = self.receivables

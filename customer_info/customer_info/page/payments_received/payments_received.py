@@ -81,6 +81,9 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	total_payment_received = []
 
 	for row in data:
+		print row['associate'],"\n\n\n\n\n\n\n\n"
+		print frappe.db.get_value("User",{'email':row['associate']},"username"),"\n\n\n\n\n\n\n"
+		row['associate'] = frappe.db.get_value("User",{'email':row['associate']},"username")
 		total_payment_received.append(row['total_payment_received'].replace(",",""))
 
 	total[0]["payment_date"] = "Total"
