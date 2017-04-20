@@ -1,5 +1,6 @@
 {% include 'customer_info/customer_info/doctype/payments_management/payments_details.js' %};
 {% include 'customer_info/customer_info/doctype/payments_management/suspended_payments_grid.js' %};
+{% include 'customer_info/customer_info/doctype/payments_management/debtor.js' %};
 
 cur_frm.add_fetch('customer', 'first_name', 'first_name');
 cur_frm.add_fetch('customer', 'last_name', 'last_name');
@@ -12,14 +13,27 @@ cur_frm.add_fetch('customer','bonus','bonus')
 cur_frm.add_fetch('customer','bonus','static_bonus')
 cur_frm.add_fetch('customer','assign_manual_bonus','assign_manual_bonus')
 cur_frm.add_fetch('customer','used_bonus','used_bonus')
+cur_frm.add_fetch('customer','debtor','debtor')
 
 var index = 0
 frappe.ui.form.on("Payments Management", {
 	refresh: function(frm) {
+		cur_frm.toggle_display('debtor_button', cur_frm.doc.customer);
 		frm.disable_save();
-		$(".orange").hide()
+		$(".orange").hide();
+		fetch_user();
+		change_color_of_debtor_button()
 	},
 	onload:function(frm){
+		cur_frm.toggle_display('debtor_button', cur_frm.doc.customer);
+		/*var df = frappe.meta.get_docfield("Payments Management", "debtor_button", cur_frm.doc.name);
+		df.formatter = function(value, df, options, doc) {
+			console.log(value)
+			if(value){
+				return "<div style='text-align: right'>sddsd</div>"
+			}
+		}*/
+
 		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")
 		$(cur_frm.fields_dict.payments_grid.wrapper).empty();
 		$(cur_frm.fields_dict.payments_grid.wrapper).append("<table width='100%>\
@@ -30,15 +44,18 @@ frappe.ui.form.on("Payments Management", {
   			</tr>\
 		</table>");
 		if(cur_frm.doc.customer){
+			cur_frm.set_df_property("debtor_button","hidden",0)
 			calculate_total_charges("Onload");
 			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
 			render_agreements();
 			render_suspended_agreements();
+			change_color_of_debtor_button()
 		}
 	},
 	customer:function(frm){
+		cur_frm.toggle_display('debtor_button', cur_frm.doc.customer);
 		if(cur_frm.doc.customer){
 			get_bonus_link()
 			calculate_total_charges("Customer");
@@ -46,6 +63,7 @@ frappe.ui.form.on("Payments Management", {
 			get_address_of_customer();			
 			render_agreements();
 			render_suspended_agreements();
+			change_color_of_debtor_button()
 		}
 	},
 	/*static_bonus:function(){
@@ -64,6 +82,9 @@ frappe.ui.form.on("Payments Management", {
 		else{
 			frappe.throw("Select Customer First")
 		}
+	},
+	debtor_button:function(){
+		new Debtor(cur_frm.doc.customer)
 	},
 	call_commitment:function(frm){
 		if(cur_frm.doc.customer){
@@ -96,6 +117,36 @@ frappe.ui.form.on("Payments Management", {
 })
 
 
+function change_color_of_debtor_button(frm){
+	if(cur_frm.doc.debtor == "Yes"){
+		$("button[data-fieldname='debtor_button']").css('background','red')
+	}
+	else{
+		$("button[data-fieldname='debtor_button']").css('background','')
+	}
+}
+
+function fetch_user(frm){
+	if(user == "Administrator"){
+		cur_frm.set_value("username","Administrator")
+	}
+	else{
+		frappe.call({
+		    method: "frappe.client.get_value",
+		    args: {
+		        doctype: "User",
+		        fieldname: "username",
+		        filters: { email: user },
+		    },
+		    callback: function(res){
+		        if (res && res.message){
+		        	cur_frm.set_value("username",res.message.username)
+		        }
+		    }   
+		});	
+	}
+}	
+
 _get_bonus_summary= function(frm){
 	frappe.call({
 	   	method:"customer_info.customer_info.doctype.payments_management.payments_management.get_bonus_summary",
@@ -103,7 +154,7 @@ _get_bonus_summary= function(frm){
 			"customer":	cur_frm.doc.customer
 		},
 		callback: function(r){
-
+			cur_frm.set_value("debtor",r.message['debtor'])
 		}
 	})	
 }
@@ -562,7 +613,7 @@ edit_bonus = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments","["+user+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
+				cur_frm.set_value("notes_on_customer_payments","["+cur_frm.doc.username+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
 				$('button[data-fieldname="add_notes"]').click();
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -820,7 +871,7 @@ edit_late_fees = Class.extend({
 		var me = this;
 		//me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(flt(me.dialog.fields_dict.late_fees.$input.val()) >= 0){
-				comment =  "["+user+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
+				comment =  "["+cur_frm.doc.username+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
 				cur_frm.set_value("notes_on_customer_payments",comment)
 				$('button[data-fieldname="add_notes"]').click()
 				//me.dialog.fields_dict.comment.set_input("")
@@ -1060,7 +1111,7 @@ call_commit = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments", " "+"["+user+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
+				cur_frm.set_value("notes_on_customer_payments", " "+"["+cur_frm.doc.username+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
 				$('button[data-fieldname="add_notes"]').click();
 				me.dialog.fields_dict.comment.set_input("");
 			}
