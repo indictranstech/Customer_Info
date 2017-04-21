@@ -99,7 +99,7 @@ frappe.ui.form.on("Customer",{
     },
     company_code:function(frm){
         valid_personal_code("Company Code");
-    }
+    },
 })
 
 

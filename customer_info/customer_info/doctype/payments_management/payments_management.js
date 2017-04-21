@@ -34,7 +34,8 @@ frappe.ui.form.on("Payments Management", {
 			}
 		}*/
 
-		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","406px")
+		$(cur_frm.fields_dict.call_commitment.wrapper).css("margin-left","231px")
+		$(cur_frm.fields_dict.debtor_button.wrapper).css("margin-left","352px")
 		$(cur_frm.fields_dict.payments_grid.wrapper).empty();
 		$(cur_frm.fields_dict.payments_grid.wrapper).append("<table width='100%>\
   		<tr>\

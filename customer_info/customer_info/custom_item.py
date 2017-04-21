@@ -55,6 +55,8 @@ def add_comment_for_customer_creation(self,method):
 
 @frappe.whitelist(allow_guest = True)
 def add_comment_for_change_receivables(self,method):
+	if self.company_code or self.prersonal_code:
+		validate_code(self)
 	if (self.old_receivables == 0 or self.old_receivables) and self.receivables and self.old_receivables != self.receivables:
 		#comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
 		associate = frappe.session.user	if frappe.session.user == "Administrator" else frappe.db.get_value("User",{"email":frappe.session.user},"username")	
@@ -63,3 +65,27 @@ def add_comment_for_change_receivables(self,method):
 		self.old_receivables = self.receivables
 		summary_of_notes = self.summary_of_notes+"\n"+comment if self.summary_of_notes else comment
 		self.summary_of_notes = summary_of_notes
+
+def validate_code(self):
+	if self.customer_type == "Individual":
+		check_code(self.prersonal_code,"Personal Code",11)
+	elif self.customer_type == "Company":
+		check_code(self.company_code,"Company Code",7)
+
+
+def check_code(code,code_label,digits):			
+	msg = "Company code should consist of 7 or 9 digits" if code_label == "Company Code" else "Enter Digits From [0-"+str(digits)+"] Only"
+	try:
+		val = int(code)
+		if len(code) < digits and code_label == "Personal Code":
+			frappe.throw(code_label+" Should Be Of "+str(digits)+" Digits")  
+		elif len(code) > digits and code_label == "Personal Code":
+			frappe.throw(code_label+" Length Not Greater Than "+str(digits)+" Digits")	
+		
+		elif (len(code) < 7 or len(code) == 8) and code_label == "Company Code":
+			frappe.throw(code_label+" Should Be Of 7 or 9 Digits")  
+		elif len(code) > 9 and code_label == "Company Code":
+			frappe.throw(code_label+" Length Not Greater Than 9 Digits")
+
+	except ValueError:
+   		frappe.throw(msg)
