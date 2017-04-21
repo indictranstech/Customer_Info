@@ -11,7 +11,7 @@ Debtor = Class.extend({
                   {"fieldtype": "Select" , "fieldname": "debtor" , "label": "Debtor","options":["","Yes","No"]},
                   {"fieldtype": "Small Text" , "fieldname": "comment" , "label": "Comment"},
                   {"fieldtype": "Section Break" , "fieldname": "section"},
-                  {"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"},
+                  //{"fieldtype": "Button" , "fieldname": "add_comment" , "label": "Add Comment"},
                   {"fieldtype": "Column Break" , "fieldname": "column"},
                   {"fieldtype": "Column Break" , "fieldname": "column"},
                   {"fieldtype": "Column Break" , "fieldname": "column"},
@@ -24,7 +24,6 @@ Debtor = Class.extend({
         this.fd = this.dialog.fields_dict;
         this.fd.debtor.set_input(cur_frm.doc.debtor)
         this.dialog.show();
-        this.add_comment();
 	},
     update_debtor:function(){
         var me = this;
@@ -39,24 +38,23 @@ Debtor = Class.extend({
                     me.dialog.hide();
                     r.message == "Yes" ? $('button[data-fieldname="debtor_button"]').css('background','red'):$('button[data-fieldname="debtor_button"]').css('background','')
                     cur_frm.set_value("debtor",r.message)
+                    me.add_comment();
                 }
             }
         })
     },
     add_comment:function(){
         var me = this;
-        me.dialog.fields_dict.add_comment.$input.click(function() {
-            if(me.dialog.fields_dict.comment.$input.val()){
-                if(me.fd.debtor.$input.val() == "Yes"){
-                    cur_frm.set_value("notes_on_customer_payments", frappe.datetime.nowdate()+" "+"["+cur_frm.doc.username+"] "+"Marked as debtor:"+" "+me.dialog.fields_dict.comment.$input.val()+" ")
-                }
-                else if(me.fd.debtor.$input.val() == "No"){
-                    cur_frm.set_value("notes_on_customer_payments", frappe.datetime.nowdate()+" "+"["+cur_frm.doc.username+"] "+"Removed debtor mark:"+" "+me.dialog.fields_dict.comment.$input.val()+" ")            
-                }
-                $('button[data-fieldname="add_notes"]').click();
-                me.dialog.fields_dict.comment.set_input("");
-            }
-            me.dialog.hide();
-        })
+        /*if(me.dialog.fields_dict.comment.$input.val()){
+        }*/
+        if(me.fd.debtor.$input.val() == "Yes"){
+            cur_frm.set_value("notes_on_customer_payments","["+cur_frm.doc.username+"] "+"Marked as debtor:"+" "+me.dialog.fields_dict.comment.$input.val()+" ")
+        }
+        else if(me.fd.debtor.$input.val() == "No"){
+            cur_frm.set_value("notes_on_customer_payments","["+cur_frm.doc.username+"] "+"Removed debtor mark:"+" "+me.dialog.fields_dict.comment.$input.val()+" ")            
+        }
+        $('button[data-fieldname="add_notes"]').click();
+        me.dialog.fields_dict.comment.set_input("");
+        me.dialog.hide();
     }
 })	
