@@ -50,8 +50,21 @@ def get_bonus_summary(customer):
 
 	data = frappe.db.get_values("Customer Agreement",{"customer":customer},["name","new_agreement_bonus",\
 								"early_payments_bonus","payment_on_time_bonus","agreement_status","agreement_closing_suspending_reason"],as_dict=1)
-	return {"data":data,"cancelled_bonus":frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus")} 
+	return {"data":data,"cancelled_bonus":frappe.db.get_value("Customer",{"name":customer},"cancelled_bonus"),"debtor":frappe.db.get_value("Customer",customer,"debtor")} 
 
+
+@frappe.whitelist()
+def update_debtor(customer,debtor):
+	agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
+		where customer = '{0}' and agreement_status = 'Open' """.format(customer),as_list=1)
+
+	for agreement_name in [agreement[0] for agreement in agreements]:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement_name)
+		agreement_doc.debtor = debtor
+		agreement_doc.save(ignore_permissions=True)
+
+	frappe.db.set_value("Customer", customer, "debtor", debtor)
+	return debtor
 
 @frappe.whitelist()
 def update_bonus(customer,bonus,assign_manual_bonus,payment_date):

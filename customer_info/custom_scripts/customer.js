@@ -95,10 +95,10 @@ frappe.ui.form.on("Customer",{
         this.get_url(frm)
     },
     prersonal_code: function(frm){
-        valid_personal_code();
+        valid_personal_code("Personal Code");
     },
     company_code:function(frm){
-        valid_personal_code();
+        valid_personal_code("Company Code");
     }
 })
 
@@ -130,7 +130,7 @@ go_to_payments_management = function(frm){
     })
 }
 
-function valid_personal_code(frm){
+function valid_personal_code(code_label){
     if(cur_frm.doc.customer_type == "Individual"){
         var tempVal = cur_frm.doc.prersonal_code;
         var regex = !/^[0-9]{1,11}$/.test(tempVal)
@@ -138,17 +138,24 @@ function valid_personal_code(frm){
     }
     else if(cur_frm.doc.customer_type == "Company"){
         var tempVal = cur_frm.doc.company_code;
-        var regex = !/^[0-7]{1,7}$/.test(tempVal)
+        var regex = !/^[0-9]{1,9}$/.test(tempVal)
         var digits = 7
     }
 
     if(!/^\d+$/.test(tempVal)){
+        console.log("code_label",code_label)
+        code_label == "Company Code" ? msgprint("Company code should consist of 7 or 9 digits"):
         msgprint(__("Enter Digits From [0-"+digits+"] Only"))
     }
-    else if (regex){ // OR if (/^[0-9]{1,10}$/.test(+tempVal) && tempVal.length<=10) 
-        msgprint(__("Personal Code Length Not Greater Than "+digits+" Digits"))
+    else if (regex){
+        code_label == "Company Code" ? msgprint(__(code_label+" Length Not Greater Than 9 Digits")):
+        msgprint(__(code_label+" Length Not Greater Than "+digits+" Digits"))    
     }
-    else if (tempVal.length < digits){
-        msgprint(__("Personal Code Should Be Of "+digits+" Digits"))
+    else if (tempVal.length < digits) {
+        code_label == "Company Code" ? msgprint(__(code_label+" Should Be Of 7 or "+digits+" Digits")):
+        msgprint(__(code_label+" Should Be Of "+digits+" Digits"))
+    }
+    else if (tempVal.length == 8 && code_label == "Company Code") {
+        msgprint(code_label+" should be of 7 digits or 9 digits")
     }
 }

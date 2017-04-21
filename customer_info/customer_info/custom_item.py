@@ -47,14 +47,18 @@ def add_comment_for_customer_creation(self,method):
 	comment = """Customer {0} is made on the {1}  """.format(self.name,datetime.now().date())
 	self.add_comment("Comment",comment)
 	if self.bonus and self.assign_manual_bonus and self.bonus == self.assign_manual_bonus:
-		comment = "{0} - [{1}] Bonus Modified From 0 To {2}".format(datetime.now().date(),frappe.session.user,self.bonus)
+		associate = frappe.session.user	if frappe.session.user == "Administrator" else frappe.db.get_value("User",{"email":frappe.session.user},"username")	
+		comment = "{0} - [{1}] Bonus Modified From 0 To {2}".format(datetime.now().date(),associate,self.bonus)
 		self.add_comment("Comment",comment)
 		frappe.db.set_value("Customer", self.name, "summary_of_notes", comment)
+
 
 @frappe.whitelist(allow_guest = True)
 def add_comment_for_change_receivables(self,method):
 	if (self.old_receivables == 0 or self.old_receivables) and self.receivables and self.old_receivables != self.receivables:
-		comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
+		#comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
+		associate = frappe.session.user	if frappe.session.user == "Administrator" else frappe.db.get_value("User",{"email":frappe.session.user},"username")	
+		comment = "{0} - [{1}] Receivables changed from {2} to {3}".format(datetime.now().date(),associate,self.old_receivables,self.receivables)
 		self.add_comment("Comment",comment)
 		self.old_receivables = self.receivables
 		summary_of_notes = self.summary_of_notes+"\n"+comment if self.summary_of_notes else comment
