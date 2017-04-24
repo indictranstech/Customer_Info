@@ -194,6 +194,9 @@ frappe.ui.form.on("Customer Agreement",{
                 cur_frm.add_custom_button(__('Payments Management'),function(){
                     get_payments_management_from_agreement();
                 });
+                /*cur_frm.add_custom_button(__('Sync Item Price'),function(){
+                    update_90sac_and_monthly_rental();
+                });*/
             }    
         }
         if(cur_frm.doc.duplicate_today_plus_90_days && !cur_frm.doc.__islocal){
@@ -363,4 +366,20 @@ get_payments_management_from_agreement = function(frm){
         method: "customer_info.customer_info.doctype.payments_management.payments_management.get_payments_management_from_agreement",
         frm: cur_frm
     })
+}
+
+
+update_90sac_and_monthly_rental = function(frm){
+    console.log("inside update_90sac_and_monthly_rental")
+    frappe.call({
+        method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.update_90sac_and_monthly_rental",
+        args: {
+            "customer_agreement": cur_frm.doc.name,
+        },
+        callback: function(res){
+            /*cur_frm.set_value("duplicate_s90d_sac_price",r.message['s90d_sac_price'])
+            cur_frm.set_value("s90d_sac_price",r.message['s90d_sac_price'])
+            cur_frm.set_value("monthly_rental_payment",r.message['monthly_rental_payment'])*/
+        }   
+    });
 }

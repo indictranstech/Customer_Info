@@ -48,9 +48,10 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 								THEN format(rental_payment+late_fees-receivables-bonus-discount,2) ELSE format(total_payment_received,2) END AS total_payment_received,
 	    						format(bank_transfer,2) as bank_transfer,format(cash,2) as cash,receivables_collected,format(bank_card,2) as bank_card,
 								balance,format(discount, 2) as discount,format(campaign_discount, 2) as campaign_discount,format(bonus,2) as bonus,concat(name,'') as refund,payments_ids,
-								late_fees_updated,payment_type,merchandise_status,owner as associate
+								late_fees_updated,payment_type,merchandise_status,
+								case when special_associate = "Automatic" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
 
 
 
@@ -83,6 +84,8 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	for row in data:
 		if row.get("associate") == "Administrator":
 			row['associate'] = frappe.db.get_value("User",{'first_name':row['associate']},"username")
+		elif row.get("associate") == "Automatic":
+			pass
 		else:		
 			row['associate'] = frappe.db.get_value("User",{'email':row['associate']},"username")
 		total_payment_received.append(row['total_payment_received'].replace(",",""))
