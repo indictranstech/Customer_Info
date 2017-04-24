@@ -312,7 +312,7 @@ def payments_done_by_scheduler():
 	process payments 
 	reduce receivables
 	"""
-	customer_list = frappe.db.sql("""select name from `tabCustomer` and customer_group = 'Individual' """,as_list=1)
+	customer_list = frappe.db.sql("""select name from `tabCustomer` where customer_group = 'Individual' """,as_list=1)
 
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -419,6 +419,7 @@ def payments_done_by_scheduler():
 			args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 			args['total_charges'] = 0
 			args['total_amount'] = 0
+			args['special_associate'] = "Automatic"
 			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 	
 
@@ -549,3 +550,19 @@ def set_bonus_in_customer(customer,bonus):
 		#customer.add_comment("Comment",comment)
 	customer.save(ignore_permissions=True)
 
+
+@frappe.whitelist()
+def update_90sac_and_monthly_rental(customer_agreement):
+	agreement_doc = frappe.get_doc("Customer Agreement",customer_agreement)
+	product_doc = frappe.get_doc("Item",agreement_doc.product)
+	if agreement_doc.monthly_rental_payment == product_doc.monthly_rental_payment and agreement_doc.s90d_sac_price == product_doc.s90d_sac_price:
+		update_value(agreement_doc, product_doc)
+	else:
+		frappe.msgprint("Item Price Already Sync")	
+
+def update_value(agreement_doc, product_doc):
+	for row in agreement_doc.payments_record:
+		if row.check_box_of_submit == 1:
+			frappe.msgprint("Please Refund this payment id <b>"+row.payment_id+"</b> before Sync Item Price\
+							\n <a href=http://"+frappe.request.host+"/desk#payments-received?agreement="+agreement_doc.name+" target='blank'><b>Payments Received Report</b></a>")
+			break
