@@ -971,13 +971,19 @@ def get_history_records(customer_agreement):
 	total_transaction_amount = ""
 	history_record_dict = frappe.db.sql("""select payment_id,due_date,payment_date,
 											monthly_rental_amount,"balance" as balance,pmt,
-											"asso" as associate, "late" as late_days,total_transaction_amount from `tabPayments Record`
+											associate, "late" as late_days,total_transaction_amount from `tabPayments Record`
 											where parent ='{0}' and check_box_of_submit = 1 order by idx""".format(customer_agreement),as_dict=1)
 	# balance = frappe.db.get_value("Customer Agreement",{"name":customer_agreement},"balance")
 	agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	balance = "{0:.2f}".format(float(agreement.agreement_period) * float(agreement.monthly_rental_payment))
 	for i in history_record_dict:
-		i['associate'] = frappe.session.user
+		if i.get('associate') == "Administrator":
+			i['associate'] = frappe.db.get_value("User",{'first_name':i['associate']},"username")
+		elif i.get("associate") == "Automatic":
+			pass
+		else:
+			i['associate'] = frappe.db.get_value("User",{'email':i['associate']},"username")
+		#i['associate'] = associate
 		total_transaction_amount = i["total_transaction_amount"]
 		i["total_transaction_amount"] = total_transaction_amount.split("/")[0] if total_transaction_amount else 0
 		i["total_calculated_payment_amount"] = total_transaction_amount.split("/")[1]  if total_transaction_amount else 0

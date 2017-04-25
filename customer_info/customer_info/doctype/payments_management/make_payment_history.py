@@ -76,8 +76,10 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 		if len(id_list) == 1:
 			cond ="where payment_id = '{0}' ".format(id_list[0]) 
 		elif len(id_list) > 1:	
-			cond = "where payment_id in {0} ".format(id_list)  	
-		
+			cond = "where payment_id in {0} ".format(id_list)
+
+		associate = "Automatic" if args.get("special_associate") else frappe.session.user
+
 		frappe.db.sql("""update `tabPayments Record` 
-						set payment_history = '{0}',pmt = '{2}',total_transaction_amount = '{3}'
-						{1} """.format(payments_history.name,cond,pmt,str(total_transaction_amount)+"/"+str(total_calculated_payment_amount)))
+						set payment_history = '{0}',pmt = '{2}',total_transaction_amount = '{3}', associate = '{4}'
+						{1} """.format(payments_history.name,cond,pmt,str(total_transaction_amount)+"/"+str(total_calculated_payment_amount),associate))

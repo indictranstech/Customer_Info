@@ -33,7 +33,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	else:
 		cond = " where refund = 'No' "
 
-	_cond = "limit 50" if not agreement	else " "
+	_cond = "limit 50" if not agreement	and not from_date and not to_date and not customer else " "
 	if data_limit and not agreement and not from_date and not to_date and not customer:
 		if data_limit != "All":
 			_cond = "limit {0}".format(data_limit.split('-')[1])
@@ -94,6 +94,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	total[0]["customer"] = "-"
 	total[0]["payoff_cond"] = "-"
 	total[0]['total_payment_received'] = "{0:.2f}".format(sum(map(float,total_payment_received)))
+
 	return {"data":data,"total":total}
 
 @frappe.whitelist()
