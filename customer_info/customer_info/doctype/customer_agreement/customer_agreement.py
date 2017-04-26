@@ -317,12 +317,13 @@ def payments_done_by_scheduler():
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
 	last_day_of_month = get_last_day(now_date)
-	
-	for name in [i[0] for i in customer_list]:
+	#print customer_list,"customer_list"
+	customer_list = ["Ausra Balandiene"]
+	for name in customer_list:
 		customer_bonus = []
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
-		
+	
 		payments_detalis_list = []
 		payment_ids_list = []
 		monthly_rental_amount = []
@@ -376,7 +377,7 @@ def payments_done_by_scheduler():
 						customer.receivables = receivables - row.monthly_rental_amount
 						customer.save(ignore_permissions=True)		
 						
-				if row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_of_month:
+				if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or (firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) < now_date)):
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if float(receivables) >= float(row.monthly_rental_amount):
