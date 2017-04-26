@@ -1065,13 +1065,13 @@ def add_notes_in_customer(customer,notes_on_customer_payments,summary_of_notes=N
 	if summary_of_notes == None:
 		notes = notes_on_customer_payments
 	else:	
-		notes = "{0} \n{1} - {2}".format(notes_on_customer_payments,summary_of_notes,now_date)
+		notes = "{0} \n{1}".format(notes_on_customer_payments,summary_of_notes)
 
 	customer.update({
 		"summary_of_notes" : notes
 		})
 	customer.save(ignore_permissions=True)
-	return customer.summary_of_notes
+	return notes#customer.summary_of_notes
 
 # call From Customer master OnClick Button Payment management 
 @frappe.whitelist()

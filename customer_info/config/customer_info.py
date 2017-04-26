@@ -33,6 +33,11 @@ def get_data():
 					"type": "doctype",
 					"name": "Ratio",
 					"description": _("Details Of Ratio"),
+				},
+				{
+					"type": "doctype",
+					"name": "Campaign Discount Code",
+					"description": _("Details Of Campaign Discount Code"),
 				}
 			]
 		},
