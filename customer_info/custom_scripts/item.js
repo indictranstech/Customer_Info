@@ -10,17 +10,18 @@ frappe.ui.form.on("Item", {
                 },
              	callback: function(res){
                     if(res && res.message){
-                        console.log(res.message,"dddddddddddddd")
                         cur_frm.doc.period = res.message['period_value']
                         cur_frm.doc.ratio = res.message['ratio_value']
                         cur_frm.doc.agreement_period = res.message['period']
                         refresh_field(["period","ratio","agreement_period"]);
+                        cur_frm.doc.purchase_price_with_vat ? calculation_for_monthly_rental_and_90d(frm):""
                     }
              	}  	
             });
             cur_frm.doc.item_group = cur_frm.doc.product_category
-            refresh_field("item_group")        
-        }
+            refresh_field("item_group")
+
+        }           
     },
     serial_number: function(frm){
         cur_frm.doc.item_code = cur_frm.doc.brand + "-" +cur_frm.doc.serial_number
@@ -28,7 +29,7 @@ frappe.ui.form.on("Item", {
         refresh_field(["item_code","item_name"])    
     },
     purchase_price_with_vat: function(frm){
-        if(cur_frm.doc.period){
+        if(cur_frm.doc.period && cur_frm.doc.ratio){
             this.calculation_for_monthly_rental_and_90d(frm)
         }
         else{
@@ -36,7 +37,7 @@ frappe.ui.form.on("Item", {
         }
     },
     period: function(frm){
-        if(cur_frm.doc.purchase_price_with_vat){
+        if(cur_frm.doc.purchase_price_with_vat && cur_frm.doc.ratio){
             this.calculation_for_monthly_rental_and_90d(frm)
         }
         else{
@@ -46,7 +47,7 @@ frappe.ui.form.on("Item", {
         refresh_field("old_agreement_period")*/
     },
     ratio:function(frm){
-        if(cur_frm.doc.purchase_price_with_vat){
+        if(cur_frm.doc.purchase_price_with_vat && cur_frm.doc.period){
             this.calculation_for_monthly_rental_and_90d(frm)
         }
         else{
@@ -134,8 +135,8 @@ cur_frm.fields_dict['brand'].get_query = function(doc) {
 	}
 }
 
-calculation_for_monthly_rental_and_90d = function(frm){    
-	var b = (cur_frm.doc.purchase_price_with_vat * cur_frm.doc.ratio) / cur_frm.doc.period
+calculation_for_monthly_rental_and_90d = function(frm){
+    var b = (cur_frm.doc.purchase_price_with_vat * cur_frm.doc.ratio) / cur_frm.doc.period
 	var c = roundNumber(b,2)
 	var n = c.toString();
 	var n1 = n.slice(-2)
