@@ -45,6 +45,14 @@ frappe.ui.form.on("Item", {
         /*cur_frm.doc.old_agreement_period = cur_frm.doc.period
         refresh_field("old_agreement_period")*/
     },
+    ratio:function(frm){
+        if(cur_frm.doc.purchase_price_with_vat){
+            this.calculation_for_monthly_rental_and_90d(frm)
+        }
+        else{
+            msgprint("Please Enter Value Of Purchase Price with Vat")
+        }
+    },
     insurance_fee: function(frm){
         if(cur_frm.doc.monthly_rental_payment){
             cur_frm.doc.total = cur_frm.doc.monthly_rental_payment + cur_frm.doc.insurance_fee
