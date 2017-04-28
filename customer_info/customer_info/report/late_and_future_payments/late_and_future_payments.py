@@ -30,7 +30,7 @@ def get_data(filters):
 									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * (t2.late_fees_rate/100) ELSE 0 END AS late_fees,
 									"a",
 									CASE WHEN t2.contact_result = "WBI" AND t1.due_date < t2.suspension_date
-									THEN concat(t2.contact_result," ",t2.suspension_date," ",t2.amount_of_contact_result)
+									THEN concat(t2.contact_result," ",t2.suspension_date," ",format(t2.amount_of_contact_result,2))
 									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date < t2.suspension_date AND t1.due_date < '{1}'
 									THEN concat(t2.contact_result," ",t2.suspension_date) ELSE " " END AS contact_result,
 									t3.company_email_id_1																		

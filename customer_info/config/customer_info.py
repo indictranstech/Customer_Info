@@ -112,7 +112,16 @@ def get_data():
 					"description": _("Record of Received Payment"),
 					"doctype": "Payments History",
 					"icon": "icon-bar-chart",
-				}
+				},
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Long term debtors",
+					"label": _("Long term debtors Report"),
+					"description": _("Long term debtors Report"),
+					"doctype": "Customer Agreement",
+					#"icon": "icon-bar-chart",
+				},
 			]
 		},
 		{
