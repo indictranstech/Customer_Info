@@ -754,6 +754,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.agreement_status = "Closed"
 		customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
 		customer_agreement.merchandise_status = "Agreement over"
+		customer_agreement.agreement_close_date = datetime.now().date()
 
 	if float(customer_agreement.payments_left) == 0:
 		customer_agreement.contact_result = ""
