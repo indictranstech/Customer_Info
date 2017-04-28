@@ -103,7 +103,7 @@ frappe.ui.form.on("Payments Management", {
 	            method: "customer_info.customer_info.doctype.payments_management.payments_management.add_notes_in_customer",
 	            args: {
 	            	"customer":cur_frm.doc.customer,
-	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments ? frappe.datetime.nowdate() + " - " + "["+cur_frm.doc.username+"] - " +cur_frm.doc.notes_on_customer_payments:" ",
+	            	"notes_on_customer_payments":cur_frm.doc.notes_on_customer_payments ? frappe.datetime.nowdate() + " - " + "["+cur_frm.doc.username+"] " +cur_frm.doc.notes_on_customer_payments:" ",
 	            	"summary_of_notes":cur_frm.doc.summary_of_notes
 	            },
 	            callback: function(r) {
