@@ -754,6 +754,13 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.agreement_status = "Closed"
 		customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
 		customer_agreement.merchandise_status = "Agreement over"
+
+	if float(customer_agreement.payments_left) == 0:
+		customer_agreement.contact_result = ""
+		customer_agreement.suspension_date = ""
+		customer_agreement.amount_of_contact_result = 0
+		customer_agreement.call_commitment = ""
+
 	customer_agreement.save(ignore_permissions=True)		
 
 def add_bonus_and_receivables_to_customer(args,flag):
