@@ -614,7 +614,8 @@ edit_bonus = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments","["+cur_frm.doc.username+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
+				//cur_frm.set_value("notes_on_customer_payments","["+cur_frm.doc.username+"]"+" "+"Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
+				cur_frm.set_value("notes_on_customer_payments","Bonus:"+" "+me.dialog.fields_dict.comment.$input.val())
 				$('button[data-fieldname="add_notes"]').click();
 				me.dialog.fields_dict.comment.set_input("")
 			}
@@ -872,7 +873,8 @@ edit_late_fees = Class.extend({
 		var me = this;
 		//me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(flt(me.dialog.fields_dict.late_fees.$input.val()) >= 0){
-				comment =  "["+cur_frm.doc.username+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
+				//comment =  "["+cur_frm.doc.username+"]- "+" "+"Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
+				comment = "- Late fees modified from "+me.item['late_fees']+" "+"to"+" "+ me.dialog.fields_dict.late_fees.$input.val() +" ("+me.item['id']+")"
 				cur_frm.set_value("notes_on_customer_payments",comment)
 				$('button[data-fieldname="add_notes"]').click()
 				//me.dialog.fields_dict.comment.set_input("")
@@ -1112,7 +1114,8 @@ call_commit = Class.extend({
 		var me = this;
 		me.dialog.fields_dict.add_comment.$input.click(function() {
 			if(me.dialog.fields_dict.comment.$input.val()){
-				cur_frm.set_value("notes_on_customer_payments", " "+"["+cur_frm.doc.username+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
+				//cur_frm.set_value("notes_on_customer_payments", " "+"["+cur_frm.doc.username+"] "+" "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
+				cur_frm.set_value("notes_on_customer_payments"," "+"CC:"+" "+me.dialog.fields_dict.comment.$input.val()+" "+"("+me.item['id']+")")
 				$('button[data-fieldname="add_notes"]').click();
 				me.dialog.fields_dict.comment.set_input("");
 			}
