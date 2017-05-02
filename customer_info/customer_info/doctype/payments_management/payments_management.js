@@ -1107,6 +1107,11 @@ call_commit = Class.extend({
             },
             callback: function(r){
         		render_agreements();
+        		me.fd.contact_result.$input.val()
+        		me.fd.contact_result.$input.val() == "Sent SMS/Email" ? cur_frm.set_value("notes_on_customer_payments"," "+me.fd.contact_result.$input.val()):
+				cur_frm.set_value("notes_on_customer_payments"," "+me.fd.contact_result.$input.val()+" "+me.fd.amount.$input.val()+"EUR"+" till "+me.fd.date_picker.$input.val())
+				$('button[data-fieldname="add_notes"]').click();
+				me.dialog.fields_dict.comment.set_input("");
         	}
 	    });
 	},
