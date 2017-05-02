@@ -756,7 +756,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.merchandise_status = "Agreement over"
 		customer_agreement.agreement_close_date = datetime.now().date()
 
-	if float(customer_agreement.payments_left) == 0:
+	#if customer_agreement.payments_left) == 0:
+	if customer_agreement.contact_result == "WBI":
 		customer_agreement.contact_result = ""
 		customer_agreement.suspension_date = ""
 		customer_agreement.amount_of_contact_result = 0
@@ -990,7 +991,7 @@ def get_history_records(customer_agreement):
 		elif i.get("associate") == "Automatic":
 			pass
 		else:
-			i['associate'] = frappe.db.get_value("User",{'email':i['associate']},"username")
+			i['associate'] = frappe.db.get_value("User",{'email':i['associate']},"first_name")
 		#i['associate'] = associate
 		total_transaction_amount = i["total_transaction_amount"]
 		i["total_transaction_amount"] = total_transaction_amount.split("/")[0] if total_transaction_amount else 0
