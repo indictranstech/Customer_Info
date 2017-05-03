@@ -63,7 +63,8 @@ def add_comment_for_change_receivables(self,method):
 		comment = "{0} - [{1}] Receivables changed from {2} to {3}".format(datetime.now().date(),associate,self.old_receivables,self.receivables)
 		self.add_comment("Comment",comment)
 		self.old_receivables = self.receivables
-		summary_of_notes = self.summary_of_notes+"\n"+comment if self.summary_of_notes else comment
+		summary_of_notes = comment+"\n"+self.summary_of_notes if self.summary_of_notes else comment
+		#summary_of_notes = self.summary_of_notes+"\n"+comment if self.summary_of_notes else comment
 		self.summary_of_notes = summary_of_notes
 
 def validate_code(self):
