@@ -987,7 +987,7 @@ def get_history_records(customer_agreement):
 	balance = "{0:.2f}".format(float(agreement.agreement_period) * float(agreement.monthly_rental_payment))
 	for i in history_record_dict:
 		if i.get('associate') == "Administrator":
-			i['associate'] = frappe.db.get_value("User",{'first_name':i['associate']},"username")
+			i['associate'] = frappe.db.get_value("User",{'first_name':i['associate']},"first_name")
 		elif i.get("associate") == "Automatic":
 			pass
 		else:
