@@ -556,14 +556,16 @@ def set_bonus_in_customer(customer,bonus):
 def update_90sac_and_monthly_rental(customer_agreement):
 	agreement_doc = frappe.get_doc("Customer Agreement",customer_agreement)
 	product_doc = frappe.get_doc("Item",agreement_doc.product)
-	if agreement_doc.monthly_rental_payment == product_doc.monthly_rental_payment and agreement_doc.s90d_sac_price == product_doc.s90d_sac_price:
-		update_value(agreement_doc, product_doc)
+	if agreement_doc.monthly_rental_payment != product_doc.monthly_rental_payment and agreement_doc.s90d_sac_price != product_doc.s90d_sac_price:
+		return {"s90d_sac_price":product_doc.s90d_sac_price,"monthly_rental_payment":product_doc.monthly_rental_payment} if update_value(agreement_doc) == True else frappe.throw(update_value(agreement_doc))
 	else:
 		frappe.msgprint("Item Price Already Sync")	
 
-def update_value(agreement_doc, product_doc):
+def update_value(agreement_doc):
+	result = True
 	for row in agreement_doc.payments_record:
 		if row.check_box_of_submit == 1:
-			frappe.msgprint("Please Refund this payment id <b>"+row.payment_id+"</b> before Sync Item Price\
+			result = ("Please Refund this payment id <b>"+row.payment_id+"</b> before Sync Item Price\
 							\n <a href=http://"+frappe.request.host+"/desk#payments-received?agreement="+agreement_doc.name+" target='blank'><b>Payments Received Report</b></a>")
 			break
+	return result
