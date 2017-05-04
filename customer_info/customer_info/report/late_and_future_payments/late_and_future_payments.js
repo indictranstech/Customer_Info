@@ -10,7 +10,7 @@ frappe.query_reports["late and future payments"] = {
 	"formatter":function (row, cell, value, columnDef, dataContext, default_formatter) {
         value = default_formatter(row, cell, value, columnDef, dataContext);
         now_date = frappe.datetime.nowdate()
-        console.log("concad", dataContext)
+        //console.log("concad", dataContext)
 	    if (dataContext["Contact Result"] && columnDef.id != "Email" && columnDef.id != "Customer"){
         	concad = dataContext["Contact Result"].split(" ")
 	    	if(concad[0] == "WBI" && concad[1] < now_date && flt(dataContext["Late Days"]) > 0) { 
