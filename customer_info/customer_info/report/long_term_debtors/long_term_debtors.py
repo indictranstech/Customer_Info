@@ -51,7 +51,6 @@ def get_data():
 			row[18] = "{0:.2f}".format(float(row[18]) + float(row[23])) if row[23] else row[18]
 		else:
 			row[22] = ""
-
 	return result
 
 
