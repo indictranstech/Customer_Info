@@ -537,18 +537,19 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 	args['assigned_bonus_discount'] = ""
 
 
-	if submitted_payments_ids_info and (float(args['values']['bonus']) > 0 or float(args['values']['discount']) > 0):
+	if submitted_payments_ids_info:
 		
 		"""Add assigned bonus and discount"""
 		args['assigned_bonus_discount'] = add_assigned_bonus_and_discount(args,submitted_payments_ids_info)#return agreement name 
 		
 		
-		"""remove bonus when payment only done by bonus with no receivables"""
-		if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
-			float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0 and float(args['receivables']) == 0:
-			remove_new_bonus(submitted_payments_ids_info)
-			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
-			args['new_bonus'] = 0
+		if float(args['values']['bonus']) > 0 or float(args['values']['discount'] > 0):
+			"""remove bonus when payment only done by bonus with no receivables"""
+			if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
+				float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0 and float(args['receivables']) == 0:
+				remove_new_bonus(submitted_payments_ids_info)
+				args['bonus'] = float(args['bonus'] - float(args['new_bonus']))
+				args['new_bonus'] = 0
 
 
 		"""remove_bonus from all payments when any payments have late_fees"""	
