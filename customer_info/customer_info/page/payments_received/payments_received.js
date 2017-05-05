@@ -267,6 +267,7 @@ payments_received = Class.extend({
 		}	
 	},
 	get_late_fees : function(agreement_name,date1,date2,rental_payment){
+		console.log(agreement_name,"agreement_name",date1,date2)
 		var date_diff = frappe.datetime.get_diff(date2,date1)
 		var late_fees_amount = 0
 		frappe.call({
@@ -278,8 +279,11 @@ payments_received = Class.extend({
                 filters: { name: agreement_name },
             },
             callback: function(res){
+            	console.log("********************8888")
                 if (res && res.message){
+                	console.log("rerer",res.message,date_diff)
 					if(flt(date_diff) > 3){
+						console.log("insdie 333333333")
 						late_fees_amount = (flt(date_diff) - 3) * rental_payment * (flt(res.message.late_fees_rate)/100)
 					}
                 }
