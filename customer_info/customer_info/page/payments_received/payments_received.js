@@ -19,7 +19,7 @@ payments_received = Class.extend({
 					me.get_data_export();
 				}, "icon-refresh");
 		this.set_fields();
-		this.render_payments_details();
+		//this.render_payments_details();
 	},
 	set_fields: function() {
 		var me = this;
@@ -113,7 +113,7 @@ payments_received = Class.extend({
 			render_input: true
 		});
 		me.data_limit.refresh();
-
+		this.render_payments_details();	
 
 		me.customer_link.$input.on("change", function(){
 			var old_me = me;
@@ -142,6 +142,9 @@ payments_received = Class.extend({
 	},
 	render_payments_details: function() {
 		var me = this;
+		var _agreement_name =  window.location.href.split("=")[1] ? window.location.href.split("=")[1]:""
+		me.agreement.$input.val(_agreement_name)
+		var me = this;
 		this.data = ""
 		frappe.call({
 			method: "customer_info.customer_info.page.payments_received.payments_received.get_payments_details",
@@ -149,7 +152,7 @@ payments_received = Class.extend({
 				"customer": me.customer_link.$input.val(),
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
-				"agreement":me.agreement.$input.val(),
+				"agreement":me.agreement.$input.val() ? me.agreement.$input.val():_agreement_name,
 				"data_limit":me.data_limit.$input.val()	
 			},
 			freeze: true,
@@ -254,7 +257,8 @@ payments_received = Class.extend({
 							"due_date":d.split("/")[1],
 							"rental_payment":d.split("/")[2],
 							"late_fees":parseFloat(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])).toFixed(2),
-							"total": flt(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])) + flt(d.split("/")[2])//parseFloat(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
+							"total": parseFloat(flt(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])) + flt(d.split("/")[2])).toFixed(2)
+							//parseFloat(me.get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2]) + flt(d.split("/")[2])).toFixed(2) 
 				   		})
 			   		});
 				}
@@ -263,6 +267,7 @@ payments_received = Class.extend({
 		}	
 	},
 	get_late_fees : function(agreement_name,date1,date2,rental_payment){
+		console.log(agreement_name,"agreement_name",date1,date2)
 		var date_diff = frappe.datetime.get_diff(date2,date1)
 		var late_fees_amount = 0
 		frappe.call({
@@ -274,8 +279,11 @@ payments_received = Class.extend({
                 filters: { name: agreement_name },
             },
             callback: function(res){
+            	console.log("********************8888")
                 if (res && res.message){
+                	console.log("rerer",res.message,date_diff)
 					if(flt(date_diff) > 3){
+						console.log("insdie 333333333")
 						late_fees_amount = (flt(date_diff) - 3) * rental_payment * (flt(res.message.late_fees_rate)/100)
 					}
                 }
