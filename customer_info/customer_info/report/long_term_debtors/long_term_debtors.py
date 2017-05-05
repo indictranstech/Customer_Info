@@ -48,7 +48,7 @@ def get_data():
 												order by ca.date limit 1""".format(row[22]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
 			row[22] = row[23]
-			row[18] = "{0:.2f}".format(float(row[18]) + float(row[23]))
+			row[18] = "{0:.2f}".format(float(row[18]) + float(row[23])) if row[23] else row[18]
 		else:
 			row[22] = ""
 
