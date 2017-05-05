@@ -31,6 +31,7 @@ def get_data(filters):
 									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * (t2.late_fees_rate/100) ELSE 0 END AS late_fees,
 									"total_due",
 									t3.receivables,
+									CASE WHEN t2.discounted_payments_left > 0 THEN t2.campaign_discount ELSE 0 END as campaign_discount,
 									CASE WHEN t2.contact_result = "WBI" AND t1.due_date < t2.suspension_date
 									THEN concat(t2.contact_result," ",t2.suspension_date," ",format(t2.amount_of_contact_result,2))
 									WHEN t2.contact_result = "Sent SMS/Email" AND t1.due_date < t2.suspension_date AND t1.due_date < '{1}'
@@ -79,5 +80,6 @@ def get_colums():
 			  ("Surname") + ":Data:80",("Debtor") + ":Data:80",
 			  ("Phone") + ":Data:80",("Customer level bonus") + ":Data:90",
 			  ("Late Fees") + ":Data:80",("Total Due") + ":Data:90",("Total Charges") + ":Data:90",
+			  ("Discount") + ":Data:80",
 			  ("Contact Result") + ":Data:140",("Email") + ":Data:140"]	
 	return columns
