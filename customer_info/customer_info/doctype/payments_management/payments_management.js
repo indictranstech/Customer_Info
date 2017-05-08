@@ -799,7 +799,8 @@ edit_current_due_date = Class.extend({
 			],
 			primary_action_label: "Update",
 			primary_action: function(){
-				me.update_due_dates();
+				me.add_comment();
+				//me.update_due_dates();
 			}
 		});
 		this.fd = this.dialog.fields_dict;
@@ -811,6 +812,18 @@ edit_current_due_date = Class.extend({
 	set_current_due_date:function(){
 		var me = this;
 		me.dialog.fields_dict.current_due_date.set_input(me.item['current_due_date']);
+	},
+	add_comment:function(){
+		var me = this;
+		if(me.dialog.fields_dict.current_due_date.$input.val() != me.item['current_due_date']) {
+			comment = "Current due date changed from "+me.item['current_due_date']+" to "+me.fd.current_due_date.$input.val()
+			cur_frm.set_value("notes_on_customer_payments",comment)
+			$('button[data-fieldname="add_notes"]').click()
+			me.update_due_dates();
+		}
+		else{
+			me.dialog.hide();
+		}	
 	},
 	update_due_dates:function(){
 		var me = this;
