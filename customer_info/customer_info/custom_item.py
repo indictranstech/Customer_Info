@@ -57,7 +57,7 @@ def add_comment_for_customer_creation(self,method):
 def add_comment_for_change_receivables(self,method):
 	if self.company_code or self.prersonal_code:
 		validate_code(self)
-	if (self.old_receivables == 0 or self.old_receivables) and self.receivables and self.old_receivables != self.receivables:
+	if self.old_receivables >= 0 and self.receivables >= 0 and self.old_receivables != self.receivables:
 		#comment = """Receivables change from  {0} to {1} on {2} """.format(self.old_receivables,self.receivables,datetime.now().date())
 		associate = frappe.session.user	if frappe.session.user == "Administrator" else frappe.db.get_value("User",{"email":frappe.session.user},"username")	
 		comment = "{0} - [{1}] Receivables changed from {2} to {3}".format(datetime.now().date(),associate,self.old_receivables,self.receivables)

@@ -535,7 +535,10 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 							and payment_date = '{1}' order by idx """.format(cond,args['payment_date']),as_dict=1)
 	
 	args['assigned_bonus_discount'] = ""
-
+	merchandise_status = ""
+	discount_amount = 0
+	campaign_discount_of_agreements = ""
+	late_fees_updated_status = ""
 
 	if submitted_payments_ids_info:
 		
@@ -558,47 +561,51 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
 			args['new_bonus'] = 0
 
-	
-
-	frappe.db.sql("""update `tabPayments Record` 
-						set check_box_of_submit = 1
-						where check_box = 1 and check_box_of_submit = 0
-						and  payment_date = '{0}'
-						and parent in {1}""".format(args['payment_date'],cond))
-	
-	agreements = frappe.db.sql("""{0}""".format(cond),as_list=1)
-	
-	completed_agreement_list = []
-	merchandise_status = ""
-	discount_amount = 0
-	campaign_discount_of_agreements = ""
-	late_fees_updated_status = ""
-	for agreement in [agreement[0] for agreement in agreements]:
-		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
-		if customer_agreement.discount_updated == "Yes":
-			campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
-			discount_amount += customer_agreement.discount
-
-		set_values_in_agreement_on_submit(customer_agreement)
+		frappe.db.sql("""update `tabPayments Record` 
+							set check_box_of_submit = 1
+							where check_box = 1 and check_box_of_submit = 0
+							and  payment_date = '{0}'
+							and parent in {1}""".format(args['payment_date'],cond))
 		
-		if float(customer_agreement.payments_left) == 0:
-			completed_agreement_list.append(customer_agreement.name)		
-		
-		if customer_agreement.late_fees_updated == "Yes":
-			late_fees_updated_status = "Yes"
-			customer_agreement.late_fees_updated = "No"
-			customer_agreement.save(ignore_permissions=True)
+		#agreements = frappe.db.sql("""{0}""".format(cond),as_list=1)
+		agreements = []
+		for d in submitted_payments_ids_info:
+			if agreements and d["payment_id"].split("-P")[0] not in agreements:
+				agreements.append(d["payment_id"].split("-P")[0])
+			elif not agreements:
+				agreements.append(d["payment_id"].split("-P")[0])
 
-	"""add assigned campaing discount discount"""
-	if campaign_discount_of_agreements:
-		add_assigned_campaing_discount_discount(campaign_discount_of_agreements)
+		completed_agreement_list = []
+		#merchandise_status = ""
+		# discount_amount = 0
+		# campaign_discount_of_agreements = ""
+		# late_fees_updated_status = ""
+		for agreement in agreements:#[agreement[0] for agreement in agreements]:
+			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
+			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
+			if customer_agreement.discount_updated == "Yes":
+				campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
+				discount_amount += customer_agreement.discount
+
+			set_values_in_agreement_on_submit(customer_agreement)
+
+			if float(customer_agreement.payments_left) == 0:
+				completed_agreement_list.append(customer_agreement.name)
+
+			if customer_agreement.late_fees_updated == "Yes":
+				late_fees_updated_status = "Yes"
+				customer_agreement.late_fees_updated = "No"
+				customer_agreement.save(ignore_permissions=True)
+
+		"""add assigned campaing discount discount"""
+		if campaign_discount_of_agreements:
+			add_assigned_campaing_discount_discount(campaign_discount_of_agreements)
+
+		used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
 
-
-	used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 	"""
 	if we have payment_ids then 
 	then payment type is Rental Payment else
