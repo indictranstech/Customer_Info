@@ -591,7 +591,7 @@ def update_value(agreement_doc):
 	result = True
 	for row in agreement_doc.payments_record:
 		if row.check_box_of_submit == 1:
-			result = ("Please Refund this payment id <b>"+row.payment_id+"</b> before Sync Item Price\
+			result = ("Please refund already made payments of <b>"+row.parent+"</b> before Sync Item Price In\
 							\n <a href=http://"+frappe.request.host+"/desk#payments-received?agreement="+agreement_doc.name+" target='blank'><b>Payments Received Report</b></a>")
 			break
 	return result

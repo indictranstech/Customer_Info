@@ -19,6 +19,7 @@ def get_data(filters):
 		result = frappe.db.sql("""select 
 								t1.due_date,
 								t2.customer,
+								t2.debtor,
 								t1.payment_id,
 								t3.receivables,
 								t1.monthly_rental_amount,
@@ -36,26 +37,46 @@ def get_data(filters):
 									{1}
 									order by agreement_number,t1.due_date  """ .format(now_date,get_condtion(filters.get("from_date"),filters.get("to_date"))),as_list=1)
 
-		total = ["","",""]
+		# total = ["","",""]
+		# receivables = 0
+		# monthly_rental_amount = 0
+		# total_due = 0
+		# late_fees = 0
+		# customer_list = []
+		# for l in result:
+		# 	late_fees += float(l[5])
+		# 	monthly_rental_amount += float(l[4])
+
+		# 	if l[1] in customer_list:
+		# 		l[3] = 0
+		# 	else:
+		# 		customer_list.append(l[1])	
+		# 	total_due += (float(l[5]) + float(l[4]) - float(l[3]))
+		# 	l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) - float(l[3]))
+		# 	receivables += float(l[3])
+		# 	if float(l[3]) == 0: # for display purpose
+		# 		l[3] = ""
+
+		total = ["","","",""]
 		receivables = 0
 		monthly_rental_amount = 0
 		total_due = 0
 		late_fees = 0
 		customer_list = []
 		for l in result:
-			late_fees += float(l[5])
-			monthly_rental_amount += float(l[4])
-			# total_due += (float(l[5]) + float(l[4]) + float(l[3]))
-			# l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) + float(l[3]))
+			late_fees += float(l[6])
+			monthly_rental_amount += float(l[5])
+			
 			if l[1] in customer_list:
-				l[3] = 0
+				l[4] = 0
 			else:
 				customer_list.append(l[1])	
-			total_due += (float(l[5]) + float(l[4]) - float(l[3]))
-			l[6] = "{0:.2f}".format(float(l[5]) + float(l[4]) - float(l[3]))
-			receivables += float(l[3])
-			if float(l[3]) == 0: # for display purpose
-				l[3] = ""
+			total_due += (float(l[6]) + float(l[5]) - float(l[4]))
+			l[7] = "{0:.2f}".format(float(l[6]) + float(l[5]) - float(l[4]))
+			receivables += float(l[4])
+			if float(l[4]) == 0: # for display purpose
+				l[4] = ""
+
 
 		total.append("{0:.2f}".format(receivables))		
 		total.append("{0:.2f}".format(monthly_rental_amount))
@@ -83,9 +104,12 @@ def get_condtion(from_date,to_date):
 
 
 def get_colums():
-	columns = [("Due Date") + ":Date:100"] + [("Customer") + ":Link/Customer:100"] + \
-			  [("Payment Id") + ":Data:170"] + \
-			  [("Receivables") + ":Data:90"] + \
-			  [("Rental Payment") + ":Data:100"] + [("Late Fees") + ":Data:80"] + \
-			  [("Total Due") + ":Data:90"]	
+	columns = [("Due Date") + ":Date:100",
+				("Customer") + ":Link/Customer:100",
+				("Debtor") + ":Data:100",
+				("Payment Id") + ":Data:170",
+				("Receivables") + ":Data:90",
+				("Rental Payment") + ":Data:100",
+				("Late Fees") + ":Data:80",("Total Due") + ":Data:90"
+				]	
 	return columns
