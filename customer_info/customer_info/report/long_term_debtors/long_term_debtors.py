@@ -29,7 +29,7 @@ def get_data():
 								cus.spouse_contact_no,
 								ca.date,
 								ca.agreement_period,
-								(select t1.payment_date from `tabPayments Record` t1 where t1.parent=ca.name order by t1.due_date desc limit 1),
+								(select t1.due_date from `tabPayments Record` t1 where t1.parent=ca.name order by t1.due_date desc limit 1),
 								ca.current_due_date,
 								concat(ca.product_category," ",ca.product),
 								(select format(sum(CASE WHEN t1.due_date < CURDATE() AND DATEDIFF(CURDATE(),t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
@@ -56,17 +56,17 @@ def get_data():
 
 def get_colums():
 	columns = [
-			("Sutarties nr") + ":Link/Customer Agreement:80",("Migracinis sutarties nr") + ":Data:70",
+			("Sutarties nr") + ":Link/Customer Agreement:80",("Migracinis sutarties nr.") + ":Data:70",
 			("Kliento vardas") + ":Data:130",
 			("Pavardė") + ":Float:100",("Asmens kodas") + ":Data:100",
 			("Telefono numeris") + ":Data:100",("El. pašto adresas") + ":Data:80",
 			("Miestas") + ":Data:90",("Adresas") + ":Float:80",
 			("Sutuoktinio vardas") + ":Data:90",("Sutuoktinio pavardė") + ":Data:90",
-			("Sutuoktinio telefono nr") + ":Data:90",("Sutarties sudarymo data") + ":Date:90",
+			("Sutuoktinio telefono nr.") + ":Data:90",("Sutarties sudarymo data") + ":Date:90",
 			("Sutarties terminas") + ":Data:90",
 			("Sutarties pabaigos data") + ":Date:90",("Seniausio neapmokėto mokėjimo data") + ":Date:90",
 			("Prekė") + ":Data:90",("Vėluojančių mokėjimų suma, EUR") + ":Data:90",	
-			("Bendra skola iki sutarties pabaigos be delspinigių, EUR") + ":Data:90",("Delspinigių suma EUR") + ":Data:90",
+			("Bendra skola iki sutarties pabaigos be delspinigių, EUR") + ":Data:90",("Delspinigių suma, EUR") + ":Data:90",
 			("Mokėtina suma su delspinigiais, EUR") + ":Data:100",("Delspinigių dydis už kiekvieną praleistą dieną pagal sutartį, %")+ ":Data:100",
 			("Permoka+/Nepriemoka-") + ":Data:100"
 			]
