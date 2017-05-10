@@ -17,17 +17,28 @@ payoff_details = Class.extend({
 	},
 	click_on_pay_off_agreement:function(){
 		var me = this;
-		me.old_instance.dialog.fields_dict.pay_off_agreement.$input.click(function() {
+		$(me.old_instance.dialog.fields_dict.payments_record.$wrapper).find(".pay_off_agreement").click(function() {
 			me.old_dialog = me.old_instance.dialog;
 			me.show_dialog();
 		});
+		/*if($("button[fieldname='pay_off_agreement']")){
+		}
+		$(me.old_instance.dialog.fields_dict.payments_record.$warpper).find("button[fieldname='pay_off_agreement']").click(function() {
+			console.log("click of pay_off_agreement")
+			me.old_dialog = me.old_instance.dialog;
+			me.show_dialog();
+		});*/
 	},
 	click_on_90_day_pay_Off: function(){
 		var me = this;
-		me.old_instance.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
+		$(me.old_instance.dialog.fields_dict.payments_record.$wrapper).find(".s90_day_pay_Off").click(function() {
 			me.old_dialog = me.old_instance.dialog;
 			me.show_dialog();
 		});
+		/*me.old_instance.dialog.fields_dict.s90_day_pay_Off.$input.click(function() {
+			me.old_dialog = me.old_instance.dialog;
+			me.show_dialog();
+		});*/
 	},
 	show_dialog:function(){
 		var me = this;

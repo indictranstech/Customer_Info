@@ -14,8 +14,8 @@ Payments_Details = Class.extend({
             title: "Payments And Summary Detalis",
                 fields: [
                    	{"fieldtype": "HTML" , "fieldname": "payments_record" , "label": "Relative Items"},
-                   	{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "Pay Off Agreement"},
-                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": "90 day pay Off"}
+                   	/*{"fieldtype": "Button" , "fieldname": "s90_day_pay_Off" , "label": "Pay Off Agreement"},
+                   	{"fieldtype": "Button" , "fieldname": "pay_off_agreement" , "label": "90 day pay Off"}*/
                    	],
                    	primary_action_label: "Add",
                    	primary_action: function(){
@@ -35,8 +35,8 @@ Payments_Details = Class.extend({
 	render_payment_management:function(){
 		var me = this;
 		var counter = 0
-		$('button[data-fieldname="pay_off_agreement"]').hide();
-		$('button[data-fieldname="s90_day_pay_Off"]').hide();
+		/*$('button[data-fieldname="pay_off_agreement"]').hide();
+		$('button[data-fieldname="s90_day_pay_Off"]').hide();*/
 		if(this.item['id']){
 			me.template_name = "common_template"
 			this.common_function_for_render_templates()	
@@ -89,26 +89,25 @@ Payments_Details = Class.extend({
 					me.remove_id_of_nav_tab_and_hide_primary_button();
 					$('#history'+ me.index).hide();
 					$(me.dialog.body).parent().find('.btn-primary').hide();
-			
+					html = $(frappe.render_template("summary_record",{
+        	   				"summary":r.message['summary_records'],
+        	   				"index":me.index
+        	   			})).appendTo(me.fd.payments_record.wrapper);
+					$(me.dialog.body).find('#menu'+ me.index).removeClass("tab-pane fade");
 					if(r.message['summary_records']['cond'] == "pay off agreement"){
 						if(me.flag == "Open Agreement"){
-							$('button[data-fieldname="pay_off_agreement"]').show();
+							//$('button[data-fieldname="pay_off_agreement"]').show();
 							me.values = r.message["summary_records"];
 							new payoff_details(me);	
 						}
 					}
 					else if(r.message['summary_records']['cond'] == "90 day pay Off"){
 						if(me.flag == "Open Agreement"){
-							$('button[data-fieldname="s90_day_pay_Off"]').show();
+							//$('button[data-fieldname="s90_day_pay_Off"]').show();
 							me.values = r.message["summary_records"];
 							new payoff_details(me);
 						}
 					}
-					html = $(frappe.render_template("summary_record",{
-        	   				"summary":r.message['summary_records'],
-        	   				"index":me.index
-        	   			})).appendTo(me.fd.payments_record.wrapper);
-					$(me.dialog.body).find('#menu'+ me.index).removeClass("tab-pane fade");
 				}
 				else if(r.message && me.template_name == "payment_history"){
 					me.remove_id_of_nav_tab_and_hide_primary_button();
@@ -132,8 +131,8 @@ Payments_Details = Class.extend({
 	init_trigger_for_nav_tabs:function(){
 		var me = this;		
 		$(me.dialog.body).find(".payment-li").click(function(){
-			$('button[data-fieldname="pay_off_agreement"]').hide();
-			$('button[data-fieldname="s90_day_pay_Off"]').hide();
+			/*$('button[data-fieldname="pay_off_agreement"]').hide();
+			$('button[data-fieldname="s90_day_pay_Off"]').hide();*/
 			//me.template_name = "payments_management"
 			me.template_name = "payments_details"
 			me.common_function_for_render_templates()
@@ -143,8 +142,8 @@ Payments_Details = Class.extend({
 			me.common_function_for_render_templates()
 		});
 		$(me.dialog.body).find(".history-li").click(function(){
-			$('button[data-fieldname="pay_off_agreement"]').hide();
-			$('button[data-fieldname="s90_day_pay_Off"]').hide();
+			/*$('button[data-fieldname="pay_off_agreement"]').hide();
+			$('button[data-fieldname="s90_day_pay_Off"]').hide();*/
 			me.template_name = "payment_history"
 			me.common_function_for_render_templates()
 		});
