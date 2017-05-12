@@ -7,7 +7,7 @@ import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer=None,from_date=None,to_date=None,agreement=None,data_limit=None):
+def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -33,7 +33,7 @@ def get_payments_details(customer=None,from_date=None,to_date=None,agreement=Non
 	else:
 		cond = " where refund = 'No' "
 
-	_cond = "limit 500" if not agreement	and not from_date and not to_date and not customer else " "
+	_cond = "limit 50" if not agreement	and not from_date and not to_date and not customer else " "
 	if data_limit and not agreement and not from_date and not to_date and not customer:
 		if data_limit != "All":
 			_cond = "limit {0}".format(data_limit.split('-')[1])
@@ -97,7 +97,7 @@ def get_payments_details(customer=None,from_date=None,to_date=None,agreement=Non
 	return {"data":data,"total":total}
 
 @frappe.whitelist()
-def create_csv(customer=None,from_date=None,to_date=None,agreement=None,data_limit=None):
+def create_csv(customer,from_date,to_date,agreement,data_limit):
 	data_list = get_payments_details(customer,from_date,to_date,agreement,data_limit)['data']
 	for row in data_list:
 			row["payments_ids"] = update_dict_by_payment_ids(row) if row.get("payments_ids") else ""

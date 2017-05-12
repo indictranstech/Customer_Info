@@ -765,6 +765,7 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
+	        		r.message['remove_bonus'] ? cur_frm.set_value("bonus",flt(bonus) - flt(r.message['bonus'])):""
 	        		var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
 	        		var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
 	        		if(me.item["campaign_discount"].split("-")[3] == "Yes"){

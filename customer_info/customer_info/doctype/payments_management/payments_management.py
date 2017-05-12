@@ -295,8 +295,22 @@ def update_campaign_discount(agreement,campaign_discount):
 	customer_agreement.discount_updated = "Yes"
 	#customer_agreement.campaign_discount = campaign_discount
 	customer_agreement.discount = campaign_discount
+	early_bonus = 0
+	on_time_bonus = 0
+	for row in customer_agreement.payments_record:
+		if row.add_bonus_to_this_payment == 1 and row.check_box_of_submit == 0 and row.bonus_type == "Early Bonus":
+			early_bonus += 2
+			row.bonus_type = ""
+			row.add_bonus_to_this_payment = 0
+		if row.add_bonus_to_this_payment == 1 and row.check_box_of_submit == 0 and row.bonus_type == "On Time Bonus":
+			on_time_bonus += 1
+			row.bonus_type = ""
+			row.add_bonus_to_this_payment = 0
+	customer_agreement.bonus = customer_agreement.bonus - early_bonus - on_time_bonus		
+	customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus - early_bonus
+	customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus - on_time_bonus
 	customer_agreement.save(ignore_permissions=True)
-	return customer_agreement.campaign_discount
+	return {"campaign_discount":customer_agreement.campaign_discount,"remove_bonus":early_bonus+on_time_bonus}
 
 
 @frappe.whitelist()
@@ -413,7 +427,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 			if row.check_box_of_submit == 1:
 				submitable_payments.append(row.idx)
 			
-			if customer_agreement.customer_group == "Individual" and flag != "Payoff":# and customer_agreement.document_type == "New":
+			if customer_agreement.customer_group == "Individual" and flag != "Payoff" and (customer_agreement.discount_updated == "No" or customer_agreement.discount == 0):# and customer_agreement.document_type == "New":
 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
 					add_bonus_of_one_eur.append(row.idx)
 					row.update({

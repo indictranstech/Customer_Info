@@ -142,8 +142,8 @@ payments_received = Class.extend({
 	},
 	render_payments_details: function() {
 		var me = this;
-		var _agreement_name =  window.location.href.split("=")[1] ? window.location.href.split("=")[1]:""
-		me.agreement.$input.val(_agreement_name)
+		//var _agreement_name =  window.location.href.split("=")[1] ? window.location.href.split("=")[1]:""
+		//me.agreement.$input.val(_agreement_name)
 		var me = this;
 		this.data = ""
 		frappe.call({
@@ -152,27 +152,27 @@ payments_received = Class.extend({
 				"customer": me.customer_link.$input.val(),
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
-				"agreement":me.agreement.$input.val() ? me.agreement.$input.val():_agreement_name,
+				"agreement":me.agreement.$input.val(),// ? me.agreement.$input.val():_agreement_name,
 				"data_limit":me.data_limit.$input.val()	
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
         	   	me.page.find(".data").empty();
-				//$.each(r.message["data"], function(i, d) {
+				$.each(r.message["data"], function(i, d) {
 					/*if(d["payoff_cond"]){
 						me.payoff_cond = d["payoff_cond"]
 					}
 					if(d["payment_type"]){
 						me.payment_type = d["payment_type"]
 					}*/
-				//	me.payoff_cond = d["payoff_cond"] ? d["payoff_cond"] : ""
-				//	me.payment_type = d["payment_type"] ? d["payment_type"]: ""
-				//	me.payments_ids = d["payments_ids"]
-				//	me.late_fees_updated = d["late_fees_updated"]
-				//	me.updated_late_fees = d["late_fees"]
-				//	d["payments_ids"] = d["payments_ids"] ? me.update_dict_by_payment_ids():""
-        	   	//});
+					me.payoff_cond = d["payoff_cond"] ? d["payoff_cond"] : ""
+					me.payment_type = d["payment_type"] ? d["payment_type"]: ""
+					me.payments_ids = d["payments_ids"]
+					me.late_fees_updated = d["late_fees_updated"]
+					me.updated_late_fees = d["late_fees"]
+					d["payments_ids"] = d["payments_ids"] ? me.update_dict_by_payment_ids():""
+        	   	});
         	   	me.data = r.message["data"];
         	   	html = frappe.render_template("payments_received",{"data": r.message["data"],"total":r.message["total"]})
 				me.page.append(html)
