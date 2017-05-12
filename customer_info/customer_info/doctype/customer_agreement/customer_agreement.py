@@ -15,6 +15,7 @@ from datetime import datetime, timedelta,date
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
+#from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 
 
 class CustomerAgreement(Document):	 
@@ -302,6 +303,7 @@ def reset_contact_result_of_sent_sms():
 
 
 def payments_done_by_scheduler():
+	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	"""
 	If we have enough receivables then make auto payment_date
 	get all customers
@@ -317,9 +319,8 @@ def payments_done_by_scheduler():
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
 	last_day_of_month = get_last_day(now_date)
-	#print customer_list,"customer_list"
-	#customer_list = ["Ausra Balandiene"]
 	for name in [customer[0] for customer in customer_list]:
+		get_bonus_summary(name)
 		customer_bonus = []
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
