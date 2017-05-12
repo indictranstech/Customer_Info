@@ -159,20 +159,20 @@ payments_received = Class.extend({
 			freeze_message: __("Please Wait..."),
 			callback: function(r) {
         	   	me.page.find(".data").empty();
-				$.each(r.message["data"], function(i, d) {
+				//$.each(r.message["data"], function(i, d) {
 					/*if(d["payoff_cond"]){
 						me.payoff_cond = d["payoff_cond"]
 					}
 					if(d["payment_type"]){
 						me.payment_type = d["payment_type"]
 					}*/
-					me.payoff_cond = d["payoff_cond"] ? d["payoff_cond"] : ""
-					me.payment_type = d["payment_type"] ? d["payment_type"]: ""
-					me.payments_ids = d["payments_ids"]
-					me.late_fees_updated = d["late_fees_updated"]
-					me.updated_late_fees = d["late_fees"]
-					d["payments_ids"] = d["payments_ids"] ? me.update_dict_by_payment_ids():""
-        	   	});
+				//	me.payoff_cond = d["payoff_cond"] ? d["payoff_cond"] : ""
+				//	me.payment_type = d["payment_type"] ? d["payment_type"]: ""
+				//	me.payments_ids = d["payments_ids"]
+				//	me.late_fees_updated = d["late_fees_updated"]
+				//	me.updated_late_fees = d["late_fees"]
+				//	d["payments_ids"] = d["payments_ids"] ? me.update_dict_by_payment_ids():""
+        	   	//});
         	   	me.data = r.message["data"];
         	   	html = frappe.render_template("payments_received",{"data": r.message["data"],"total":r.message["total"]})
 				me.page.append(html)
@@ -361,10 +361,19 @@ payments_received = Class.extend({
 	},
 	get_data_export:function(){
 		var me = this;
-		window.location.href = repl(frappe.request.url +
+		/*window.location.href = repl(frappe.request.url +
 		'?cmd=%(cmd)s&data=%(data)s', {
 			cmd: "customer_info.customer_info.page.payments_received.payments_received.create_csv",
 			data:JSON.stringify(me["data"])
+		});*/
+		window.location.href = repl(frappe.request.url +
+		'?cmd=%(cmd)s&from_date=%(from_date)s&to_date=%(to_date)s&customer=%(customer)s&agreement=%(agreement)s&data_limit=%(data_limit)s', {
+			cmd: "customer_info.customer_info.page.payments_received.payments_received.create_csv",
+			from_date: me.from_date.$input.val(),
+			to_date: me.to_date.$input.val(),
+			customer: me.customer_link.$input.val(),
+			agreement: me.agreement.$input.val(),
+			data_limit: me.data_limit.$input.val(),
 		});
 	}
 });

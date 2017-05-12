@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 import frappe
 import json
-from frappe.utils import flt, cstr, cint
+from frappe.utils import flt, cstr, cint, date_diff
 from frappe.utils.csvutils import UnicodeWriter
 import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer,from_date,to_date,agreement,data_limit):
+def get_payments_details(customer=None,from_date=None,to_date=None,agreement=None,data_limit=None):
 
 	if customer and from_date and to_date:
 		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
@@ -33,7 +33,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	else:
 		cond = " where refund = 'No' "
 
-	_cond = "limit 50" if not agreement	and not from_date and not to_date and not customer else " "
+	_cond = "limit 500" if not agreement	and not from_date and not to_date and not customer else " "
 	if data_limit and not agreement and not from_date and not to_date and not customer:
 		if data_limit != "All":
 			_cond = "limit {0}".format(data_limit.split('-')[1])
@@ -51,8 +51,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 								late_fees_updated,payment_type,merchandise_status,
 								case when special_associate = "Automatic" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
-
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
 
 
 	filter_data = []
@@ -98,7 +97,11 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 	return {"data":data,"total":total}
 
 @frappe.whitelist()
-def create_csv(data):
+def create_csv(customer=None,from_date=None,to_date=None,agreement=None,data_limit=None):
+	data_list = get_payments_details(customer,from_date,to_date,agreement,data_limit)['data']
+	for row in data_list:
+			row["payments_ids"] = update_dict_by_payment_ids(row) if row.get("payments_ids") else ""
+	data = data_list
 	w = UnicodeWriter()
 	w = add_header(w)
 	w = add_data(w, data)
@@ -107,12 +110,81 @@ def create_csv(data):
 	frappe.response['type'] = 'csv'
 	frappe.response['doctype'] = "Payment Received Report"
 
+
+def update_dict_by_payment_ids(row):
+	dict_of_payments_ids = []
+	__dict_of_payments_ids = []
+	if row.payment_type != "Modification Of Receivables":
+		formatted_list_of_payment_ids = str(row.payments_ids[1:-1]).split(",")
+		if row.payoff_cond != "Rental Payment":
+			late_fees = ""
+			rental_payment = 0
+			total = ""
+			payment_id = ""
+			payments_ids = []
+			for d in formatted_list_of_payment_ids:
+				payment_id = d.split("/")[0].split("-P")[0],
+				payments_ids.append(d.split("/")[0]),
+				late_fees = "-",
+				rental_payment = float(d.split("/")[2]),
+				total = "-"
+	   		__dict_of_payments_ids.append({
+	   			"payments_id":str(payment_id)+"-"+row.payoff_cond,
+				"payment_id_list": str(payments_ids),
+				"due_date":"-",
+				"rental_payment":rental_payment,
+				"late_fees":late_fees,
+				"total": total
+	   		})
+			return __dict_of_payments_ids
+
+		else:
+			if row.late_fees_updated == "Yes":
+				for index,data in enumerate(formatted_list_of_payment_ids):
+					if index == 0:
+			   			dict_of_payments_ids.append({
+			   				"late_fees": row.updated_late_fees,
+			   				"payments_id":data.split("/")[0],
+							"due_date":data.split("/")[1],
+							"rental_payment":data.split("/")[2],
+							"total": float(float(row.updated_late_fees) if row.updated_late_fees else 0 + float(data.split("/")[2])) 
+			   			})	
+			   		else:
+			   			dict_of_payments_ids.append({	
+			   				"late_fees":0,
+			   				"payments_id":data.split("/")[0],
+							"due_date":data.split("/")[1],
+							"rental_payment":data.split("/")[2],
+							"total": float(0 + float(data.split("/")[2])) 
+			   			})
+			else:
+		   		for d in formatted_list_of_payment_ids:
+		   			dict_of_payments_ids.append({
+			   			"payments_id":d.split("/")[0],
+						"due_date":d.split("/")[1] if d.split("/")[1] else "",
+						"rental_payment":d.split("/")[2],
+						"late_fees":float(get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])),
+						"total": float(float(get_late_fees(d.split("/")[0].split("-P")[0],d.split("/")[1],d.split("/")[3],d.split("/")[2])) + float(d.split("/")[2]))
+			   		})
+			return dict_of_payments_ids
+
+
+def get_late_fees(agreement_name,date1,date2,rental_payment):
+	date_diffirence = date_diff(date2,date1)
+	late_fees_amount = 0
+	agreement_doc = frappe.get_doc("Customer Agreement",agreement_name)
+	if flt(date_diffirence) > 3:
+		late_fees_amount = (float(date_diffirence) - 3) * float(rental_payment) * (float(agreement_doc.late_fees_rate)/100)
+	if float(date_diffirence) > 3 and late_fees_amount:
+		return late_fees_amount
+	else:
+		return 0
+
 def add_header(w):
 	w.writerow(["Payment Received Report"])
 	return w
 
 def add_data(w,data):
-	data = json.loads(data)
 	if len(data) > 0:
 		w.writerow('\n')
 		w.writerow(['Payment Received'])
