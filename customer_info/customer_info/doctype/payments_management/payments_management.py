@@ -615,7 +615,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 		if campaign_discount_of_agreements:
 			add_assigned_campaing_discount_discount(campaign_discount_of_agreements)
 
-		used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
+		#used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 
 	payments_detalis_list = []
 	payment_ids_list = []
@@ -638,7 +638,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 
 		"""add bonus and receivables to customer_doc"""
 		flag = "Process Payment"
-
+		used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 		"""remove customer bonus when all agreements are closed"""
 		if flag == "Process Payment" and set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
 			customer_doc = frappe.get_doc("Customer",args['customer'])
@@ -651,6 +651,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 				"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False"}			
 	else:
 		if flag == "from_payoff":
+			add_bonus_and_receivables_to_customer(args,flag)	
 			args['total_amount'] = 0
 			make_payment_history(args,payments_detalis_list,payment_ids_list,"Modification Of Receivables",merchandise_status,late_fees_updated_status,"Modification Of Receivables",discount_amount,campaign_discount_of_agreements)
 
