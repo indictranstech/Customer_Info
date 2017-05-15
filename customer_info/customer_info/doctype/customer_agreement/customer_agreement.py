@@ -361,7 +361,8 @@ def payments_done_by_scheduler():
 							"check_box":1,
 							"check_box_of_submit":1,
 							"payment_date":now_date,
-							'add_bonus_to_this_payment':1 if row.idx != 1 else 0
+							'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+							'bonus_type':"On Time Bonus" if row.idx != 1 else ""
 						})
 						row.save(ignore_permissions = True)
 
@@ -388,7 +389,8 @@ def payments_done_by_scheduler():
 							"check_box":1,
 							"check_box_of_submit":1,
 							"payment_date":now_date,
-							'add_bonus_to_this_payment':1 if row.idx != 1 else 0
+							'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+							'bonus_type':"Early Bonus" if row.idx != 1 else "",
 						})
 						row.save(ignore_permissions = True)
 
@@ -419,35 +421,35 @@ def payments_done_by_scheduler():
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)
 
-		if len(payment_ids_list) > 0:
-			customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
-			customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2	
-			customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-			customer_agreement.late_payment = sum(late_payments)
-			customer_bonus.append(customer_agreement.bonus)
-			customer_agreement.save(ignore_permissions = True)
-			customer = frappe.get_doc("Customer",name)
-			customer.bonus += sum(customer_bonus) if customer_bonus else 0
-			customer.save(ignore_permissions=True)
+			if len(payment_ids_list) > 0:
+				customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
+				customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2	
+				customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+				customer_agreement.late_payment = sum(late_payments)
+				customer_bonus.append(customer_agreement.bonus)
+				customer_agreement.save(ignore_permissions = True)
+				customer = frappe.get_doc("Customer",name)
+				customer.bonus = sum(customer_bonus) if customer_bonus else 0
+				customer.save(ignore_permissions=True)
 
-			set_values_in_agreement(customer_agreement)
-			args['assigned_bonus_discount'] = ""
-			args['customer'] = name
-			args['add_in_receivables'] = frappe.get_doc("Customer",name).receivables
-			args['payment_date'] = str(now_date)
-			args['rental_payment'] = sum(monthly_rental_amount)
-			args['payment_type'] = "Normal Payment"
-			args['late_fees'] = sum(map(float,late_fees))
-			args['values']['amount_paid_by_customer'] = 0
-			args['values']['bank_card'] = 0
-			args['values']['bank_transfer'] = 0
-			args['values']['discount'] = 0
-			args['values']['bonus'] = 0
-			args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-			args['total_charges'] = 0
-			args['total_amount'] = 0
-			args['special_associate'] = "Automatic"
-			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
+				set_values_in_agreement(customer_agreement)
+				args['assigned_bonus_discount'] = ""
+				args['customer'] = name
+				args['add_in_receivables'] = frappe.get_doc("Customer",name).receivables
+				args['payment_date'] = str(now_date)
+				args['rental_payment'] = sum(monthly_rental_amount)
+				args['payment_type'] = "Normal Payment"
+				args['late_fees'] = sum(map(float,late_fees))
+				args['values']['amount_paid_by_customer'] = 0
+				args['values']['bank_card'] = 0
+				args['values']['bank_transfer'] = 0
+				args['values']['discount'] = 0
+				args['values']['bonus'] = 0
+				args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+				args['total_charges'] = 0
+				args['total_amount'] = 0
+				args['special_associate'] = "Automatic"
+				make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 	
 
 def set_values_in_agreement(customer_agreement):
