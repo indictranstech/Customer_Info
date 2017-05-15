@@ -817,7 +817,7 @@ edit_current_due_date = Class.extend({
 	add_comment:function(){
 		var me = this;
 		if(me.dialog.fields_dict.current_due_date.$input.val() != me.item['current_due_date']) {
-			comment = "Current due date changed from "+me.item['current_due_date']+" to "+me.fd.current_due_date.$input.val()+"("+me.item['id']+")"
+			comment = "Current due date changed from "+me.item['current_due_date']+" to "+me.fd.current_due_date.$input.val()+" ("+me.item['id']+")"
 			cur_frm.set_value("notes_on_customer_payments",comment)
 			$('button[data-fieldname="add_notes"]').click()
 			me.update_due_dates();
