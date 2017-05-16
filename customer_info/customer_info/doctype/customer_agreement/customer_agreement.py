@@ -321,17 +321,17 @@ def payments_done_by_scheduler():
 	last_day_of_month = get_last_day(now_date)
 	for name in [customer[0] for customer in customer_list]:
 		get_bonus_summary(name)
-		customer_bonus = []
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
 								where agreement_status = "Open" and customer = '{0}' """.format(name),as_list=1)
 	
-		payments_detalis_list = []
-		payment_ids_list = []
-		monthly_rental_amount = []
-		merchandise_status = ""
 		args = {'values':{}}
 		args['receivables'] = frappe.get_doc("Customer",name).receivables
 		for agreement in [e[0] for e in customer_agreement]:
+			customer_bonus = []
+			payments_detalis_list = []
+			payment_ids_list = []
+			monthly_rental_amount = []
+			merchandise_status = ""
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 			add_bonus_of_one_eur = []
 			add_bonus_of_two_eur = []
@@ -340,7 +340,7 @@ def payments_done_by_scheduler():
 			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 			for row in customer_agreement.payments_record:
 				#if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_of_month and getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) == now_date:
-				if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) == now_date:
+				if row.check_box_of_submit == 0 and getdate(row.due_date) == now_date:
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if date_diff(now_date,row.due_date) > 3:
@@ -349,7 +349,6 @@ def payments_done_by_scheduler():
 						if customer_agreement.late_fees_updated == "No":
 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 						late_fees.append(customer_agreement.late_fees)
-					
 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 					if float(receivables) >= total_charges:
 						payment_ids_list.append(row.payment_id)
@@ -365,7 +364,6 @@ def payments_done_by_scheduler():
 							'bonus_type':"On Time Bonus" if row.idx != 1 else ""
 						})
 						row.save(ignore_permissions = True)
-
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)	
 
@@ -393,11 +391,11 @@ def payments_done_by_scheduler():
 							'bonus_type':"Early Bonus" if row.idx != 1 else "",
 						})
 						row.save(ignore_permissions = True)
-
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)		
 						
-				if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or (firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) < now_date)):
+				#if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or (firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) < now_date)):
+				if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
 					customer = frappe.get_doc("Customer",name)
 					receivables = customer.receivables
 					if date_diff(now_date,row.due_date) > 3:
@@ -417,13 +415,12 @@ def payments_done_by_scheduler():
 							"payment_date":now_date,
 						})
 						row.save(ignore_permissions = True)
-
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)
 
 			if len(payment_ids_list) > 0:
 				customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
-				customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2	
+				customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
 				customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 				customer_agreement.late_payment = sum(late_payments)
 				customer_bonus.append(customer_agreement.bonus)
@@ -480,6 +477,11 @@ def set_values_in_agreement(customer_agreement):
 		customer_agreement.discount_updated = "No"
 		customer_agreement.late_fees_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		# if float(customer_agreement.payments_left) == 0:
+		# 	customer_agreement.agreement_status = "Closed"
+		# 	customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
+		# 	customer_agreement.merchandise_status = "Agreement over"
+		# 	customer_agreement.agreement_close_date = datetime.now().date()
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 	customer_agreement.save(ignore_permissions=True)
 
