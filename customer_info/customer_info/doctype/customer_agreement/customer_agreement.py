@@ -477,6 +477,7 @@ def set_values_in_agreement(customer_agreement):
 		customer_agreement.discount_updated = "No"
 		customer_agreement.late_fees_updated = "No"
 		customer_agreement.payments_left = len(customer_agreement.payments_record) - len(payment_made)
+		
 		# if float(customer_agreement.payments_left) == 0:
 		# 	customer_agreement.agreement_status = "Closed"
 		# 	customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
