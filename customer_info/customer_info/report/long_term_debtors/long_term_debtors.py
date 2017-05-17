@@ -23,7 +23,7 @@ def get_data():
 								cus.company_phone_1,
 								cus.company_email_id_1,
 								(select ad.city from `tabAddress` ad where ad.customer = cus.name and ad.is_primary_address=1),
-								(select concat(ad.address_line1,"\n",ad.address_line2) from `tabAddress` ad where ad.customer = cus.name and ad.is_primary_address=1),
+								(select concat(ad.address_line1,"\n",IF(ad.address_line2 IS NULL,"",ad.address_line2)) from `tabAddress` ad where ad.customer = cus.name and ad.is_primary_address=1),
 								cus.spouse_first_name,
 								cus.spouse_last_name,
 								cus.spouse_contact_no,
