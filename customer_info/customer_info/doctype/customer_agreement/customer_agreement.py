@@ -20,7 +20,7 @@ from customer_info.customer_info.doctype.payments_management.make_payment_histor
 
 class CustomerAgreement(Document):	 
 	def validate(self):
-		self.change_sold_date_of_item()
+		#self.change_sold_date_of_item()
 		self.naming()
 		self.comment_for_agreement_status_change()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
@@ -44,7 +44,7 @@ class CustomerAgreement(Document):
 		elif self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Contract Term is over" and self.merchandise_status == "Agreement over":	
 			item.old_sold_date = item.sold_date
 			item.sold_date = datetime.now()
-			
+
 		item.save(ignore_permissions=True)	
 
 	"""
@@ -61,8 +61,7 @@ class CustomerAgreement(Document):
 			self.merchandise_status = "New"
 			self.agreement_closing_suspending_reason = ""
 			self.suspended_from = ""
-			self.agreement_close_date = ""				
-
+			self.agreement_close_date = ""
 
 	"""
 	change default ware house of item according to agreement_status

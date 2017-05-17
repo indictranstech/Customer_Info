@@ -778,6 +778,10 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
 		customer_agreement.merchandise_status = "Agreement over"
 		customer_agreement.agreement_close_date = datetime.now().date()
+		item_doc = frappe.get_doc("Item",customer_agreement.product)
+		item_doc.old_sold_date = item_doc.sold_date
+		item_doc.sold_date = datetime.now().date()
+		item_doc.save(ignore_permissions=True)
 
 	#if customer_agreement.payments_left) == 0:
 	if customer_agreement.contact_result == "WBI":
@@ -868,9 +872,13 @@ def payoff_submit(args,from_import_payment=None):
 			"agreement_status":"Closed",
 			"agreement_close_date":now_date,
 			"agreement_closing_suspending_reason":"Early buy offer",
-			"merchandise_status":"Early buy"
+			"merchandise_status":"Early buy",
 		})
 		agreement.save(ignore_permissions=True)
+		item_doc = frappe.get_doc("Item",agreement.product)
+		item_doc.old_sold_date = item_doc.sold_date
+		item_doc.sold_date = now_date
+		item_doc.save(ignore_permissions=True)
 		payoff_cond = "Early buy"+"-"+str(agreement.early_buy_discount_percentage)
 
 	
@@ -883,6 +891,10 @@ def payoff_submit(args,from_import_payment=None):
 			"merchandise_status":"Sold" if date_diff(args['payment_date'],agreement.date) <= 2 else "90d SAC"
 		})
 		agreement.save(ignore_permissions=True)
+		item_doc = frappe.get_doc("Item",agreement.product)
+		item_doc.old_sold_date = item_doc.sold_date
+		item_doc.sold_date = now_date
+		item_doc.save(ignore_permissions=True)
 		payoff_cond = "90d SAC"
 
 	if agreement.discount_updated == "Yes":
