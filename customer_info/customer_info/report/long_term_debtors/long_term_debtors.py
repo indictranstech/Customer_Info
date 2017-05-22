@@ -5,6 +5,8 @@
 
 from __future__ import unicode_literals
 import frappe
+from datetime import datetime, timedelta,date
+
 
 def execute(filters=None):
 	columns, data = [], []
@@ -14,6 +16,7 @@ def execute(filters=None):
 
 
 def get_data():
+	now_date = datetime.now().date()
 	result = frappe.db.sql("""select 
 								ca.name,
 								ca.migrated_agreement_id,
@@ -32,16 +35,16 @@ def get_data():
 								(select t1.due_date from `tabPayments Record` t1 where t1.parent=ca.name order by t1.due_date desc limit 1),
 								ca.current_due_date,
 								concat(ca.product_category," ",ca.product),
-								(select format(sum(CASE WHEN t1.due_date < CURDATE() AND DATEDIFF(CURDATE(),t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(t1.monthly_rental_amount),2) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < CURDATE() AND DATEDIFF(CURDATE(),t1.due_date) > 3  THEN (DATEDIFF(CURDATE(),t1.due_date) - 3) * t1.monthly_rental_amount * (2/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < CURDATE() AND DATEDIFF(CURDATE(),t1.due_date) > 3  THEN (DATEDIFF(CURDATE(),t1.due_date) - 3) * t1.monthly_rental_amount * (2/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								ca.late_fees_rate,
 								cus.name,
 								cus.receivables
 								from `tabCustomer Agreement` ca ,`tabCustomer` cus
 								where ca.customer = cus.name and ca.debtor = "Yes"
-								""",as_list=1,debug=1)
+								""".format(now_date),as_list=1,debug=1)
 	for row in result:
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
@@ -57,21 +60,31 @@ def get_data():
 
 def get_colums():
 	columns = [
-			("Sutarties nr") + ":Link/Customer Agreement:80",("Migracinis sutarties nr.") + ":Data:70",
+			("Sutarties nr") + ":Link/Customer Agreement:80",
+			("Migracinis sutarties nr.") + ":Data:70",
 			("Kliento vardas") + ":Data:130",
-			("Pavardė") + ":Data:100",("Asmens kodas") + ":Data:100",
-			("Telefono numeris") + ":Data:100",("El. pašto adresas") + ":Data:80",
-			("Miestas") + ":Data:90",("Adresas") + ":Data:80",
-			("Sutuoktinio vardas") + ":Data:90",("Sutuoktinio pavardė") + ":Data:90",
-			("Sutuoktinio telefono nr.") + ":Data:90",("Sutarties sudarymo data") + ":Date:90",
+			("Pavardė") + ":Data:100",
+			("Asmens kodas") + ":Data:100",
+			("Telefono numeris") + ":Data:100",
+			("El. pašto adresas") + ":Data:80",
+			("Miestas") + ":Data:90",
+			("Adresas") + ":Data:80",
+			("Sutuoktinio vardas") + ":Data:90",
+			("Sutuoktinio pavardė") + ":Data:90",
+			("Sutuoktinio telefono nr.") + ":Data:90",
+			("Sutarties sudarymo data") + ":Date:90",
 			("Sutarties terminas") + ":Data:90",
-			("Sutarties pabaigos data") + ":Date:90",("Seniausio neapmokėto mokėjimo data") + ":Date:90",
-			("Prekė") + ":Data:90",("Vėluojančių mokėjimų suma, EUR") + ":Data:90",	
-			("Bendra skola iki sutarties pabaigos be delspinigių, EUR") + ":Data:90",("Delspinigių suma, EUR") + ":Data:90",
-			("Mokėtina suma su delspinigiais, EUR") + ":Data:100",("Delspinigių dydis už kiekvieną praleistą dieną pagal sutartį, %")+ ":Data:100",
+			("Sutarties pabaigos data") + ":Date:90",
+			("Seniausio neapmokėto mokėjimo data") + ":Date:90",
+			("Prekė") + ":Data:90",
+			("Vėluojančių mokėjimų suma, EUR") + ":Data:90",	
+			("Bendra skola iki sutarties pabaigos be delspinigių, EUR") + ":Data:90",
+			("Delspinigių suma, EUR") + ":Data:90",
+			("Mokėtina suma su delspinigiais, EUR") + ":Data:100",
+			("Delspinigių dydis už kiekvieną praleistą dieną pagal sutartį, %")+ ":Data:100",
 			("Permoka+/Nepriemoka-") + ":Data:100"
 			]
-	return columns	
+	return columns
 
 
 # def get_colums():
@@ -85,9 +98,9 @@ def get_colums():
 # 			("Spouse Contact No") + ":Data:90",("Agreement Start Date") + ":Date:90",
 # 			("Agreement period") + ":Data:90",
 # 			("Agreement Close Date") + ":Date:90",("Oldest due date") + ":Date:90",
-# 			("Product") + ":Data:90",("Late Payments") + ":Data:90",	
+# 			("Product") + ":Data:90",("Late Payments") + ":Data:90",
 # 			("Total amount of unpaid and to be paid payments") + ":Data:90",("Late Fees") + ":Data:90",
 # 			("Late Payments + Late Fees") + ":Data:100",("Late Fees Rate %")+ ":Data:100",
 # 			("Permoka+/Nepriemoka-") + ":Data:100"
 # 			]
-# 	return columns	
+# 	return columns

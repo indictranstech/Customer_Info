@@ -23,8 +23,10 @@ frappe.ui.form.on("Payments Management", {
 		$(".orange").hide();
 		fetch_user();
 		change_color_of_debtor_button()
+		cur_frm.set_value("payment_date",frappe.datetime.nowdate())
 	},
 	onload:function(frm){
+		cur_frm.set_value("payment_date",frappe.datetime.nowdate())
 		cur_frm.toggle_display('debtor_button', cur_frm.doc.customer);
 		/*var df = frappe.meta.get_docfield("Payments Management", "debtor_button", cur_frm.doc.name);
 		df.formatter = function(value, df, options, doc) {
@@ -57,6 +59,7 @@ frappe.ui.form.on("Payments Management", {
 	},
 	customer:function(frm){
 		cur_frm.toggle_display('debtor_button', cur_frm.doc.customer);
+		cur_frm.set_value("payment_date",frappe.datetime.nowdate())
 		if(cur_frm.doc.customer){
 			get_bonus_link()
 			calculate_total_charges("Customer");

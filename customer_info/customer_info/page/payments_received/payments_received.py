@@ -246,8 +246,8 @@ def make_refund_payment(payments_ids,ph_name):
 		for i in payments_ids:
 			frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,
 								payment_date = "",check_box_of_submit = 0,payment_history = "",pmt="",associate="",
-								total_transaction_amount = 0 
-								where check_box_of_submit = 1 
+								total_transaction_amount = 0
+								where check_box_of_submit = 1
 								and payment_id = '{0}' """.format(i))
 			payments_id_list.append(i)
 			agreement_list.append(i.split("-P")[0])
