@@ -29,6 +29,7 @@ class CustomerAgreement(Document):
 		self.change_default_warehouse()
 		self.changed_merchandise_status_according_to_agreement_status()
 		self.payment_date_comment()
+		self.get_active_agreement_month()
 		#self.remove_bonus_of_customer()
 
 	def change_sold_date_of_item(self):
@@ -127,7 +128,7 @@ class CustomerAgreement(Document):
 
 	def on_update(self):
 		#self.payment_date_comment()
-		self.get_agreement_closed_date()
+		#self.get_agreement_closed_date()
 		self.changed_merchandise_status()
 
 
@@ -232,9 +233,9 @@ class CustomerAgreement(Document):
 		self.old_date = self.payment_day	
 	
 	# get_agreement_closed_date
-	def get_agreement_closed_date(self):
-		if self.agreement_close_date and self.agreement_status == "Closed":
-			self.get_active_agreement_month()
+	# def get_agreement_closed_date(self):
+	# 	if self.agreement_close_date and self.agreement_status == "Closed":
+	# 		self.get_active_agreement_month()
 
 	# get_active_agreement_month
 	def get_active_agreement_month(self):
