@@ -444,7 +444,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						})
 					row.save(ignore_permissions = True)
 				
-				if row_to_uncheck:	
+				if row_to_uncheck:
 					if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
 						remove_bonus_of_one_eur.append(row.idx)
 						row.update({
@@ -749,7 +749,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			if row.check_box_of_submit == 0 and row.idx == len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
 				customer_agreement.next_due_date = row.due_date
-				break			
+				break
 			# if row.idx == 1:
 			# 	customer_agreement.current_due_date = customer_agreement.date
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
