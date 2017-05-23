@@ -546,9 +546,9 @@ bonus_summary = Class.extend({
 					}
 					r.message['data'].push(total_bonus)
 					me.dialog.show();
-					var total_bonus_accumulated = r.message['data'][r.message['data'].length -1]["early_payments_bonus"] 
-												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"] 
-												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"] 
+					var total_bonus_accumulated = r.message['data'][r.message['data'].length -1]["early_payments_bonus"]
+												+ r.message['data'][r.message['data'].length -1]["new_agreement_bonus"]
+												+ r.message['data'][r.message['data'].length -1]["payment_on_time_bonus"]
 												+ cur_frm.doc.assign_manual_bonus
 					html = $(frappe.render_template("bonus_summary",{
 						"bonus":r.message['data'],
@@ -768,9 +768,9 @@ edit_campaign_discount = Class.extend({
 	        },
 	        callback: function(r) {
 	        	if(r.message){
-	        		r.message['remove_bonus'] ? cur_frm.set_value("bonus",flt(bonus) - flt(r.message['bonus'])):""
-	        		var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
-	        		var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
+					r.message['remove_bonus'] ? cur_frm.set_value("bonus",flt(cur_frm.doc.bonus) - flt(r.message['remove_bonus'])):""
+					var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
+					var total_charges = cur_frm.doc.total_charges+flt(me.item["campaign_discount"].split("-")[0])-flt(me.fd.campaign_discount.$input.val())
 	        		if(me.item["campaign_discount"].split("-")[3] == "Yes"){
 	        			cur_frm.set_value("amount_of_due_payments",flt(amount_of_due_payments) == 0 ? "0.00":flt(amount_of_due_payments))
 	    				cur_frm.set_value("total_charges",flt(total_charges) == 0 ? "0.00":flt(total_charges))	
