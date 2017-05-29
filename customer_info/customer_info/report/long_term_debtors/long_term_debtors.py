@@ -17,7 +17,7 @@ def execute(filters=None):
 
 def get_data():
 	now_date = datetime.now().date()
-	result = frappe.db.sql("""select 
+	result = frappe.db.sql("""select
 								ca.name,
 								ca.migrated_agreement_id,
 								cus.first_name,
@@ -38,7 +38,7 @@ def get_data():
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(t1.monthly_rental_amount),2) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),
 								ca.late_fees_rate,
 								cus.name,
 								cus.receivables
@@ -89,18 +89,28 @@ def get_colums():
 
 # def get_colums():
 # 	columns = [
-# 			("Agreement Number") + ":Link/Customer Agreement:80",("Migrated agreement ID") + ":Data:70",
+# 			("Agreement Number") + ":Link/Customer Agreement:80",
+			#("Migrated agreement ID") + ":Data:70",
 # 			("Customer Name") + ":Data:130",
-# 			("Surname") + ":Float:100",("Personal Code") + ":Data:100",
-# 			("Phone") + ":Data:100",("Email Id") + ":Data:80",
-# 			("City") + ":Data:90",("Address") + ":Float:80",
-# 			("Spouse First Name") + ":Data:90",("Spouse Last Name") + ":Data:90",
-# 			("Spouse Contact No") + ":Data:90",("Agreement Start Date") + ":Date:90",
+# 			("Surname") + ":Float:100",
+			#("Personal Code") + ":Data:100",
+# 			("Phone") + ":Data:100",
+			#("Email Id") + ":Data:80",
+# 			("City") + ":Data:90",
+			#("Address") + ":Float:80",
+# 			("Spouse First Name") + ":Data:90",
+			#("Spouse Last Name") + ":Data:90",
+# 			("Spouse Contact No") + ":Data:90",
+			#("Agreement Start Date") + ":Date:90",
 # 			("Agreement period") + ":Data:90",
-# 			("Agreement Close Date") + ":Date:90",("Oldest due date") + ":Date:90",
-# 			("Product") + ":Data:90",("Late Payments") + ":Data:90",
-# 			("Total amount of unpaid and to be paid payments") + ":Data:90",("Late Fees") + ":Data:90",
-# 			("Late Payments + Late Fees") + ":Data:100",("Late Fees Rate %")+ ":Data:100",
+# 			("Agreement Close Date") + ":Date:90",
+			#("Oldest due date") + ":Date:90",
+# 			("Product") + ":Data:90",
+			#("Late Payments") + ":Data:90",
+# 			("Total amount of unpaid and to be paid payments") + ":Data:90",
+			#("Late Fees") + ":Data:90",
+# 			("Late Payments + Late Fees") + ":Data:100",
+			#("Late Fees Rate %")+ ":Data:100",
 # 			("Permoka+/Nepriemoka-") + ":Data:100"
 # 			]
 # 	return columns

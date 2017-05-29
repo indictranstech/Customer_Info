@@ -24,8 +24,8 @@ class CustomerAgreement(Document):
 		self.naming()
 		self.comment_for_agreement_status_change()
 		if not self.payments_record and self.name and self.due_date_of_next_month:
-			self.check_date_diff_of_first_and_second_month_due_date()
-			self.add_payments_record()	
+			self.check_date_diff_of_first_and_second_month_due_date() # check days for 44
+			self.add_payments_record()	#add payments record
 		self.change_default_warehouse()
 		self.changed_merchandise_status_according_to_agreement_status()
 		self.payment_date_comment()
@@ -101,7 +101,7 @@ class CustomerAgreement(Document):
 		self.comment_for_agreement_creation()
 		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
 		customer_agreement = frappe.get_doc("Customer Agreement",self.name)
-		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)		
+		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)
 		customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
 
@@ -230,7 +230,7 @@ class CustomerAgreement(Document):
 		if self.payment_day and self.old_date and self.payment_day != self.old_date:
 			comment = """ Payment Day is Changed From '{0}' To '{1}' """.format(self.old_date,self.payment_day)
 			self.add_comment("Comment",comment)
-		self.old_date = self.payment_day	
+		self.old_date = self.payment_day
 	
 	# get_agreement_closed_date
 	# def get_agreement_closed_date(self):
@@ -569,7 +569,7 @@ def get_product(doctype, txt, searchfield, start, page_len, filters):
 									or merchandise_status like '{txt}') 
 								limit 20 """.format(txt= "%%%s%%" % txt),as_list=1)
 
-
+# not working for now
 @frappe.whitelist()
 def set_bonus_in_customer(customer,bonus):
 	customer = frappe.get_doc("Customer",customer)
@@ -584,6 +584,7 @@ def set_bonus_in_customer(customer,bonus):
 	customer.save(ignore_permissions=True)
 
 
+#sync item price
 @frappe.whitelist()
 def update_90sac_and_monthly_rental(customer_agreement):
 	agreement_doc = frappe.get_doc("Customer Agreement",customer_agreement)
