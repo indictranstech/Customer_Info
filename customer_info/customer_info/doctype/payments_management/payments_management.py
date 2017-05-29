@@ -84,6 +84,13 @@ def update_bonus(customer,bonus,assign_manual_bonus,payment_date):
 		customer.save(ignore_permissions=True)
 		return comment
 
+
+"""
+1.Refresh Payment Records and Customer Agreement,remove temporary saved Details from customer agreement
+2.calculate amount_of_due_payments
+	amount_of_due_payments = SUM(monthly_rental_amount) + (if payment is late then also add late_payment) late_payment
+							- (if any discount) discount_amount_of_agreement
+"""
 @frappe.whitelist()
 def calculate_total_charges(customer,flag,payment_date):
 	receivables = frappe.db.get_value("Customer",{"name":customer},"receivables")
@@ -92,8 +99,8 @@ def calculate_total_charges(customer,flag,payment_date):
 	if flag == "Customer" or flag == "Onload":
 		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "",
 						add_bonus_to_this_payment = 0,
-						bonus_type = ""	 
-						where check_box_of_submit = 0 
+						bonus_type = ""
+						where check_box_of_submit = 0
 						and parent in (select name from `tabCustomer Agreement`
 						where customer = '{0}' and agreement_status = "Open") """.format(customer))
 
@@ -319,12 +326,19 @@ def get_customer_agreement(customer,payment_date,flag=None):
 	condition =  "and agreement_status = '{0}' ".format("Suspended" if flag else "Open") 
 	suspended_until_date = ",suspended_until" if flag else ""
 	data = {
-	"list_of_agreement": frappe.db.sql("""select agreement_no,agreement_period,
-										concat(product," ",product_category),number_of_payments,
-										monthly_rental_payment,current_due_date,next_due_date,
-										payments_left,balance,late_fees,total_due,payments_made,
-										CASE 
-										WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN "WBI"
+	"list_of_agreement": frappe.db.sql("""select 
+										agreement_no,
+										agreement_period,
+										concat(product," ",product_category),
+										number_of_payments,
+										monthly_rental_payment,
+										current_due_date,
+										next_due_date,
+										payments_left,
+										balance,
+										late_fees,
+										total_due,payments_made,
+										CASE WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN "WBI"
 										WHEN contact_result = "Sent SMS/Email" THEN "SMS/Email" 
 										ELSE "Call/Commitment" 
 										END AS suspension_date,
@@ -561,7 +575,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 		
 		
 		if float(args['values']['bonus']) > 0 or float(args['values']['discount'] > 0):
-			"""remove bonus when payment only done by bonus with no receivables"""
+			"""remove bonus when payment only done by bonus(in dialog) with no receivables"""
 			if float(args['values']['amount_paid_by_customer']) == 0 and float(args['values']['bank_card']) == 0 and float(args['values']['bank_transfer']) == 0 and\
 				float(args['values']['discount']) == 0 and float(args['values']['bonus']) > 0 and float(args['receivables']) == 0:
 				remove_new_bonus(submitted_payments_ids_info)
@@ -569,7 +583,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 				args['new_bonus'] = 0
 
 
-		"""remove_bonus from all payments when any payments have late_fees"""	
+		"""remove_bonus from all payments when any payments have late_fees"""
 		if float(args['late_fees']) > 0 or float(args['receivables']) < 0 or float(args['add_in_receivables']) < 0:
 			remove_new_bonus(submitted_payments_ids_info)
 			args['bonus'] = float(args['bonus'] - float(args['new_bonus']))	
@@ -582,7 +596,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 							and parent in {1}""".format(args['payment_date'],cond))
 		
 		#agreements = frappe.db.sql("""{0}""".format(cond),as_list=1)
-		agreements = []
+		agreements = [] # take those agreements whose payments process currently
 		for d in submitted_payments_ids_info:
 			if agreements and d["payment_id"].split("-P")[0] not in agreements:
 				agreements.append(d["payment_id"].split("-P")[0])
@@ -597,7 +611,7 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 		for agreement in agreements:#[agreement[0] for agreement in agreements]:
 			customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
-			if customer_agreement.discount_updated == "Yes":
+			if customer_agreement.discount_updated == "Yes": # if campaign discount given for agreement
 				campaign_discount_of_agreements += str(customer_agreement.name)+"/"+str(customer_agreement.discount)+"/"+str(customer_agreement.discounted_payments_left)+","
 				discount_amount += customer_agreement.discount
 
