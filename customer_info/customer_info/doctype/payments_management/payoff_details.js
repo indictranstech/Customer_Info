@@ -489,7 +489,8 @@ payoff_details = Class.extend({
 					"total_charges":cur_frm.doc.total_charges,
 					//"receivables":me.add_in_receivables,
    		        },
-   		        "flag":"from_payoff"
+				"flag":"from_payoff",
+				"debtor":cur_frm.doc.debtor
 	       	},
 	       	callback: function(r){
 	       		/*if(flt(value.bonus) >= cur_frm.doc.total_charges && flt(value.amount_paid_by_customer) == 0 
@@ -530,6 +531,9 @@ payoff_details = Class.extend({
 	            	if(r.message["used_bonus_of_customer"]){	
 	       				cur_frm.set_value("used_bonus",flt(r.message['used_bonus_of_customer']))
 	        	    }
+					if(r.message["debtor"]){
+						cur_frm.set_value("debtor",r.message['debtor'])
+					}
 	        	}    
 
 	            if(flt(me.add_in_receivables) == 0){
