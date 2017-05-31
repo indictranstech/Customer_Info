@@ -547,7 +547,7 @@ def get_late_payment(agreements,payment_date):
 
 @frappe.whitelist()
 #def update_on_submit(values,customer,receivables,add_in_receivables,payment_date,bonus,manual_bonus,used_bonus,new_bonus,total_charges,rental_payment,late_fees):
-def update_on_submit(args,flag=None,from_import_payment=None):
+def update_on_submit(args,flag=None,from_import_payment=None,debtor=None):
 
 	#args = json.loads(args) if flag == "from_payoff" else args
 	args = json.loads(args) if flag else args
@@ -654,15 +654,28 @@ def update_on_submit(args,flag=None,from_import_payment=None):
 		flag = "Process Payment"
 		used_bonus_of_customer = add_bonus_and_receivables_to_customer(args,flag)
 		"""remove customer bonus when all agreements are closed"""
-		if flag == "Process Payment" and set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
+		#if flag == "Process Payment" and set(completed_agreement_list) == set([agreement[0] for agreement in agreements]):
+		if flag == "Process Payment" and set(completed_agreement_list) == set([agreement for agreement in agreements]):
 			customer_doc = frappe.get_doc("Customer",args['customer'])
 			customer_doc.cancelled_bonus = float(customer_doc.cancelled_bonus) + float(customer_doc.bonus) - float(args['values']['bonus'])
 			customer_doc.bonus = 0
 			customer_doc.save(ignore_permissions=True)
 
+		"""When the last customer agreement is closed - debtor status should be removed from customer and all customer agreements. """
+		if set(completed_agreement_list) == set([agreement for agreement in agreements]):
+			for agreement_name in agreements:
+				c_agreement_doc = frappe.get_doc("Customer Agreement",agreement_name)
+				c_agreement_doc.debtor = "No"
+				c_agreement_doc.save(ignore_permissions=True)
+			customer_doc = frappe.get_doc("Customer",args['customer'])
+			customer_doc.debtor = "No"
+			customer_doc.save(ignore_permissions=True)
+			debtor = "No"
+
 		return {"completed_agreement_list":completed_agreement_list if len(completed_agreement_list) > 0 else "",
 				"used_bonus_of_customer":used_bonus_of_customer,
-				"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False"}			
+				"remove_bonus":"True" if set(completed_agreement_list) == set([agreement[0] for agreement in agreements]) else "False",
+				"debtor":debtor}
 	else:
 		if flag == "from_payoff":
 			add_bonus_and_receivables_to_customer(args,flag)	
