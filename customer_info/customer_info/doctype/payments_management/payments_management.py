@@ -43,8 +43,6 @@ def get_bonus_summary(customer):
 			AS bonus 
 			from `tabPayments Record` where parent = "{0}")I
 			""".format(agreement['name']),as_list=1)[0][0]
-		print "agreement_doc.new_agreement_bonus + agreement_doc.payment_on_time_bonus + agreement_doc.early_payments_bonus"
-		print agreement_doc.new_agreement_bonus,agreement_doc.payment_on_time_bonus,agreement_doc.early_payments_bonus		
 		agreement_doc.bonus = agreement_doc.new_agreement_bonus + agreement_doc.payment_on_time_bonus + agreement_doc.early_payments_bonus# - agreement_doc.temporary_new_bonus
 		#agreement_doc.bonus = agreement_doc.bonus  - agreement_doc.temporary_new_bonus + agreement_doc.payment_on_time_bonus + agreement_doc.early_payments_bonus
 		#agreement_doc.temporary_new_bonus = 0

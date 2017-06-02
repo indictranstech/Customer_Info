@@ -55,7 +55,6 @@ def get_data():
 	for row in result:
 		if frappe.get_doc("Customer Agreement",row[24]).agreement_status == "Open":
 			if row[12]:
-				print "--",row[3]
 				submitted_payments_rental_amount = [-float(row[12])]
 				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
 				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) > getdate(now_date)])
@@ -101,7 +100,6 @@ def get_data():
 					Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
 					payments_rental_amount.append(float(Total_payoff_amount))
 					submitted_payments_rental_amount.extend(payments_rental_amount)
-				print "submitted_payments_rental_amount",submitted_payments_rental_amount
 				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 		else:
 			row[24] = ""
