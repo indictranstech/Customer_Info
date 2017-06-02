@@ -54,14 +54,53 @@ def get_data():
 
 	for row in result:
 		if frappe.get_doc("Customer Agreement",row[24]).agreement_status == "Open":
-			submitted_payments_rental_amount = [-float(row[12])]
-			submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
-			submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) > getdate(now_date)])
-			row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+			if row[12]:
+				submitted_payments_rental_amount = [-float(row[12])]
+				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
+				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) > getdate(now_date)])
+				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+		
 		elif frappe.get_doc("Customer Agreement",row[24]).agreement_status == "Closed":
-			submitted_payments_rental_amount = [-float(row[12])]
-			submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
-			row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+			
+			if row[12] and row[18] =="Contract Term is over":
+				submitted_payments_rental_amount = [-float(row[12])]
+				item_90dsac_prince = [float(row[11])]
+				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
+				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+			
+			if row[12] and row[18] =="90d SAC":
+				payments_rental_amount =[]
+				submitted_payments_rental_amount = [-float(row[12])]
+				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+				payments_record_doc = customer_agreement_doc.payments_record
+				if payments_record_doc:
+					for payment_r in payments_record_doc:
+						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+						if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
+							payments_rental_amount.append(payment_r.monthly_rental_amount)
+					payments_rental_amount.append(customer_agreement_doc.s90d_sac_price)
+					submitted_payments_rental_amount.extend(payments_rental_amount)				
+				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+
+			if row[12] and row[18] =="30% Early buy offer":
+				payments_rental_amount =[]
+				submitted_payments_rental_amount = [-float(row[12])]
+				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+				payments_record_doc = customer_agreement_doc.payments_record
+				if payments_record_doc:
+					payment_history =''
+					for payment_r in payments_record_doc:
+						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+						if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
+							payments_rental_amount.append(payment_r.monthly_rental_amount)
+						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
+							payment_history = payment_r.payment_history
+					Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
+					payments_rental_amount.append(float(Total_payoff_amount))
+					submitted_payments_rental_amount.extend(payments_rental_amount)
+				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 		else:
 			row[24] = ""
 	return result
