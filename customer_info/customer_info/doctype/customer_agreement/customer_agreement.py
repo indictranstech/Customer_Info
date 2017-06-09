@@ -602,3 +602,11 @@ def update_value(agreement_doc):
 							\n <a href=http://"+frappe.request.host+"/desk#payments-received?agreement="+agreement_doc.name+" target='blank'><b>Payments Received Report</b></a>")
 			break
 	return result
+
+def sent_check_mail():
+	frappe.sendmail(
+			recipients="sukrut.j@indictranstech.com",
+			sender="sukrut.j@indictranstech.com",
+			subject="Frappe Check Mail"+ frappe.utils.data.nowdate(),
+			message = "Bekredito mail",
+	)
