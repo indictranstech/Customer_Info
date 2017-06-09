@@ -36,7 +36,7 @@ def get_data():
 								ca.current_due_date,
 								concat(ca.product_category," ",ca.product),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(t1.monthly_rental_amount),2) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								(select sum(t1.monthly_rental_amount) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),
 								ca.late_fees_rate,
@@ -51,8 +51,11 @@ def get_data():
 												order by ca.date limit 1""".format(row[22]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
 			row[22] = row[23]
-			row[18] = "{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
-			#row[18] = "{0:.2f}".format(float(row[18]) + float(row[23])) if row[23] else row[18]
+			if float(row[23]) > 0.0:
+				row[18] ="{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
+			else: 
+				row[18] = "{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
+						
 		else:
 			row[22] = ""
 	return result
@@ -90,27 +93,28 @@ def get_colums():
 # def get_colums():
 # 	columns = [
 # 			("Agreement Number") + ":Link/Customer Agreement:80",
-			#("Migrated agreement ID") + ":Data:70",
+# 			("Migrated agreement ID") + ":Data:70",
 # 			("Customer Name") + ":Data:130",
 # 			("Surname") + ":Float:100",
-			#("Personal Code") + ":Data:100",
+# 			("Personal Code") + ":Data:100",
 # 			("Phone") + ":Data:100",
-			#("Email Id") + ":Data:80",
+# 			("Email Id") + ":Data:80",
 # 			("City") + ":Data:90",
-			#("Address") + ":Float:80",
+# 			("Address") + ":Float:80",
 # 			("Spouse First Name") + ":Data:90",
-			#("Spouse Last Name") + ":Data:90",
+# 			("Spouse Last Name") + ":Data:90",
 # 			("Spouse Contact No") + ":Data:90",
-			#("Agreement Start Date") + ":Date:90",
+# 			("Agreement Start Date") + ":Date:90",
 # 			("Agreement period") + ":Data:90",
 # 			("Agreement Close Date") + ":Date:90",
-			#("Oldest due date") + ":Date:90",
+# 			("Oldest due date") + ":Date:90",
 # 			("Product") + ":Data:90",
-			#("Late Payments") + ":Data:90",
+# 			("Late Payments") + ":Data:90",
 # 			("Total amount of unpaid and to be paid payments") + ":Data:90",
-			#("Late Fees") + ":Data:90",
+# 			("Late Fees") + ":Data:90",
 # 			("Late Payments + Late Fees") + ":Data:100",
-			#("Late Fees Rate %")+ ":Data:100",
-# 			("Permoka+/Nepriemoka-") + ":Data:100"
+# 			("Late Fees Rate %")+ ":Data:100",
+# 			#("Permoka+/Nepriemoka-") + ":Data:100"
+# 			("Receivables")+":Data:100"
 # 			]
 # 	return columns
