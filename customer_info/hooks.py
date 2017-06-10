@@ -104,6 +104,10 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
+
+	# "all": [
+ #      "customer_info.customer_info.doctype.customer_agreement.customer_agreement.sent_check_mail",
+ #  	],
 	"daily": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms"
 	],

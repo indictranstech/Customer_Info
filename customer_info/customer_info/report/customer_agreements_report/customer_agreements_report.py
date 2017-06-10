@@ -53,7 +53,6 @@ def get_data():
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1,debug=1)
 
-
 	for row in result:
 		"""
 		  IIR Calculations 
