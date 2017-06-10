@@ -610,3 +610,4 @@ def sent_check_mail():
 			subject="Frappe Check Mail"+ frappe.utils.data.nowdate(),
 			message = "Bekredito mail",
 	)
+	
