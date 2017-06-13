@@ -365,7 +365,9 @@ def payments_done_by_scheduler():
 						})
 						row.save(ignore_permissions = True)
 						customer.receivables = receivables - total_charges
-						customer.save(ignore_permissions=True)	
+						customer.save(ignore_permissions=True)
+
+
 
 				if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
 					customer = frappe.get_doc("Customer",name)
@@ -447,7 +449,7 @@ def payments_done_by_scheduler():
 				args['total_amount'] = 0
 				args['special_associate'] = "Automatic"
 				make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
-	
+				auto_payment(customer_agreement.name)
 
 def set_values_in_agreement(customer_agreement):
 	payment_made = []
@@ -610,4 +612,13 @@ def sent_check_mail():
 			subject="Frappe Check Mail"+ frappe.utils.data.nowdate(),
 			message = "Bekredito mail",
 	)
+
+def auto_payment(customer_agreement):
+	frappe.sendmail(
+			recipients="sukrut.j@indictranstech.com",
+			sender="sukrut.j@indictranstech.com",
+			subject="Auto Payment"+ frappe.utils.data.nowdate(),
+			message = "Auto Payment : "+customer_agreement
+	)
+	
 	
