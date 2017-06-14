@@ -48,9 +48,36 @@ def get_data():
 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
 				ca.campaign_discount_code,
 				ca.irr,
-				ca.xiir
+				ca.xirr
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1,debug=1)
+
+	
+	
+	for row in result:
+		#print "\n\n\n Agree",row[3]
+		if row[24]:
+			try:
+				irr = float(row[24])
+			#	print "__irr",irr
+				irr = irr * 12 * 100
+ 				irr = round(irr,2)
+				row[24] = str(irr) + "%"
+			#	print "row[24]",row[24]
+			except Exception,e:
+				row[24] =row[24]
+		if row[24]:
+			try:
+				xirr = float(row[25])
+			#	print "__xirr",xirr
+				xirr = xirr * 100
+ 				xirr = round(xirr,2)
+				row[25] = str(xirr) + "%"
+			#	print "row[25]",row[25]
+			except Exception,e:
+				row[25] =row[25]
+
+				
 
 	return result
 	
@@ -231,7 +258,7 @@ def get_colums():
 				("Real agreement profit %") + ":Data:100",
 				("Remaining months till the end of agreement") + ":Data:100",
 				("Campaign discount code") + ":Link/Campaign Discount Code:150",
-				("IRR") + ":Data:100",
+				("IRR") + ":Data:150",
 				("XIRR")+":Data:150",
 			]
 	return columns
