@@ -292,9 +292,6 @@ class CustomerAgreement(Document):
 				customer_doc.bonus = 0
 				customer_doc.save(ignore_permissions=True)
 
-
-
-
 def reset_contact_result_of_sent_sms():
 	now_date = datetime.now().date()
 	customer_agreement = frappe.get_all("Customer Agreement", fields=["name"],filters={"agreement_status": "Open","contact_result":"Sent SMS/Email"})
@@ -319,7 +316,7 @@ def payments_done_by_scheduler():
 	process payments
 	reduce receivables
 	"""
-	customer_list = frappe.db.sql("""select name from `tabCustomer` where customer_group = 'Individual' """,as_list=1,debug=1)
+	customer_list = frappe.db.sql("""select name from `tabCustomer` where customer_group = 'Individual' """,as_list=1)
 
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -452,7 +449,7 @@ def payments_done_by_scheduler():
 				args['total_amount'] = 0
 				args['special_associate'] = "Automatic"
 				make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
-	
+				auto_payment(customer_agreement.name)
 
 def set_values_in_agreement(customer_agreement):
 	payment_made = []
@@ -616,7 +613,13 @@ def sent_check_mail():
 			message = "Bekredito mail",
 	)
 
-
+def auto_payment(customer_agreement):
+	frappe.sendmail(
+			recipients="sukrut.j@indictranstech.com",
+			sender="sukrut.j@indictranstech.com",
+			subject="Auto Payment"+ frappe.utils.data.nowdate(),
+			message = "Auto Payment : "+customer_agreement
+	)
 
 def get_IIR_XIIR():
 	now_date = datetime.now().date()
@@ -849,4 +852,4 @@ def get_IIR_XIIR():
 				row[26] = ""
  		else:
 			row[26] = ""	
-   # 
+    
