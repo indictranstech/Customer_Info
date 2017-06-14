@@ -14,7 +14,6 @@ def execute(filters=None):
 	data = get_data()
 	return columns, data
 
-
 def get_data():
 	now_date = datetime.now().date()
 	result = frappe.db.sql("""select
@@ -48,22 +47,53 @@ def get_data():
 				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
 				ca.campaign_discount_code,
-				ca.name,
-				ca.name
+				ca.irr,
+				ca.xirr
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1,debug=1)
 
+	
+	
 	for row in result:
-		"""
-		  IIR Calculations 
-		"""
-		if frappe.get_doc("Customer Agreement",row[24]).agreement_status == "Open":
+		#print "\n\n\n Agree",row[3]
+		if row[24]:
+			try:
+				irr = float(row[24])
+			#	print "__irr",irr
+				irr = irr * 12 * 100
+ 				irr = round(irr,2)
+				row[24] = str(irr) + "%"
+			#	print "row[24]",row[24]
+			except Exception,e:
+				row[24] =row[24]
+		if row[24]:
+			try:
+				xirr = float(row[25])
+			#	print "__xirr",xirr
+				xirr = xirr * 100
+ 				xirr = round(xirr,2)
+				row[25] = str(xirr) + "%"
+			#	print "row[25]",row[25]
+			except Exception,e:
+				row[25] =row[25]
+
+				
+
+	return result
+	
+	"""
+	for row in result:
+	
+		#  IIR Calculations 
+	
+		print row[3]
+		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0:
 				submitted_payments_rental_amount = [-float(row[12])]
 				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 1])
 				submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[24]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) > getdate(now_date)])
 				row[24] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-				
+				print row[24]	
 		elif frappe.get_doc("Customer Agreement",row[24]).agreement_status == "Closed":
 			if row[12] and float(row[12]) > 0 and row[18] =="Contract Term is over":
 				submitted_payments_rental_amount = [-float(row[12])]
@@ -107,32 +137,40 @@ def get_data():
 				row[24] = ""
 		else:
 			row[24] = ""
-		"""
-		  XIIR Calculations 
-		"""
+		
+		#  XIIR Calculations 
+	
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0:
 				submitted_payments_rental_amount = []
+				print "Row[3]",row[3]
 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 				payments = agreement_doc.payments_record
 				if payments:
-					submitted_payments_rental_amount.append((row[5],-float(row[12])))
+					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+					submitted_payments_rental_amount.append((purchase_date,-float(row[12])))
+					print "\nsubmitted_payments_rental_amount",submitted_payments_rental_amount
 					for payment_r in payments:
 						if payment_r.check_box_of_submit == 1:
 							submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
 						if payment_r.check_box_of_submit == 0 and payment_r.due_date > getdate(now_date):
 							submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
+					print "Row[3]",row[3]
+					print "\nsubmitted_payments_rental_amount",submitted_payments_rental_amount
 					try:
 						row[25] = xirr(submitted_payments_rental_amount,0.1)
+						print "row[25]",row[25]
 					except Exception,e:
 						row[25] = ""
+ 		
  		elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
  			if row[12] and float(row[12]) > 0 and row[18] =="Contract Term is over":
  				submitted_payments_rental_amount = []
 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 				payments = agreement_doc.payments_record
 				if payments:
-					submitted_payments_rental_amount.append((row[5],-row[12]))
+					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+					submitted_payments_rental_amount.append((purchase_date,-float(row[12])))
 					for payment_r in payments:
 						if payment_r.check_box_of_submit == 1:
 							submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
@@ -147,7 +185,8 @@ def get_data():
 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 				payments = agreement_doc.payments_record
  				if payments:
- 					submitted_payments_rental_amount.append((row[5],-row[12]))
+ 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+					submitted_payments_rental_amount.append((purchase_date,-float(row[12])))
  					for payment_r in payments_record_doc:
 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
@@ -169,7 +208,8 @@ def get_data():
 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 				payments = agreement_doc.payments_record
  				if payments:
- 					submitted_payments_rental_amount.append((row[5],-row[12]))
+ 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+					submitted_payments_rental_amount.append((purchase_date,-float(row[12])))
  					for payment_r in payments_record_doc:
 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
@@ -187,8 +227,10 @@ def get_data():
 			else:
 				row[25] = ""
  		else:
-			row[25] = ""	
+			row[25] = ""
+				
 	return result
+"""
 
 def get_colums():
 	columns = [
@@ -216,7 +258,7 @@ def get_colums():
 				("Real agreement profit %") + ":Data:100",
 				("Remaining months till the end of agreement") + ":Data:100",
 				("Campaign discount code") + ":Link/Campaign Discount Code:150",
-				("IRR") + ":Data:100",
+				("IRR") + ":Data:150",
 				("XIRR")+":Data:150",
 			]
 	return columns
