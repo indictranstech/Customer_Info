@@ -1,5 +1,5 @@
 import datetime
-#from scipy import optimize 
+from scipy import optimize 
 
 def secant_method(tol, f, x0):
     """

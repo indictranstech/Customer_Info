@@ -6,7 +6,7 @@ import frappe
 from numpy import irr
 from datetime import datetime, timedelta,date
 from frappe.utils import flt, get_datetime, get_time, getdate
-#from customer_info.customer_info.report.customer_agreements_report.financial import xirr
+from customer_info.customer_info.report.customer_agreements_report.financial import xirr
 
 def execute(filters=None):
 	columns, data = [], []

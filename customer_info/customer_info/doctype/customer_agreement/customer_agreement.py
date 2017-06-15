@@ -18,7 +18,7 @@ from customer_info.customer_info.doctype.payments_management.make_payment_histor
 #from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 from datetime import datetime, timedelta,date
 from frappe.utils import flt, get_datetime, get_time, getdate
-#from customer_info.customer_info.report.customer_agreements_report.financial import xirr
+from customer_info.customer_info.report.customer_agreements_report.financial import xirr
 from numpy import irr
 
 
@@ -737,7 +737,6 @@ def get_IIR_XIIR():
 		"""
 		  XIIR Calculations 
 		"""
-		"""
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0: 
 				if float(row[13]) > 0.0:
@@ -852,4 +851,4 @@ def get_IIR_XIIR():
 				row[26] = ""
  		else:
 			row[26] = ""	
-    """
+    
