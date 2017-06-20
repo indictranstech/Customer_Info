@@ -714,8 +714,8 @@ def get_IIR_XIIR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						try:		
 							row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-							if row[25]
-							IIR = float(row[25]) * 12 * 100
+							if row[25]:
+								IIR = float(row[25]) * 12 * 100
 							if IIR:
 								IIR = round(IIR,2)
 								frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
