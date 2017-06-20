@@ -655,11 +655,8 @@ def get_IIR_XIIR():
 				ca.xirr
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
-
 	for row in result:
-		"""
-		  IIR Calculations 
-		"""
+		#  IIR Calculations 
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0:  
 				if float(row[13]) > 0.0:
@@ -794,13 +791,8 @@ def get_IIR_XIIR():
 				row[25] = ""
 		else:
 			row[25] = ""
-
-		"""
-		  XIIR Calculations 
-		"""
-		#print "Customer Agreement",row[3]," ",row[4]
+	#XIIR Calculations 	
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
-
 			if row[12] and float(row[12])>0: 
 				if float(row[13]) > 0.0:
 					late_payments_rental_amount =[]
