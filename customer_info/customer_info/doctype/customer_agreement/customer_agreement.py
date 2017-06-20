@@ -681,11 +681,15 @@ def get_IIR_XIIR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						#submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 1])	
 						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) > getdate(now_date)])
-						row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-						IIR = float(row[25]) * 12 * 100
-						if IIR:
-							IIR = round(IIR,2)
-							frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
+						try:
+							row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[25]:
+								IIR = float(row[25]) * 12 * 100
+							if IIR:
+								IIR = round(IIR,2)
+								frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
+						except Exception,e:
+							row[25] = ""
 				else:
 					row[25] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[25])
@@ -748,11 +752,15 @@ def get_IIR_XIIR():
 									payments_rental_amount.append(payment_r.monthly_rental_amount)
 						payments_rental_amount.append(customer_agreement_doc.s90d_sac_price)
 						submitted_payments_rental_amount.extend(payments_rental_amount)				
-						row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-						IIR = float(row[25]) * 12 * 100
-						if IIR:
-							IIR = round(IIR,2)
-							frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
+						try:	
+							row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[25]:
+								IIR = float(row[25]) * 12 * 100
+							if IIR:
+								IIR = round(IIR,2)
+								frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
+						except Exception,e:
+							row[25] = ""
 				else:
 					row[25] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[25])
@@ -783,11 +791,15 @@ def get_IIR_XIIR():
 						Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
 						payments_rental_amount.append(float(Total_payoff_amount)) if Total_payoff_amount else ""
 						submitted_payments_rental_amount.extend(payments_rental_amount)
-						row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-						IIR = float(row[25]) * 12 * 100
-						if IIR:
-							IIR = round(IIR,2)
-							frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)			
+						try:
+							row[25] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[25]:
+								IIR = float(row[25]) * 12 * 100
+							if IIR:
+								IIR = round(IIR,2)
+								frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)			
+						except Exception,e:
+							row[25] = ""
 				else:
 					row[25] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[25])			
