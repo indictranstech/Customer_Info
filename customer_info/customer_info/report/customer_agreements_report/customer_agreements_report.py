@@ -53,7 +53,7 @@ def get_data():
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1,debug=1)
 
 	for row in result:
-		if row[24]:
+		if row[24] and if row[24] != "Wholesale price is not set":
 			try:
 				row[24] = str(row[24]) + "%"
 			except Exception,e:
