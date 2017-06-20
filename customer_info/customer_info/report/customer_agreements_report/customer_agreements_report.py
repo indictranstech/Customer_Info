@@ -55,30 +55,16 @@ def get_data():
 	
 	
 	for row in result:
-		#print "\n\n\n Agree",row[3]
 		if row[24]:
 			try:
-				irr = float(row[24])
-			#	print "__irr",irr
-				irr = irr * 12 * 100
- 				irr = round(irr,2)
-				row[24] = str(irr) + "%"
-			#	print "row[24]",row[24]
+				row[24] = str(row[24]) + "%"
 			except Exception,e:
 				row[24] =row[24]
 		if row[24]:
 			try:
-				xirr = float(row[25])
-			#	print "__xirr",xirr
-				xirr = xirr * 100
- 				xirr = round(xirr,2)
-				row[25] = str(xirr) + "%"
-			#	print "row[25]",row[25]
+				row[25] = str(row[25]) + "%"
 			except Exception,e:
 				row[25] =row[25]
-
-				
-
 	return result
 	
 	"""
