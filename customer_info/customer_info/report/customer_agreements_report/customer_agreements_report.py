@@ -56,16 +56,14 @@ def get_data():
 		if row[24] and row[24] != "Wholesale price is not set":
 			if row[24] != "":
 				try:
-					if float(row[24]) > 0:
-						row[24] = str(row[24]) + "%"
+					row[24] = str(row[24]) + "%"
 				except Exception,e:
 					row[24] =row[24]
 		
 		if row[25] and row[25] != "Wholesale price is not set":
 			if row[25] != "" or row[25]!="0.000000":
 				try:
-					if float(row[25]) > 0:
-						row[25] = str(row[25]) + "%"
+					row[25] = str(row[25]) + "%"
 				except Exception,e:
 					row[25] =row[25]
 	return result
