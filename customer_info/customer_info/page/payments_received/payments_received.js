@@ -29,7 +29,8 @@ payments_received = Class.extend({
   				<div class='col-xs-2 to_date'></div>\
   				<div class='col-xs-2 agreement'></div>\
   				<div class='col-xs-2 data_limit'></div>\
-  				<div class='col-xs-2'></div>\
+  				<div class='col-xs-2 payment_type_filter'></div>\
+  				<div class='col-xs-2' ></div>\
   				</div>\
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
@@ -112,7 +113,20 @@ payments_received = Class.extend({
 			},
 			render_input: true
 		});
-		me.data_limit.refresh();
+
+		me.payment_type_filter = frappe.ui.form.make_control({
+		parent: me.page.find(".payment_type_filter"),
+		df: {
+				fieldtype: "Select",
+				fieldname: "payment_type_filter",
+				label:"Payment Type",
+				placeholder: "payment_type",
+				options:["","Rental Payment","Modification Of Receivables","90d SAC"]
+			},
+			render_input: true
+		});
+		me.payment_type_filter.refresh();
+		
 		this.render_payments_details();	
 
 		me.customer_link.$input.on("change", function(){
@@ -139,12 +153,18 @@ payments_received = Class.extend({
 			var old_me = me;
 			old_me.render_payments_details()
 		});
+
+		me.payment_type_filter.$input.on("change", function(){
+			var old_me = me;
+			old_me.render_payments_details()
+		});
 	},
 	render_payments_details: function() {
 		var me = this;
 		//var _agreement_name =  window.location.href.split("=")[1] ? window.location.href.split("=")[1]:""
 		//me.agreement.$input.val(_agreement_name)
 		var me = this;
+		console.log("------------ggg-----",me.payment_type_filter.$input.val())
 		this.data = ""
 		frappe.call({
 			method: "customer_info.customer_info.page.payments_received.payments_received.get_payments_details",
@@ -153,7 +173,8 @@ payments_received = Class.extend({
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
 				"agreement":me.agreement.$input.val(),// ? me.agreement.$input.val():_agreement_name,
-				"data_limit":me.data_limit.$input.val()	
+				"data_limit":me.data_limit.$input.val(),
+				"pmt_type" :me.payment_type_filter.$input.val()	
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),
@@ -213,7 +234,7 @@ payments_received = Class.extend({
 			}
 			else{
 				if(me.late_fees_updated == "Yes"){
-					console.log("inside late_fees_updated")
+					//console.log("inside late_fees_updated")
 					/*oldest_date = {"payments_id":"","due_date":""}
 					var due_date_list = []
 					$.each(formatted_list_of_payment_ids, function(i, d) {
@@ -267,7 +288,7 @@ payments_received = Class.extend({
 		}	
 	},
 	get_late_fees : function(agreement_name,date1,date2,rental_payment){
-		console.log(agreement_name,"agreement_name",date1,date2)
+		//console.log(agreement_name,"agreement_name",date1,date2)
 		var date_diff = frappe.datetime.get_diff(date2,date1)
 		var late_fees_amount = 0
 		frappe.call({
@@ -279,11 +300,11 @@ payments_received = Class.extend({
                 filters: { name: agreement_name },
             },
             callback: function(res){
-            	console.log("********************8888")
+            //	console.log("********************8888")
                 if (res && res.message){
-                	console.log("rerer",res.message,date_diff)
+                //	console.log("rerer",res.message,date_diff)
 					if(flt(date_diff) > 3){
-						console.log("insdie 333333333")
+				//		console.log("insdie 333333333")
 						late_fees_amount = (flt(date_diff) - 3) * rental_payment * (flt(res.message.late_fees_rate)/100)
 					}
                 }

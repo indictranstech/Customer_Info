@@ -7,31 +7,65 @@ import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer,from_date,to_date,agreement,data_limit):
+def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_type):
+	payment_type = pmt_type;
+	cond   = " where refund='No' "
+	cond_dict = [{"customer":[customer, "="]},{"payoff_cond":[pmt_type, "="]}, {"payment_date":[from_date, ">="]}, 
+		{"payment_date":[to_date, "<="]}]
+	
+	if from_date and to_date:
+		cond += " and (payment_date BETWEEN '{0}' AND '{1}') ".format(from_date, to_date)		
+		cond_dict.remove({"payment_date":[from_date, ">="]})
+		cond_dict.remove({"payment_date":[to_date, "<="]})
+		
+	for cond_row in cond_dict:
+		for key in cond_row:
+			if cond_row[key][0]:
+				cond += " and {0} {1} '{2}' ".format(key,cond_row[key][1],cond_row[key][0])
 
-	if customer and from_date and to_date:
-		cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
+	
+	# if customer and from_date and to_date and payment_type:
+	# 	cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and payoff_cond ='{3}'and refund = 'No' ".format(customer,from_date,to_date,payment_type)
 
-	elif customer and from_date:
-		cond = "where customer = '{0}' and payment_date >= '{1}' and refund = 'No' ".format(customer,from_date)
+	# elif customer and from_date and to_date and not payment_type:
+	# 	cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and refund = 'No' ".format(customer,from_date,to_date)
 
-	elif customer and to_date:
-		cond = "where customer = '{0}' and payment_date < '{1}' and refund = 'No' ".format(customer,to_date)
+	# elif payment_type and not customer and not from_date and not to_date:
+	# 	cond = "where payoff_cond = '{0}' and refund = 'No' ".format(payment_type)
 
-	elif from_date and to_date:
-		cond = "where (payment_date BETWEEN '{0}' AND '{1}')  and refund = 'No' ".format(from_date,to_date)
+	# elif customer and payment_type and not from_date and not to_date:
+	# 	cond = "where  customer = '{0}' and payoff_cond = '{1}' and refund = 'No' ".format(customer,payment_type)
+	
+	# elif customer and not payment_type and not from_date and not to_date:
+	# 	cond = "where  customer = '{0}' and refund = 'No' ".format(customer,payment_type)	
+	
+	# elif from_date and to_date and not customer and not payment_type:
+	# 	cond = "where (payment_date BETWEEN '{0}' AND '{1}')  and refund = 'No' ".format(from_date,to_date)
+	
+	# elif customer and from_date and not payment_type and not to_date:
+	# 	cond = "where customer = '{0}' and payment_date >= '{1}' and refund = 'No' ".format(customer,from_date)
 
-	elif customer:
-		cond = "where customer = '{0}'  and refund = 'No' ".format(customer)
+	# elif customer and to_date:
+	# 		cond = "where customer = '{0}' and payment_date < '{1}' and refund = 'No' ".format(customer,to_date)
 
-	elif from_date:
-		cond = "where payment_date >= '{0}' and refund = 'No' ".format(from_date)
+	
+	# # elif customer:
+	# # 	cond = "where customer = '{0}'  and refund = 'No' ".format(customer)
 
-	elif to_date:
-		cond = "where payment_date <= '{0}' and refund = 'No' ".format(to_date)
+	# # elif from_date:
+	# # 	cond = "where payment_date >= '{0}' and refund = 'No' ".format(from_date)
 
-	else:
-		cond = " where refund = 'No' "
+	# # elif to_date:
+	# # 	cond = "where payment_date <= '{0}' and refund = 'No' ".format(to_date)
+
+	
+		
+	# # # elif payment_type and customer and from_date and to_date:
+	# # # 	cond = "where customer = '{0}' and (payment_date BETWEEN '{1}' AND '{2}') and payoff_cond = '{3}' and refund = 'No' ".format(customer,from_date,to_date,payment_type)
+	
+	# else:
+	# 	cond = " where refund = 'No' "
+
 
 	_cond = "limit 50" if not agreement	and not from_date and not to_date and not customer else " "
 	if data_limit and not agreement and not from_date and not to_date and not customer:
@@ -51,9 +85,9 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit):
 								late_fees_updated,payment_type,merchandise_status,
 								case when special_associate = "Automatic" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
 
-
+	# print "\n\ndata",data
 	filter_data = []
 	filter_payments_history = []
 	for row in data:
