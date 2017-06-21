@@ -659,7 +659,7 @@ def get_IIR_XIIR():
 		#  IIR Calculations 
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0:  
-				if float(row[13]) > 0.0:
+				if row[13] and float(row[13]) > 0.0:
 					payments_rental_amount =[]
 					late_payments_rental_amount =[]
 					submitted_payments_rental_amount = [-float(row[13])]
@@ -696,7 +696,7 @@ def get_IIR_XIIR():
 
 		elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
 			if row[12] and float(row[12]) > 0 and row[19] =="Contract Term is over" :  
-				if float(row[13]) > 0.0:
+				if row[13] and float(row[13]) > 0.0:
 					payments_rental_amount =[]
 					late_payments_rental_amount =[]
 					submitted_payments_rental_amount = [-float(row[13])]
@@ -731,7 +731,7 @@ def get_IIR_XIIR():
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[25])
 
 			if row[12] and float(row[12]) > 0 and row[19] =="90d SAC":
-				if float(row[13]) > 0.0:
+				if row[13] and float(row[13]) > 0.0:
 					late_payments_rental_amount=[]
 					payments_rental_amount =[]
 					submitted_payments_rental_amount = [-float(row[12])]
@@ -766,7 +766,7 @@ def get_IIR_XIIR():
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[25])
 
 			if row[12] and float(row[12]) > 0 and row[19] =="30% Early buy offer":
-				if float(row[13]) > 0.0:
+				if row[13] and float(row[13]) > 0.0:
 					late_payments_rental_amount=[]
 					payments_rental_amount =[]
 					submitted_payments_rental_amount = [-float(row[12])]
@@ -811,7 +811,7 @@ def get_IIR_XIIR():
 	#XIIR Calculations 	
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0: 
-				if float(row[13]) > 0.0:
+				if row[13] and float(row[13]) > 0.0:
 					late_payments_rental_amount =[]
 					submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
@@ -847,7 +847,7 @@ def get_IIR_XIIR():
  	
  		elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
  			if row[12] and float(row[12]) > 0 and row[19] =="Contract Term is over":
- 				if float(row[13]) > 0.0:
+ 				if row[13] and float(row[13]) > 0.0:
  					late_payments_rental_amount =[]
 	 				submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
@@ -880,7 +880,7 @@ def get_IIR_XIIR():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[26])
  			
  			if row[12] and float(row[12]) > 0 and row[19] =="90d SAC":
- 				if float(row[13]) > 0.0:
+ 				if row[13] and float(row[13]) > 0.0:
 	 				submitted_payments_rental_amount = []
 	 				late_payments_rental_amount =[]
 	 				pay_off_date = ""
@@ -919,7 +919,7 @@ def get_IIR_XIIR():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[26])
 		
  			if row[12] and float(row[12]) > 0 and row[19] =="30% Early buy offer":
- 				if float(row[13]) > 0.0:
+ 				if row[13] and float(row[13]) > 0.0:
  					late_payments_rental_amount =[]
 	 				submitted_payments_rental_amount = []
 	 				payment_history = ""
