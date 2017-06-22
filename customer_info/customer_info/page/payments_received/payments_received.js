@@ -121,7 +121,7 @@ payments_received = Class.extend({
 				fieldname: "payment_type_filter",
 				label:"Payment Type",
 				placeholder: "payment_type",
-				options:["","Rental Payment","Modification Of Receivables","90d SAC"]
+				options:["","Rental Payment","Modification Of Receivables","90d SAC","Early buy"]
 			},
 			render_input: true
 		});
