@@ -23,13 +23,13 @@ payments_received = Class.extend({
 	},
 	set_fields: function() {
 		var me = this;
+		// / <div class='col-xs-2 payment_type_filter'></div>\
 		html = "<div>\
 				<div class='col-xs-2 customer'></div>\
 				<div class='col-xs-2 from_date'></div>\
   				<div class='col-xs-2 to_date'></div>\
   				<div class='col-xs-2 agreement'></div>\
   				<div class='col-xs-2 data_limit'></div>\
-  				<div class='col-xs-2 payment_type_filter'></div>\
   				<div class='col-xs-2' ></div>\
   				</div>\
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
@@ -114,18 +114,18 @@ payments_received = Class.extend({
 			render_input: true
 		});
 
-		me.payment_type_filter = frappe.ui.form.make_control({
-		parent: me.page.find(".payment_type_filter"),
-		df: {
-				fieldtype: "Select",
-				fieldname: "payment_type_filter",
-				label:"Payment Type",
-				placeholder: "payment_type",
-				options:["","Rental Payment","Modification Of Receivables","90d SAC","Early buy"]
-			},
-			render_input: true
-		});
-		me.payment_type_filter.refresh();
+		// me.payment_type_filter = frappe.ui.form.make_control({
+		// parent: me.page.find(".payment_type_filter"),
+		// df: {
+		// 		fieldtype: "Select",
+		// 		fieldname: "payment_type_filter",
+		// 		label:"Payment Type",
+		// 		placeholder: "payment_type",
+		// 		options:["","Rental Payment","Modification Of Receivables","90d SAC","Early buy"]
+		// 	},
+		// 	render_input: true
+		// });
+		// me.payment_type_filter.refresh();
 		
 		this.render_payments_details();	
 
@@ -154,17 +154,17 @@ payments_received = Class.extend({
 			old_me.render_payments_details()
 		});
 
-		me.payment_type_filter.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
-		});
+		// me.payment_type_filter.$input.on("change", function(){
+		// 	var old_me = me;
+		// 	old_me.render_payments_details()
+		// });
 	},
 	render_payments_details: function() {
 		var me = this;
 		//var _agreement_name =  window.location.href.split("=")[1] ? window.location.href.split("=")[1]:""
 		//me.agreement.$input.val(_agreement_name)
 		var me = this;
-		console.log("------------ggg-----",me.payment_type_filter.$input.val())
+		// console.log("------------ggg-----",me.payment_type_filter.$input.val())
 		this.data = ""
 		frappe.call({
 			method: "customer_info.customer_info.page.payments_received.payments_received.get_payments_details",
@@ -173,8 +173,8 @@ payments_received = Class.extend({
 				"from_date": me.from_date.$input.val(),
 				"to_date":me.to_date.$input.val(),
 				"agreement":me.agreement.$input.val(),// ? me.agreement.$input.val():_agreement_name,
-				"data_limit":me.data_limit.$input.val(),
-				"pmt_type" :me.payment_type_filter.$input.val()	
+				"data_limit":me.data_limit.$input.val()
+				// "pmt_type" :me.payment_type_filter.$input.val()	
 			},
 			freeze: true,
 			freeze_message: __("Please Wait..."),

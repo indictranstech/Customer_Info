@@ -7,11 +7,16 @@ import pdfkit
 from customer_info.customer_info.doctype.payments_management.payments_management import set_values_in_agreement_on_submit,set_values_in_agreement_temporary 
 
 @frappe.whitelist()
-def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_type):
-	payment_type = pmt_type;
+def get_payments_details(customer,from_date,to_date,agreement,data_limit):
+	# get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_type):
+	# payment_type = pmt_type;
 	cond   = " where refund='No' "
-	cond_dict = [{"customer":[customer, "="]},{"payoff_cond":[pmt_type, "="]}, {"payment_date":[from_date, ">="]}, 
+	# cond_dict = [{"customer":[customer, "="]},{"payoff_cond":[pmt_type, "="]}, {"payment_date":[from_date, ">="]}, 
+	# 	{"payment_date":[to_date, "<="]}]
+
+	cond_dict = [{"customer":[customer, "="]},{"payment_date":[from_date, ">="]}, 
 		{"payment_date":[to_date, "<="]}]
+
 	
 	if from_date and to_date:
 		cond += " and (payment_date BETWEEN '{0}' AND '{1}') ".format(from_date, to_date)		
@@ -85,7 +90,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_typ
 								late_fees_updated,payment_type,merchandise_status,
 								case when special_associate = "Automatic" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
 
 	# print "\n\ndata",data
 	filter_data = []
