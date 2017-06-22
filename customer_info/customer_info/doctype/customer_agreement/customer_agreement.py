@@ -449,7 +449,7 @@ def payments_done_by_scheduler():
 				args['total_amount'] = 0
 				args['special_associate'] = "Automatic"
 				make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
-				auto_payment(customer_agreement.name)
+				# auto_payment(customer_agreement.name)
 
 def set_values_in_agreement(customer_agreement):
 	payment_made = []
@@ -605,21 +605,21 @@ def update_value(agreement_doc):
 			break
 	return result
 
-def sent_check_mail():
-	frappe.sendmail(
-			recipients="sukrut.j@indictranstech.com",
-			sender="sukrut.j@indictranstech.com",
-			subject="Frappe Check Mail"+ frappe.utils.data.nowdate(),
-			message = "Bekredito mail",
-	)
+# def sent_check_mail():
+# 	frappe.sendmail(
+# 			recipients="sukrut.j@indictranstech.com",
+# 			sender="sukrut.j@indictranstech.com",
+# 			subject="Frappe Check Mail"+ frappe.utils.data.nowdate(),
+# 			message = "Bekredito mail",
+# 	)
 
-def auto_payment(customer_agreement):
-	frappe.sendmail(
-			recipients="sukrut.j@indictranstech.com",
-			sender="sukrut.j@indictranstech.com",
-			subject="Auto Payment"+ frappe.utils.data.nowdate(),
-			message = "Auto Payment : "+customer_agreement
-	)
+# def auto_payment(customer_agreement):
+# 	frappe.sendmail(
+# 			recipients="lukas@povilauskas.lt",
+# 			sender="lukas@povilauskas.lt",
+# 			subject="Auto Payment"+ frappe.utils.data.nowdate(),
+# 			message = "Auto Payment : "+customer_agreement
+# 	)
 
 def get_IIR_XIIR():
 	now_date = datetime.now().date()
