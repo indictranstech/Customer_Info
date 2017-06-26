@@ -30,6 +30,8 @@ def get_data():
 				format(ca.agreement_period,2),
 				format(ca.s90d_sac_price,2),
 				item.purchase_price_with_vat,
+				item.transportation_costs_incoming,
+				item.transportation_costs_outgoing,
 				format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format(ca.monthly_rental_payment * ca.agreement_period,2),
@@ -53,21 +55,21 @@ def get_data():
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1,debug=1)
 
 	for row in result:
-		if row[24] and row[24] != "Wholesale price is not set":
-			if row[24] != "":
+		if row[26] and row[26] != "Wholesale price is not set":
+			if row[26] != "":
 				try:
-					row[24] =round(float(row[24]),2)
-					row[24] = str(row[24]) + "%"
+					row[26] =round(float(row[26]),2)
+					row[26] = str(row[26]) + "%"
 				except Exception,e:
-					row[24] =row[24]
+					row[26] =row[26]
 		
-		if row[25] and row[25] != "Wholesale price is not set":
-			if row[25] != "" or row[25]!="0.000000":
+		if row[27] and row[27] != "Wholesale price is not set":
+			if row[27] != "" or row[27]!="0.000000":
 				try:
-					row[25] =round(float(row[25]),2)
-					row[25] = str(row[25]) + "%"
+					row[27] =round(float(row[27]),2)
+					row[27] = str(row[27]) + "%"
 				except Exception,e:
-					row[25] =row[25]
+					row[27] =row[27]
 	return result
 	
 	
@@ -86,6 +88,8 @@ def get_colums():
 				("Agreement Period") + ":Data:100",
 				("90d SAC Price") + ":Data:100",
 				("Purchase price") + ":Data:100",
+				("Transportation costs (incoming)") + ":Data:90",
+				("Transportation costs (outgoing)") + ":Data:90",
 				("90d SAC profit %") + ":Data:100",
 				("Planned agreement profit %") + ":Data:100",
 				("Planned agreement incomes") + ":Data:100",
