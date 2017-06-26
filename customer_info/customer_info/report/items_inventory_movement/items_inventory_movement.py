@@ -23,6 +23,8 @@ def get_data(filters):
 			item.serial_number,item.imei_number,
 			format(item.purchase_price_with_vat,2) as Basic_calculation_price,
 			format(item.wholesale_price,2) as Purchase_price_with_VAT,
+			item.transportation_costs_incoming,
+			item.transportation_costs_outgoing,
 			format(item.wholesale_price/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
 			item.purchase_date,item.sold_date,
 			case when agreement.merchandise_status = "Early buy" then
@@ -76,6 +78,8 @@ def get_colums():
 				("IMEI number") + "::90",
 				("Basic calculation price") + "::120",
 				("Purchase price with VAT") + ":Data:90",
+				("Transportation costs (incoming)") + ":Data:90",
+				("Transportation costs (outgoing)") + ":Data:90",
 				("Purchase price without VAT") + ":Data:90",
 				("Purchase Date") + ":Date:100",
 				("Merchandise transfer date") + ":Date:80",
