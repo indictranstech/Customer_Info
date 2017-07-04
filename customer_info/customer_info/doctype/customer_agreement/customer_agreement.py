@@ -632,8 +632,8 @@ def auto_payment(customer_agreement,args,payments_detalis_list):
 def auto_payment_notification(customer,agreement,last_payment):
 	date = frappe.utils.data.now_datetime()
 	frappe.sendmail(
-				recipients = "sukrut.j@indictranstech.com",
-				#recipients = "lukas@povilauskas.lt",
+				# recipients = "sukrut.j@indictranstech.com",
+				recipients = "lukas@povilauskas.lt",
 				cc =["sukrut.j@indictranstech.com"],
 				sender = "sukrut.j@indictranstech.com",
 				subject = "Auto Payment Notification For Agreement "+ agreement,
