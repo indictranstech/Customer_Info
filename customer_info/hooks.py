@@ -113,7 +113,7 @@ scheduler_events = {
 	],
 	"hourly": [
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler",
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_IIR_XIIR"					
+		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_IRR_XIRR"					
 	]
 }
 
