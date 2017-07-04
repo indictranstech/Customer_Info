@@ -315,6 +315,8 @@ def payments_done_by_scheduler():
 	add bonus for payments
 	process payments
 	reduce receivables
+	Early payments are stopped from normal auto payments 
+	Early payments are process using flagged receiable api.
 	"""
 	customer_list = frappe.db.sql("""select name from `tabCustomer` where customer_group = 'Individual' """,as_list=1)
 
@@ -366,9 +368,6 @@ def payments_done_by_scheduler():
 						row.save(ignore_permissions = True)
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)
-						print "\nAgreement",customer_agreement.name
-						print "customer",customer.name
-						print "total_charges",total_charges
 						auto_payment_notification(customer.name,customer_agreement.name,total_charges)	
 
 				# Todays Payment
@@ -398,9 +397,6 @@ def payments_done_by_scheduler():
 						row.save(ignore_permissions = True)
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)
-						print "\nAgreement",customer_agreement.name
-						print "customer",customer.name
-						print "total_charges",total_charges
 						auto_payment_notification(customer.name,customer_agreement.name,total_charges)	
 
 				# Early Payemnts
@@ -500,19 +496,7 @@ def set_values_in_agreement(customer_agreement):
 			customer_agreement.agreement_close_date = datetime.now().date()
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 	
-	# if customer_agreement.payments_record:
-	# 	print "___if___________________"
-	# 	idx = frappe.db.sql("""select max(idx) from`tabPayments Record` where parent =%s""",(customer_agreement.name),as_list=1)
-	# 	print "______________________"
-	# 	if idx:
-	# 		print "\nidx",idx
-	# 		print "idx",idx[0]
-	# 		for row in customer_agreement.payments_record:
-	# 			if row.idx == int(idx[0][0]) and row.check_box_of_submit == 1:
-	# 				print "jjjj"
-	# 				customer_agreement.agreement_status ="Closed"
 	customer_agreement.save(ignore_permissions=True)
-	print "saved"
 
 
 @frappe.whitelist()
@@ -643,24 +627,21 @@ def auto_payment(customer_agreement,args,payments_detalis_list):
 			customer = first_name 
 		if last_name:
 			customer += " " + last_name 
-	# 	data = frappe.db.sql("""select max(idx),due_date,payment_date,monthly_rental_amount,check_box_of_submit
-	# 					 		from`tabPayments Record` where parent =%s and check_box_of_submit='1'""",
-	# 							(cust_agree_doc.name)
-	# 				 		)
-	# auto_payment_notification(customer,customer_agreement,args['rental_payment'])
 
 @frappe.whitelist()
 def auto_payment_notification(customer,agreement,last_payment):
 	date = frappe.utils.data.now_datetime()
 	frappe.sendmail(
-				recipients = "lukas@povilauskas.lt",
+				recipients = "sukrut.j@indictranstech.com",
+				#recipients = "lukas@povilauskas.lt",
 				cc =["sukrut.j@indictranstech.com"],
 				sender = "sukrut.j@indictranstech.com",
 				subject = "Auto Payment Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/auto_payment_notification.html", {"last_payment":last_payment,"customer": customer,"agreement":agreement,"date": date}),
 	)
 
-def get_IIR_XIIR():
+# Schedular for Calculating IRR and XIRR values will save to respective customer
+def get_IRR_XIRR():
 	now_date = datetime.now().date()
 	result = frappe.db.sql("""select 
 				cus.first_name,
@@ -737,7 +718,6 @@ def get_IIR_XIIR():
 								
 									frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
 							except Exception,e:
-								print "Exeception"
 								row[27] = ""
 								frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
 					else:
@@ -767,17 +747,13 @@ def get_IIR_XIIR():
 										payments_rental_amount.append(payment_r.monthly_rental_amount)
 							submitted_payments_rental_amount.extend(payments_rental_amount)
 							try:
-								print "\nsubmitted_payments_rental_amount",submitted_payments_rental_amount
 								row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 								if row[27]:
-									print "row[27]",row[27]
 									IIR = float(row[27]) * 12 * 100
 								if IIR:
 									IIR = round(IIR,2)
-									print "IIR",IIR
 									frappe.db.set_value("Customer Agreement",row[3],"irr",IIR)
 							except Exception,e:
-								print "Exceptiomn"
 								row[27] = ""
 								frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])	
 					else:
@@ -864,39 +840,31 @@ def get_IIR_XIIR():
 					row[27] = ""
 			else:
 				row[27] = ""
-		# 
-
+		
 """
-Payment By Rest API
-
+Payment By Rest API 
+when Flagged Receivables added through api then payments_done_by_api() called and it will process 
+pending,ondate and future payments for pertcular customer.
+Get all open agreements of customers
+Get remaining payments of all agreements comming in current month and pending of last months
+Add payments according to due_date
+Add bonus for payments
+Process payments
+Reduce receivables
 """
-
 def payments_done_by_api(customer):
-	print "---------------------------",customer
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
-	"""
-	If we have enough receivables then make auto payment_date
-	get all customers
-	get all open agreements of customers
-	get remaining payments of all agreements comming in current month and pending of last months
-	add payments according to due_date
-	add bonus for payments
-	process payments
-	reduce receivables
-	"""
-	# customer_list = frappe.db.sql("""select name from `tabCustomer` where customer_group = 'Individual' """,as_list=1)
-
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
 	last_day_of_month = get_last_day(now_date)
 	get_bonus_summary(customer)
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
-	print "customer_agreement",customer_agreements
+	# print "customer_agreement",customer_agreements
 	args = {'values':{}}
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
 	for agreement in [e[0] for e in customer_agreements]:
-		print "agreement",agreement
+		# print "agreement",agreement
 		customer_bonus = []
 		payments_detalis_list = []
 		payment_ids_list = []
@@ -973,9 +941,9 @@ def payments_done_by_api(customer):
 					row.save(ignore_permissions = True)
 					customer_doc.flagged_receivables = flagged_receivables - total_charges
 					customer_doc.save(ignore_permissions=True)
-					print "\nAgreement",customer_agreement.name
-					print "customer",customer_doc.name
-					print "total_charges",total_charges
+					# print "\nAgreement",customer_agreement.name
+					# print "customer",customer_doc.name
+					# print "total_charges",total_charges
 					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)	
 
 			# print "early"
@@ -985,7 +953,7 @@ def payments_done_by_api(customer):
 			# print "row.due_date)",row.due_date 
 			# print "now_date",now_date
 			
-			#Early Payemnts
+			#Early Payemnts 
 			if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date):
 			# if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
 				customer_doc = frappe.get_doc("Customer",customer)
@@ -1013,24 +981,24 @@ def payments_done_by_api(customer):
 					row.save(ignore_permissions = True)
 					customer_doc.flagged_receivables = flagged_receivables - total_charges
 					customer_doc.save(ignore_permissions=True)
-					print "\nAgreement",customer_agreement.name
-					print "customer",customer_doc.name
-					print "total_charges",total_charges
+					# print "\nAgreement",customer_agreement.name
+					# print "customer",customer_doc.name
+					# print "total_charges",total_charges
 					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)			
 					
 				#if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or (firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) < now_date)):
 				
 		if len(payment_ids_list) > 0:
-			print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
-			print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
-			print "\n\nbonus",customer_agreement.bonus
-			customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
+			# print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
+			# print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
+			# print "\n\nbonus",customer_agreement.bonus
+			# customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
 			customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
 			customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 			customer_agreement.late_payment = sum(late_payments)
-			print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
-			print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
-			print "\n\nbonus",customer_agreement.bonus
+			# print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
+			# print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
+			# print "\n\nbonus",customer_agreement.bonus
 			
 			customer_bonus.append(customer_agreement.bonus)
 			customer_agreement.save(ignore_permissions = True)
@@ -1056,8 +1024,7 @@ def payments_done_by_api(customer):
 			args['total_amount'] = 0
 			args['special_associate'] = "Automatic API"
 			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
-			# auto_payment(customer_agreement.name,args,payments_detalis_list)
-		
+			
 	cust_doc = frappe.get_doc("Customer",customer)
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
 	cust_doc.flagged_receivables = 0.0
