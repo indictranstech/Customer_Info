@@ -56,7 +56,7 @@ def get_data():
 
 	for row in result:
 		if row[26] and row[26] != "Wholesale price is not set":
-			if row[26] != "":
+			if row[26] != "" or row[27]!="0.000000":
 				try:
 					row[26] =round(float(row[26]),2)
 					row[26] = str(row[26]) + "%"
@@ -64,7 +64,7 @@ def get_data():
 					row[26] =row[26]
 		
 		if row[27] and row[27] != "Wholesale price is not set":
-			if row[27] != "" or row[27]!="0.000000":
+			if row[27] != "" or row[27]!="0.000000" :
 				try:
 					row[27] =round(float(row[27]),2)
 					row[27] = str(row[27]) + "%"
