@@ -695,8 +695,8 @@ def get_IRR_XIRR():
 	
 	for row in result:
 		#  IIR Calculations
-		print"________________________________________________" 		
-		print "Agree",row[3]
+		# print"________________________________________________" 		
+		# print "Agree",row[3]
 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":	
 			if row[12] and float(row[12])>0:  
 				if row[13] and float(row[13]) > 0.0:
@@ -716,7 +716,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) >= getdate(now_date)])
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 							if row[27]:						
 								IIR = float(row[27]) * 12 * 100
@@ -726,7 +726,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[27] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-						print "\nOPEN IRR",row[27] 
+						# print "\nOPEN IRR",row[27] 
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
@@ -747,7 +747,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 							if row[27]:
 								IIR = float(row[27]) * 12 * 100
@@ -757,7 +757,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[27] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])	
-						print "\nContract Term is over IRR",row[27]
+						# print "\nContract Term is over IRR",row[27]
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
@@ -779,7 +779,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)				
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount	
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount	
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 							if row[27]:
 								IIR = float(row[27]) * 12 * 100
@@ -789,7 +789,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[27] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-						print "\n90d SAC",row[27]
+						# print "\n90d SAC",row[27]
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
@@ -815,7 +815,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 							if row[27]:
 								IIR = float(row[27]) * 12 * 100
@@ -825,7 +825,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[27] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-						print "\n30% Early buy offer",row[27]
+						# print "\n30% Early buy offer",row[27]
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])			
@@ -853,7 +853,7 @@ def get_IRR_XIRR():
 								submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)	
 							XIIR = float(row[28]) * 12 * 100
 							if XIIR:
@@ -862,7 +862,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	 		
-						print "\nOPEN XIRR",row[28] 
+						# print "\nOPEN XIRR",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
@@ -883,7 +883,7 @@ def get_IRR_XIRR():
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							# print "late_payments_rental_amount",late_payments_rental_amount
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							XIIR = float(row[28]) * 12 * 100
 							if XIIR:
@@ -892,7 +892,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
-						print "\nContract Term is over XIRR",row[28] 
+						# print "\nContract Term is over XIRR",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
@@ -918,7 +918,7 @@ def get_IRR_XIRR():
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
 					   	try:
 							# print "late_payments_rental_amount",late_payments_rental_amount
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							XIIR = float(row[28]) * 12 * 100
 							if XIIR:
@@ -927,7 +927,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-						print "\n90d SAC",row[28] 
+						# print "\n90d SAC",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
@@ -957,7 +957,7 @@ def get_IRR_XIRR():
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							# print "late_payments_rental_amount",late_payments_rental_amount
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							XIIR = float(row[28]) * 12 * 100
 							if XIIR:
@@ -966,7 +966,7 @@ def get_IRR_XIRR():
 						except Exception,e:
 								row[28] = ""
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-						print "\n30% Early buy offer",row[28] 
+						# print "\n30% Early buy offer",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])

@@ -34,7 +34,7 @@ def add_flagged_receivables(customer,flagged_receivables):
 			cust_doc.flagged_receivables += float(flagged_receivables)
 			cust_doc.save(ignore_permissions=True)
 			frappe.db.commit()
-			payments_done_by_api(customer)
+			#payments_done_by_api(customer)
 			return "%Flagged Receivables are successfully added for customer {0}#".format(cust_doc.name)
 		except Exception, e:
 			raise e
