@@ -855,7 +855,8 @@ def get_IRR_XIRR():
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)	
-							XIIR = float(row[28]) * 12 * 100
+							XIIR = row[28]
+							# XIIR = float(row[28]) * 12 * 100
 							if XIIR:
 								XIIR = round(XIIR,2)
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIIR)			
@@ -885,7 +886,8 @@ def get_IRR_XIRR():
 							# print "late_payments_rental_amount",late_payments_rental_amount
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
-							XIIR = float(row[28]) * 12 * 100
+							XIIR = row[28]
+							# XIIR = float(row[28]) * 12 * 100
 							if XIIR:
 								XIIR = round(XIIR,2)
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIIR)
@@ -920,7 +922,8 @@ def get_IRR_XIRR():
 							# print "late_payments_rental_amount",late_payments_rental_amount
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
-							XIIR = float(row[28]) * 12 * 100
+							XIIR = row[28]
+							# XIIR = float(row[28]) * 12 * 100
 							if XIIR:
 								XIIR = round(XIIR,2)
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIIR)
@@ -959,7 +962,8 @@ def get_IRR_XIRR():
 							# print "late_payments_rental_amount",late_payments_rental_amount
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
-							XIIR = float(row[28]) * 12 * 100
+							XIIR = row[28]
+							# XIIR = float(row[28]) * 12 * 100
 							if XIIR:
 								XIIR = round(XIIR,2)
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIIR)
