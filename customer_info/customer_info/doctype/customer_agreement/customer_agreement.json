@@ -1847,7 +1847,7 @@
   {
    "allow_on_submit": 0, 
    "bold": 0, 
-   "collapsible": 0, 
+   "collapsible": 1, 
    "fieldname": "irr_xirr", 
    "fieldtype": "Section Break", 
    "hidden": 0, 
@@ -1997,7 +1997,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-07-05 16:29:26.471631", 
+ "modified": "2017-07-07 13:34:35.973233", 
  "modified_by": "Administrator", 
  "module": "Customer Info", 
  "name": "Customer Agreement", 
