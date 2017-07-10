@@ -17,7 +17,10 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_typ
 	# cond_dict = [{"customer":[customer, "="]},{"payment_date":[from_date, ">="]}, 
 	# 	{"payment_date":[to_date, "<="]}]
 
-	
+	if pmt_type == "Early buy":
+		cond += "and payoff_cond not in ('Rental Payment','Modification Of Receivables','90d SAC')"
+		cond_dict.remove({"payoff_cond":[pmt_type, "="]})
+
 	if from_date and to_date:
 		cond += " and (payment_date BETWEEN '{0}' AND '{1}') ".format(from_date, to_date)		
 		cond_dict.remove({"payment_date":[from_date, ">="]})
@@ -90,7 +93,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_typ
 								late_fees_updated,payment_type,merchandise_status,
 								case when special_associate = "Automatic" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
 
 	# print "\n\ndata",data
 	filter_data = []
