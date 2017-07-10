@@ -109,7 +109,7 @@ class CustomerAgreement(Document):
 		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)
 		customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
-		# self.add_item_log()
+		self.add_item_log()
 
 	def add_bonus_for_this_agreement(self):
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
@@ -293,17 +293,15 @@ class CustomerAgreement(Document):
 				customer_doc.bonus = 0
 				customer_doc.save(ignore_permissions=True)
 
-# 	def add_item_log(self):
-# 		product = self.product
-# 		agreement =self.name
-# 		if product and agreement:
-# 			comment = "{0} is assigned for the agreement <b> <a href ='/desk#Form/Customer%20Agreement/{1}'> [{1}] </a></b> on the {2}".format(product,agreement,self.date)
-# 			print "____________________",comment
-# 			product_doc = frappe.get_doc("Item",product)
-# 			product_doc.log =  comment+"\n"+product_doc.log if product_doc.log else comment
-# 			product_doc.save(ignore_permissions=1)
-# 			print "__________________________________________Saved_______________________________"
-
+	def add_item_log(self):
+		product = self.product
+		agreement =self.name
+		if product and agreement:
+			comment = "{0} is assigned for the agreement <b> <a href ='/desk#Form/Customer%20Agreement/{1}'> [{1}] </a></b> on the {2}".format(product,agreement,self.date)
+			product_doc = frappe.get_doc("Item",product)
+			product_doc.log =  comment+"\n"+product_doc.log if product_doc.log else comment
+			product_doc.save(ignore_permissions=1)
+			
 def reset_contact_result_of_sent_sms():
 	now_date = datetime.now().date()
 	customer_agreement = frappe.get_all("Customer Agreement", fields=["name"],filters={"agreement_status": "Open","contact_result":"Sent SMS/Email"})
