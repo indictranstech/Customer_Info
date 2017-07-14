@@ -299,7 +299,8 @@ class CustomerAgreement(Document):
 		if product and agreement:
 			comment = "{0} is assigned for the agreement <b> <a href ='/desk#Form/Customer%20Agreement/{1}'> [{1}] </a></b> on the {2}".format(product,agreement,self.date)
 			product_doc = frappe.get_doc("Item",product)
-			product_doc.log =  comment+"\n"+product_doc.log if product_doc.log else comment
+			comment = comment+"\n"+product_doc.log if product_doc.log else comment
+			product_doc.add_comment("Comment",comment)  
 			product_doc.save(ignore_permissions=1)
 			
 def reset_contact_result_of_sent_sms():

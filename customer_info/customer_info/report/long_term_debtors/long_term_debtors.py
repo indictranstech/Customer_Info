@@ -51,11 +51,14 @@ def get_data():
 												order by ca.date limit 1""".format(row[22]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
 			row[22] = row[23]
+			print "Agree----",row[0]
+			print "row18",row[18],"row23",row[23],"row22",row[22]
 			if float(row[23]) > 0.0:
 				row[18] ="{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
 			else: 
-				row[18] = "{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
-						
+				# print "float",float(row[23])
+				row[18] = "{0:.2f}".format(float(str(row[18])) + abs(float(str(row[23])))) if row[23] and row[18] else row[18]
+				print "row18",row[18],"row23",row[23],"row22",row[22]		
 		else:
 			row[22] = ""
 	return result
