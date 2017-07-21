@@ -109,7 +109,7 @@ class CustomerAgreement(Document):
 		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)
 		customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
-		# self.add_item_log()
+		self.add_item_log()
 
 	def add_bonus_for_this_agreement(self):
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
@@ -965,11 +965,9 @@ def payments_done_by_api(customer):
 	get_bonus_summary(customer)
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
-	# print "customer_agreement",customer_agreements
 	args = {'values':{}}
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
 	for agreement in [e[0] for e in customer_agreements]:
-		# print "agreement",agreement
 		customer_bonus = []
 		payments_detalis_list = []
 		payment_ids_list = []
@@ -982,13 +980,7 @@ def payments_done_by_api(customer):
 		late_fees = []
 		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 		for row in customer_agreement.payments_record:
-			# print "+=="
-			# print "row.check_box_of_submit",row.check_box_of_submit
-			# print "getdate(row.due_date)",getdate(row.due_date)
-			# print "firstDay_of_month",firstDay_of_month
-			# print "row.due_date)",row.due_date 
-			# print "now_date",now_date
-			# print "\n\n\n\n\n"
+
 			if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
 				customer_doc = frappe.get_doc("Customer",customer)
 				flagged_receivables = customer_doc.flagged_receivables
@@ -1012,13 +1004,6 @@ def payments_done_by_api(customer):
 					customer_doc.flagged_receivables = flagged_receivables - total_charges
 					customer_doc.save(ignore_permissions=True)
 					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)	
-
-			# print "today"
-			# print "row.check_box_of_submit",row.check_box_of_submit
-			# print "getdate(row.due_date)",getdate(row.due_date)
-			# print "firstDay_of_month",firstDay_of_month
-			# print "row.due_date)",row.due_date 
-			# print "now_date",now_date
 			
 			if row.check_box_of_submit == 0 and getdate(row.due_date) == now_date:
 				customer_doc = frappe.get_doc("Customer",customer)
@@ -1046,19 +1031,8 @@ def payments_done_by_api(customer):
 					row.save(ignore_permissions = True)
 					customer_doc.flagged_receivables = flagged_receivables - total_charges
 					customer_doc.save(ignore_permissions=True)
-					# print "\nAgreement",customer_agreement.name
-					# print "customer",customer_doc.name
-					# print "total_charges",total_charges
 					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)	
-
-			# print "early"
-			# print "row.check_box_of_submit",row.check_box_of_submit
-			# print "getdate(row.due_date)",getdate(row.due_date)
-			# print "firstDay_of_month",firstDay_of_month
-			# print "row.due_date)",row.due_date 
-			# print "now_date",now_date
-			
-			#Early Payemnts 
+ 
 			if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date):
 			# if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
 				customer_doc = frappe.get_doc("Customer",customer)
@@ -1086,25 +1060,12 @@ def payments_done_by_api(customer):
 					row.save(ignore_permissions = True)
 					customer_doc.flagged_receivables = flagged_receivables - total_charges
 					customer_doc.save(ignore_permissions=True)
-					# print "\nAgreement",customer_agreement.name
-					# print "customer",customer_doc.name
-					# print "total_charges",total_charges
 					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)			
-					
-				#if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or (firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) < now_date)):
-				
+
 		if len(payment_ids_list) > 0:
-			# print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
-			# print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
-			# print "\n\nbonus",customer_agreement.bonus
-			# customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + len(add_bonus_of_one_eur)*1
 			customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
 			customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 			customer_agreement.late_payment = sum(late_payments)
-			# print "\n\payment_on_time_bonus",customer_agreement.payment_on_time_bonus
-			# print "\n\nearly_payments_bonus",customer_agreement.early_payments_bonus
-			# print "\n\nbonus",customer_agreement.bonus
-			
 			customer_bonus.append(customer_agreement.bonus)
 			customer_agreement.save(ignore_permissions = True)
 			customer_doc = frappe.get_doc("Customer",customer)
