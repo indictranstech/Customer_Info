@@ -19,25 +19,54 @@ def get_data(filters):
 			item.default_warehouse,
 			item.default_supplier,
 			item.invoice_number,
-			item.product_category,item.brand,
-			item.serial_number,item.imei_number,
+			item.product_category,
+			item.brand,
+			item.serial_number,
+			item.imei_number,
 			format(item.purchase_price_with_vat,2) as Basic_calculation_price,
 			format(item.wholesale_price,2) as Purchase_price_with_VAT,
 			item.transportation_costs_incoming,
 			item.transportation_costs_outgoing,
 			format(item.wholesale_price/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
-			item.purchase_date,item.sold_date,
+			item.purchase_date,
+			item.sold_date,
 			case when agreement.merchandise_status = "Early buy" then
 			concat(agreement.early_buy_discount_percentage,"% ",item.merchandise_status) else item.merchandise_status end as merchandise_status,
 			agreement.name,
 			agreement.customer,
 			(select replace(replace(replace(content,"<p></p>",""),"<p>",""),"</p>","") as content from `tabCommunication` where reference_doctype = "Item" 
 				 and reference_name = item.name order by creation desc limit 1) as Last_Comment
+			
 			FROM `tabItem` item left join `tabCustomer Agreement` agreement on 
-			item.name = agreement.product
-			WHERE 1=1
+			item.name = agreement.product 
+			WHERE agreement.date =(select max(date) from `tabCustomer Agreement` where product =item.name);
 			{0}""" .format(get_condtion(filters.get("sold_from_date"),filters.get("sold_to_date"),filters.get("purchase_from_date"),filters.get("purchase_to_date"))),as_list=1)
 	return result
+
+	# result = frappe.db.sql("""select
+	# 		item.default_warehouse,
+	# 		item.default_supplier,
+	# 		item.invoice_number,
+	# 		item.product_category,item.brand,
+	# 		item.serial_number,item.imei_number,
+	# 		format(item.purchase_price_with_vat,2) as Basic_calculation_price,
+	# 		format(item.wholesale_price,2) as Purchase_price_with_VAT,
+	# 		item.transportation_costs_incoming,
+	# 		item.transportation_costs_outgoing,
+	# 		format(item.wholesale_price/((item.vat_rate)/100+1),2) as Purchase_price_without_VAT,
+	# 		item.purchase_date,item.sold_date,
+	# 		case when agreement.merchandise_status = "Early buy" then
+	# 		concat(agreement.early_buy_discount_percentage,"% ",item.merchandise_status) else item.merchandise_status end as merchandise_status,
+	# 		agreement.name,
+	# 		agreement.customer,
+	# 		(select replace(replace(replace(content,"<p></p>",""),"<p>",""),"</p>","") as content from `tabCommunication` where reference_doctype = "Item" 
+	# 			 and reference_name = item.name order by creation desc limit 1) as Last_Comment
+	# 		FROM `tabItem` item left join `tabCustomer Agreement` agreement on 
+	# 		item.name = agreement.product
+	# 		WHERE 1=1
+	# 		{0}""" .format(get_condtion(filters.get("sold_from_date"),filters.get("sold_to_date"),filters.get("purchase_from_date"),filters.get("purchase_to_date"))),as_list=1)
+	# return result
+
 
 def get_condtion(sold_from_date,sold_to_date,purchase_from_date,purchase_to_date):
 	
