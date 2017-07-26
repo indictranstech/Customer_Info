@@ -52,6 +52,7 @@ frappe.ui.form.on("Payments Management", {
 			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
+			console.log("render 2")
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -64,7 +65,8 @@ frappe.ui.form.on("Payments Management", {
 			get_bonus_link()
 			calculate_total_charges("Customer");
 			_get_bonus_summary();
-			get_address_of_customer();			
+			get_address_of_customer();	
+			console.log("render 1")		
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -259,7 +261,8 @@ calculate_total_charges = function(flag){
 
 render_agreements = function(flag){
 	var grid;
-
+	console.log("render agreements-----------------")
+	debugger;
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
 		return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
 	}
@@ -285,13 +288,61 @@ render_agreements = function(flag){
 	}
 
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
+		console.log("campaign_discount______________", dataContext['id'])
 		var id = "campaign_discount"+ String(row)
 		//console.log(cell,"cell campaign_discount",value,row)
 		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + dataContext['campaign_discount'].split("-")[0] + "</a>";
 		}
+		// else if(flt(dataContext['campaign_discount'].split("-")[2]) > 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0){			
+		// 	console.log("dataContext['campaign_discount']",dataContext['campaign_discount'])	
+		// // 	flt(dataContext['campaign_discount'].split("-")[2]);i++
+			
+		// 	for(i=1;i<=1;i++){
+		// 		// me.options_list.push(i*flt(dataContext['campaign_discount'].split("-")[1]))
+		// 		camp_dis_val = i*flt(dataContext['campaign_discount'].split("-")[1])
+		// 		console.log("camp_dis_val",camp_dis_val)
+		// 	}
+		// 	console.log("dataContext",dataContext)
+		// 	console.log("cur_frm.doc.amount_of_due_payments",cur_frm.doc.amount_of_due_payments)
+		// 	console.log("cur_frm.doc.total_charges",cur_frm.doc.total_charges)
+		// 	var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(dataContext['campaign_discount'].split("-")[0])-flt(camp_dis_val)
+		// 	var total_charges = cur_frm.doc.total_charges+flt(dataContext['campaign_discount'].split("-")[0])-flt(camp_dis_val)
+	        
+		// 	frappe.call({
+	 //       		method: "customer_info.customer_info.doctype.payments_management.payments_management.update_campaign_discount",
+	 //        	args: {
+	 //        			"agreement":dataContext['id'],
+	 //        			"campaign_discount": camp_dis_val
+	 //       		 },
+	 //        	callback: function(r) {
+	 //        		console.log("----------------------------------------")
+	 //        		if(r.message){
+	 //        			console.log("r.message",r.message)
+		// 				r.message['remove_bonus'] ? cur_frm.set_value("bonus",flt(cur_frm.doc.bonus) - flt(r.message['remove_bonus'])):""
+		// 				var amount_of_due_payments = cur_frm.doc.amount_of_due_payments+flt(dataContext['campaign_discount'].split("-")[0])-flt(camp_dis_val)
+		// 				var total_charges = cur_frm.doc.total_charges+flt(dataContext['campaign_discount'].split("-")[0])-flt(camp_dis_val)
+	 //        			if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
+	 //        				cur_frm.set_value("amount_of_due_payments",flt(amount_of_due_payments) == 0 ? "0.00":flt(amount_of_due_payments))
+	 //    					cur_frm.set_value("total_charges",flt(total_charges) == 0 ? "0.00":flt(total_charges))	
+	 //        			}
+	 //        			else{
+	 //    					cur_frm.set_value("amount_of_due_payments",cur_frm.doc.amount_of_due_payments - flt(camp_dis_val) == 0 ? "0.00":cur_frm.doc.amount_of_due_payments - flt(camp_dis_val))
+	 //    					cur_frm.set_value("total_charges",cur_frm.doc.total_charges - flt(camp_dis_val) == 0 ? "0.00":cur_frm.doc.total_charges - flt(camp_dis_val))
+	 //        			}
+	 //        		}
+	 //        		// me.dialog.hide();
+	 //    			// render_agreements();
+	 //        		// calculate_total_charges("Campaign Discount");
+		//     		return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + camp_dis_val + "</a></span>";
+		//         } 
+		         
+	 //   		 });
+	
+		// return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + camp_dis_val + "</a></span>";
+		// }
 		else if(flt(dataContext['campaign_discount'].split("-")[2]) > 0 && flt(dataContext['campaign_discount'].split("-")[1]) > 0) {
-			return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
+		 	return "<span style='background:  rgb(201, 255, 53);padding: 15px;' ><a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a></span>";
 		}
 		else{
 			return "<a class='campaign_discount' value="+dataContext['campaign_discount']+">" + 0.00 + "</a>";
@@ -345,7 +396,7 @@ render_agreements = function(flag){
 					this.data = r.message;
 					cur_frm.set_df_property("open_agreements","hidden",0)
 					cur_frm.set_df_property("process_payment_section","hidden",0)
-					make_grid(r.message,columns,options)
+					make_grid(r.message, columns, options)
 					if(flag == "from_late_fees"){
 						var total_due_amount = 0
 			        	$.each($("#payments_grid").find(".slick-row"),function(i,d){
@@ -382,13 +433,16 @@ render_agreements = function(flag){
 				}	
 			}
     });
+    
 }
+
 
 make_grid= function(data1,columns,options){
 	var data = [];
 	var me = this;
 	/*var index = 0;*/
 	for (var i = 0; i<data1.list_of_agreement.length; i++) {
+		console.log("make_grid", data1.list_of_agreement[i][0])
           	data[i] = {
           	id : data1.list_of_agreement[i][0],	
           	/*serial:i,*/	
@@ -781,6 +835,7 @@ edit_campaign_discount = Class.extend({
 	        		}
 	        	}
 	        	me.dialog.hide();
+	        	console.log("render 7")
 	        	render_agreements();
 	        	//calculate_total_charges("Campaign Discount");
 	        }
@@ -839,6 +894,7 @@ edit_current_due_date = Class.extend({
 			},
 			callback: function(r) {
 				if(r.message){
+					console.log("render 6")
 					render_agreements();
 					me.dialog.hide();
 				}
@@ -911,6 +967,7 @@ edit_late_fees = Class.extend({
 	        	"late_fees": flt(me.fd.late_fees.$input.val())
 	        },
 	        callback: function(r) {
+	        	console.log("render 5")
 	        	render_agreements("from_late_fees");
 	        	me.dialog.hide();	        	
 	        	//calculate_total_charges("Customer");
@@ -1084,6 +1141,7 @@ call_commit = Class.extend({
 	            },
 	            callback: function(r) {
 	            	me.dialog.hide();
+	            	console.log("render 4")
 	            	render_agreements();
 	            }
 	        });
@@ -1123,6 +1181,7 @@ call_commit = Class.extend({
               "all_or_individual":me.item == "Common" ? "All":"Individual"		
             },
             callback: function(r){
+            	console.log("render 3")
         		render_agreements();
         		me.fd.contact_result.$input.val()
         		me.fd.contact_result.$input.val() == "Sent SMS/Email" ? cur_frm.set_value("notes_on_customer_payments"," "+me.fd.contact_result.$input.val()):
