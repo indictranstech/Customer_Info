@@ -702,11 +702,17 @@ def get_IRR_XIRR():
 					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments_record_doc = customer_agreement_doc.payments_record
 					if payments_record_doc:
-						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 1])# Processed Payments
-						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) >= getdate(now_date)])	# Early Payents (Future Payments)
+						for payment_r in payments_record_doc:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
+						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) >= getdate(now_date)])	# Early Payents (Future Payments)				try:
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
 							if row[27]:						
 								IRR = round((float(row[27]) * 12 * 100),2)
@@ -714,8 +720,7 @@ def get_IRR_XIRR():
 									frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)
 						except Exception,e:
 							row[27] = ""
-							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-						# print "\nOPEN IRR",row[27] 
+							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27]) 
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
@@ -727,7 +732,14 @@ def get_IRR_XIRR():
 					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments_record_doc = customer_agreement_doc.payments_record
 					if payments_record_doc:
-						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 1]) #Processed Payments
+						for payment_r in payments_record_doc:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)								
+							# payments_rental_amount.append(payment_r.monthly_rental_amount)
+						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
@@ -745,9 +757,11 @@ def get_IRR_XIRR():
 				else:
 					row[27] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+			
 			if row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
 				if row[13] and float(row[13]) > 0.0:
 					payments_rental_amount =[]
+					Total_payoff_amount = 0.0
 					submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
 					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments_record_doc = customer_agreement_doc.payments_record
@@ -756,8 +770,14 @@ def get_IRR_XIRR():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
-								payments_rental_amount.append(payment_r.monthly_rental_amount)
-						payments_rental_amount.append(customer_agreement_doc.s90d_sac_price)
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+									# payments_rental_amount.append(payment_r.monthly_rental_amount)
+							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
+								Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
+						payments_rental_amount.append(Total_payoff_amount)
 						submitted_payments_rental_amount.extend(payments_rental_amount)				
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						try:
@@ -788,7 +808,11 @@ def get_IRR_XIRR():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
-								payments_rental_amount.append(payment_r.monthly_rental_amount)
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+								# payments_rental_amount.append(payment_r.monthly_rental_amount)
 							if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
 								payment_history = payment_r.payment_history
 						Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
@@ -813,6 +837,7 @@ def get_IRR_XIRR():
 				row[27] = ""
  		else:
  			row[27] = ""
+
  		#XIIR Calculations
  		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0: 
@@ -825,7 +850,10 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
 						for payment_r in payments:
 							if payment_r.check_box_of_submit == 1:
-								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
 							if payment_r.check_box_of_submit == 0 and payment_r.due_date >= getdate(now_date):
 								submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
@@ -854,7 +882,10 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
 						for payment_r in payments:
 							if payment_r.check_box_of_submit == 1:
-								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
@@ -875,6 +906,7 @@ def get_IRR_XIRR():
  				if row[13] and float(row[13]) > 0.0:
 	 				submitted_payments_rental_amount = []
 	 				pay_off_date = ""
+	 				total_payment_received = 0.0
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
 	 				if payments:
@@ -884,10 +916,14 @@ def get_IRR_XIRR():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
-								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
 							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
 								pay_off_date = payment_r.payment_date
-						submitted_payments_rental_amount.append((pay_off_date,agreement_doc.s90d_sac_price))
+								total_payment_received = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
+						submitted_payments_rental_amount.append((pay_off_date,total_payment_received))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
 					   	try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
@@ -919,7 +955,11 @@ def get_IRR_XIRR():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
-								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								# submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
 	 						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
 								payment_history = payment_r.payment_history
 						Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
