@@ -1054,6 +1054,8 @@ def get_history_records(customer_agreement):
 			i['associate'] = frappe.db.get_value("User",{'first_name':i['associate']},"first_name")
 		elif i.get("associate") == "Automatic":
 			pass
+		elif i.get("associate") == "Automatic API":
+			pass
 		else:
 			i['associate'] = frappe.db.get_value("User",{'email':i['associate']},"first_name")
 		#i['associate'] = associate

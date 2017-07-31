@@ -81,7 +81,7 @@ def get_data():
 				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
 				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
 
-				case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else (DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
+				case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
 
 				format(ca.payments_made - item.purchase_price_with_vat,2),
 				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
