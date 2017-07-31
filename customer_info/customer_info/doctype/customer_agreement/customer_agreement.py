@@ -505,6 +505,7 @@ def set_values_in_agreement(customer_agreement):
 			customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
 			customer_agreement.merchandise_status = "Agreement over"
 			customer_agreement.agreement_close_date = datetime.now().date()
+			closed_agreement_notification(customer_agreement.customer,customer_agreement.name)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 	
 	customer_agreement.save(ignore_permissions=True)
@@ -643,13 +644,25 @@ def auto_payment(customer_agreement,args,payments_detalis_list):
 def auto_payment_notification(customer,agreement,last_payment):
 	date = frappe.utils.data.now_datetime()
 	frappe.sendmail(
-				# recipients = "sukrut.j@indictranstech.com",
+				#recipients = "sukrut.j@indictranstech.com",
 				recipients = "lukas@povilauskas.lt",
-				cc =["sukrut.j@indictranstech.com"],
 				sender = "sukrut.j@indictranstech.com",
 				subject = "Auto Payment Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/auto_payment_notification.html", {"last_payment":last_payment,"customer": customer,"agreement":agreement,"date": date}),
 	)
+
+@frappe.whitelist()
+def closed_agreement_notification(customer,agreement):
+	date = frappe.utils.data.now_datetime()
+	frappe.sendmail(
+				recipients = "sukrut.j@indictranstech.com",
+				#recipients = "lukas@povilauskas.lt",
+				cc =["sukrut.j@indictranstech.com"],
+				sender = "sukrut.j@indictranstech.com",
+				subject = "Closed Agreemnet Notification For Agreement "+ agreement,
+				message = frappe.render_template("templates/email/closed_agreement_notification.html", {"agreement":agreement,"customer": customer,"date": date}),
+	)
+
 
 # Schedular for Calculating IRR and XIRR values will save to respective customer
 def get_IRR_XIRR():
@@ -1110,6 +1123,7 @@ def payments_done_by_api(customer):
 			customer_agreement.save(ignore_permissions = True)
 			customer_doc = frappe.get_doc("Customer",customer)
 			customer_doc.bonus = sum(customer_bonus) if customer_bonus else 0
+			# customer_doc.bonus = customer_doc.bonus + sum(customer_bonus) if customer_bonus else 0
 			customer_doc.save(ignore_permissions=True)
 			set_values_in_agreement(customer_agreement)
 			args['assigned_bonus_discount'] = ""
