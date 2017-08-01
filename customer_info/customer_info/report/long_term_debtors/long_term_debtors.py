@@ -54,7 +54,7 @@ def get_data():
 			print "Agree----",row[0]
 			print "row18",row[18],"row23",row[23],"row22",row[22]
 			if float(row[23]) > 0.0:
-				row[18] ="{0:.2f}".format(float(str(row[18])) + float(str(row[23]))) if row[23] and row[18] else row[18]
+				row[18] ="{0:.2f}".format(float(str(row[18])) - float(str(row[23]))) if row[23] and row[18] else row[18]
 			else: 
 				# print "float",float(row[23])
 				row[18] = "{0:.2f}".format(float(str(row[18])) + abs(float(str(row[23])))) if row[23] and row[18] else row[18]
