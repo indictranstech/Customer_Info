@@ -15,11 +15,11 @@ from datetime import datetime, timedelta,date
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
-#from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
+# from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 from datetime import datetime, timedelta,date
 from frappe.utils import flt, get_datetime, get_time, getdate
-# from customer_info.customer_info.report.customer_agreements_report.financial import xirr
-# from numpy import irr
+from customer_info.customer_info.report.customer_agreements_report.financial import xirr
+from numpy import irr
 
 
 
@@ -418,7 +418,8 @@ def payments_done_by_scheduler():
 						customer.save(ignore_permissions=True)
 						auto_payment_notification(customer.name,customer_agreement.name,total_charges)	
 
-				# Early Payemnts
+				# (Early Payements)Future Payments Stopped in auto payments 
+				# Early Payments 
 				# if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
 				# 	customer = frappe.get_doc("Customer",name)
 				# 	receivables = customer.receivables
@@ -654,7 +655,7 @@ def auto_payment_notification(customer,agreement,last_payment):
 	frappe.sendmail(
 				#recipients = "sukrut.j@indictranstech.com",
 				recipients = "lukas@povilauskas.lt",
-				sender = "sukrut.j@indictranstech.com",
+				sender = "pagalba@bekredito.lt",
 				subject = "Auto Payment Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/auto_payment_notification.html", {"last_payment":last_payment,"customer": customer,"agreement":agreement,"date": date}),
 	)
@@ -665,345 +666,345 @@ def closed_agreement_notification(customer,agreement):
 	frappe.sendmail(
 				#recipients = "sukrut.j@indictranstech.com",
 				recipients = "lukas@povilauskas.lt",
-				sender = "sukrut.j@indictranstech.com",
+				sender = "pagalba@bekredito.lt",
 				subject = "Closed Agreemnet Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/closed_agreement_notification.html", {"agreement":agreement,"customer": customer,"date": date}),
 	)
 
 
-# Schedular for Calculating IRR and XIRR values will save to respective customer
+# Schedular for Calculating IRR and XIRR values will save to respective customer Agreement
 def get_IRR_XIRR():
-	pass	# now_date = datetime.now().date()
-	# result = frappe.db.sql("""select 
-	# 			cus.first_name,
-	# 			cus.last_name,
-	# 			cus.prersonal_code,
-	# 			ca.name,
-	# 			ca.agreement_status,
-	# 			ca.date,
-	# 			ca.agreement_close_date,
-	# 			ca.product_category,
-	# 			item.brand,
-	# 			format(ca.monthly_rental_payment,2),
-	# 			format(ca.agreement_period,2),
-	# 			format(ca.s90d_sac_price,2),
-	# 			item.purchase_price_with_vat,
-	# 			item.wholesale_price,
-	# 			item.transportation_costs_incoming,
-	# 			item.transportation_costs_outgoing,
-	# 			format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
-	# 			format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
-	# 			format(ca.monthly_rental_payment * ca.agreement_period,2),
-	# 			format(ca.payments_made,2),
-	# 			case when ca.agreement_status = "Closed" then ca.agreement_close_date
-	# 			when ca.agreement_status = "Suspended" then ca.suspended_from
-	# 			else "-" end as agreement_closing_suspension_date,
-	# 			case when ca.agreement_closing_suspending_reason = "Early buy offer" then
-	# 			concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
-	# 			else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
-	# 			case when ca.agreement_close_date then period_diff(date_format(ca.agreement_close_date, "%Y%m"), date_format(ca.date, "%Y%m")) else period_diff(date_format(now(), "%Y%m"), date_format(ca.date, "%Y%m")) end as active_agreement_months,
-	# 			format(ca.payments_made - item.purchase_price_with_vat,2),
-	# 			format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
-	# 			format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
-	# 			ca.campaign_discount_code,
-	# 			ca.irr,
-	# 			ca.xirr
-	# 			from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
-	# 			where ca.customer = cus.name and ca.product = item.name""",as_list=1)
+	now_date = datetime.now().date()
+	result = frappe.db.sql("""select 
+				cus.first_name,
+				cus.last_name,
+				cus.prersonal_code,
+				ca.name,
+				ca.agreement_status,
+				ca.date,
+				ca.agreement_close_date,
+				ca.product_category,
+				item.brand,
+				format(ca.monthly_rental_payment,2),
+				format(ca.agreement_period,2),
+				format(ca.s90d_sac_price,2),
+				item.purchase_price_with_vat,
+				item.wholesale_price,
+				item.transportation_costs_incoming,
+				item.transportation_costs_outgoing,
+				format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+				format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+				format(ca.monthly_rental_payment * ca.agreement_period,2),
+				format(ca.payments_made,2),
+				case when ca.agreement_status = "Closed" then ca.agreement_close_date
+				when ca.agreement_status = "Suspended" then ca.suspended_from
+				else "-" end as agreement_closing_suspension_date,
+				case when ca.agreement_closing_suspending_reason = "Early buy offer" then
+				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
+				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
+				case when ca.agreement_close_date then period_diff(date_format(ca.agreement_close_date, "%Y%m"), date_format(ca.date, "%Y%m")) else period_diff(date_format(now(), "%Y%m"), date_format(ca.date, "%Y%m")) end as active_agreement_months,
+				format(ca.payments_made - item.purchase_price_with_vat,2),
+				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
+				ca.campaign_discount_code,
+				ca.irr,
+				ca.xirr
+				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
+				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 	
-	# for row in result:
-	# 	# IIR Calculation		
-	# 	# print "Agree",row[3]
-	# 	if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":	
-	# 		if row[12] and float(row[12])>0:
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 				payments_rental_amount =[]
-	# 				submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
-	# 				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments_record_doc = customer_agreement_doc.payments_record
-	# 				if payments_record_doc:
-	# 					for payment_r in payments_record_doc:
-	# 						if payment_r.check_box_of_submit == 1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								payments_rental_amount.append(0)
-	# 							else:
-	# 								payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 					submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
-	# 					submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) >= getdate(now_date)])	# Early Payents (Future Payments)				try:
-	# 					frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-	# 						if row[27]:						
-	# 							IRR = round((float(row[27]) * 12 * 100),2)
-	# 							if IRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)
-	# 					except Exception,e:
-	# 						row[27] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"irr",row[27]) 
-	# 			else:
-	# 				row[27] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-	# 	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
-	# 		if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over" :  
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 				payments_rental_amount =[]
-	# 				submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
-	# 				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments_record_doc = customer_agreement_doc.payments_record
-	# 				if payments_record_doc:
-	# 					for payment_r in payments_record_doc:
-	# 						if payment_r.check_box_of_submit == 1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								payments_rental_amount.append(0)
-	# 							else:
-	# 								payments_rental_amount.append(payment_r.monthly_rental_amount)								
-	# 						# payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 					submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
-	# 					frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-	# 						if row[27]:
-	# 							IRR = round((float(row[27]) * 12 * 100),2)
-	# 							# print "IRR",IRR
-	# 							if IRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)
-	# 								# print "Updated"
-	# 					except Exception,e:
-	# 						row[27] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])	
-	# 					# print "\nContract Term is over IRR",row[27]
-	# 			else:
-	# 				row[27] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+	for row in result:
+		# IIR Calculation		
+		# print "Agree",row[3]
+		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":	
+			if row[12] and float(row[12])>0:
+				if row[13] and float(row[13]) > 0.0:
+					payments_rental_amount =[]
+					submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
+					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments_record_doc = customer_agreement_doc.payments_record
+					if payments_record_doc:
+						for payment_r in payments_record_doc:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
+						submitted_payments_rental_amount.extend([payment.get("monthly_rental_amount") for payment in frappe.get_doc("Customer Agreement",row[3]).payments_record if payment.get("check_box_of_submit") == 0 and getdate(payment.get("due_date")) >= getdate(now_date)])	# Early Payents (Future Payments)				try:
+						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[27]:						
+								IRR = round((float(row[27]) * 12 * 100),2)
+								if IRR:
+									frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)
+						except Exception,e:
+							row[27] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27]) 
+				else:
+					row[27] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+		elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
+			if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over" :  
+				if row[13] and float(row[13]) > 0.0:
+					payments_rental_amount =[]
+					submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
+					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments_record_doc = customer_agreement_doc.payments_record
+					if payments_record_doc:
+						for payment_r in payments_record_doc:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)								
+							# payments_rental_amount.append(payment_r.monthly_rental_amount)
+						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
+						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[27]:
+								IRR = round((float(row[27]) * 12 * 100),2)
+								# print "IRR",IRR
+								if IRR:
+									frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)
+									# print "Updated"
+						except Exception,e:
+							row[27] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])	
+						# print "\nContract Term is over IRR",row[27]
+				else:
+					row[27] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
 			
-	# 		if row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 				payments_rental_amount =[]
-	# 				Total_payoff_amount = 0.0
-	# 				submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
-	# 				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments_record_doc = customer_agreement_doc.payments_record
-	# 				if payments_record_doc:
-	# 					for payment_r in payments_record_doc:
-	# 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
-	# 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
-	# 						if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								payments_rental_amount.append(0)
-	# 							else:
-	# 								payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 								# payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 						if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
-	# 							Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
-	# 					payments_rental_amount.append(Total_payoff_amount)
-	# 					submitted_payments_rental_amount.extend(payments_rental_amount)				
-	# 					frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount	
-	# 						row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-	# 						# print "row[27]",row[27]
-	# 						if row[27]:
-	# 							IRR = round((float(row[27]) * 12 * 100),2)
-	# 							if IRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"irr",float(IRR))
-	# 								# print "Updated IIR",IRR
-	# 					except Exception,e:
-	# 						row[27] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-	# 					# print "\n90d SAC",row[27]
-	# 			else:
-	# 				row[27] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-	# 		if row[12] and float(row[12]) > 0 and row[21] =="30% Early buy offer":
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 				payments_rental_amount =[]
-	# 				submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
-	# 				customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments_record_doc = customer_agreement_doc.payments_record
-	# 				if payments_record_doc:
-	# 					payment_history =''
-	# 					for payment_r in payments_record_doc:
-	# 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
-	# 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
-	# 						if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								payments_rental_amount.append(0)
-	# 							else:
-	# 								payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 							# payments_rental_amount.append(payment_r.monthly_rental_amount)
-	# 						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
-	# 							payment_history = payment_r.payment_history
-	# 					Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-	# 					payments_rental_amount.append(float(Total_payoff_amount)) if Total_payoff_amount else ""
-	# 					submitted_payments_rental_amount.extend(payments_rental_amount)
-	# 					frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
-	# 						if row[27]:
-	# 							IRR = round((float(row[27]) * 12 * 100),2)
-	# 							if IRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)			
-	# 					except Exception,e:
-	# 						row[27] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
-	# 					# print "\n30% Early buy offer",row[27]
-	# 			else:
-	# 				row[27] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])		
-	# 		else:
-	# 			row[27] = ""
- # 		else:
- # 			row[27] = ""
+			if row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
+				if row[13] and float(row[13]) > 0.0:
+					payments_rental_amount =[]
+					Total_payoff_amount = 0.0
+					submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
+					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments_record_doc = customer_agreement_doc.payments_record
+					if payments_record_doc:
+						for payment_r in payments_record_doc:
+							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+									# payments_rental_amount.append(payment_r.monthly_rental_amount)
+							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
+								Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
+						payments_rental_amount.append(Total_payoff_amount)
+						submitted_payments_rental_amount.extend(payments_rental_amount)				
+						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount	
+							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							# print "row[27]",row[27]
+							if row[27]:
+								IRR = round((float(row[27]) * 12 * 100),2)
+								if IRR:
+									frappe.db.set_value("Customer Agreement",row[3],"irr",float(IRR))
+									# print "Updated IIR",IRR
+						except Exception,e:
+							row[27] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+						# print "\n90d SAC",row[27]
+				else:
+					row[27] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+			if row[12] and float(row[12]) > 0 and row[21] =="30% Early buy offer":
+				if row[13] and float(row[13]) > 0.0:
+					payments_rental_amount =[]
+					submitted_payments_rental_amount = [-(float(row[13])+float(row[14])+float(row[15]))]
+					customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments_record_doc = customer_agreement_doc.payments_record
+					if payments_record_doc:
+						payment_history =''
+						for payment_r in payments_record_doc:
+							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									payments_rental_amount.append(0)
+								else:
+									payments_rental_amount.append(payment_r.monthly_rental_amount)
+								# payments_rental_amount.append(payment_r.monthly_rental_amount)
+							if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
+								payment_history = payment_r.payment_history
+						Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
+						payments_rental_amount.append(float(Total_payoff_amount)) if Total_payoff_amount else ""
+						submitted_payments_rental_amount.extend(payments_rental_amount)
+						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
+							if row[27]:
+								IRR = round((float(row[27]) * 12 * 100),2)
+								if IRR:
+									frappe.db.set_value("Customer Agreement",row[3],"irr",IRR)			
+						except Exception,e:
+							row[27] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])
+						# print "\n30% Early buy offer",row[27]
+				else:
+					row[27] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"irr",row[27])		
+			else:
+				row[27] = ""
+ 		else:
+ 			row[27] = ""
 
- # 		#XIIR Calculations
- # 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
-	# 		if row[12] and float(row[12])>0: 
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 				submitted_payments_rental_amount = []
-	# 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments = agreement_doc.payments_record
-	# 				if payments:
-	# 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
-	# 					submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
-	# 					for payment_r in payments:
-	# 						if payment_r.check_box_of_submit == 1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								submitted_payments_rental_amount.append((payment_r.due_date,0))
-	# 							else:
-	# 								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
-	# 						if payment_r.check_box_of_submit == 0 and payment_r.due_date >= getdate(now_date):
-	# 							submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
-	# 					frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[28] = xirr(submitted_payments_rental_amount,0.1)	
-	# 						XIRR = round((float(row[28]) * 100),2)
-	# 						if XIRR:					
-	# 							frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)			
-	# 					except Exception,e:
-	# 						row[28] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	 		
-	# 					# print "\nOPEN XIRR",row[28] 
-	# 			else:
-	# 				row[28] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
+ 		#XIIR Calculations
+ 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
+			if row[12] and float(row[12])>0: 
+				if row[13] and float(row[13]) > 0.0:
+					submitted_payments_rental_amount = []
+					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments = agreement_doc.payments_record
+					if payments:
+						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
+						for payment_r in payments:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+							if payment_r.check_box_of_submit == 0 and payment_r.due_date >= getdate(now_date):
+								submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
+						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[28] = xirr(submitted_payments_rental_amount,0.1)	
+							XIRR = round((float(row[28]) * 100),2)
+							if XIRR:					
+								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)			
+						except Exception,e:
+							row[28] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	 		
+						# print "\nOPEN XIRR",row[28] 
+				else:
+					row[28] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
 	 	
-	#  	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
-	# 		if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over":
-	# 			if row[13] and float(row[13]) > 0.0:
-	# 	 			submitted_payments_rental_amount = []
-	# 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments = agreement_doc.payments_record
-	# 				if payments:
-	# 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")					
-	# 					submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
-	# 					for payment_r in payments:
-	# 						if payment_r.check_box_of_submit == 1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								submitted_payments_rental_amount.append((payment_r.due_date,0))
-	# 							else:
-	# 								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
-	# 					frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[28] = xirr(submitted_payments_rental_amount,0.1)
-	# 						if row[28]:
-	# 							XIRR = round((float(row[28]) * 100),2)
-	# 							if XIRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
-	# 					except Exception,e:
-	# 						row[28] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
-	# 					# print "\nContract Term is over XIRR",row[28] 
-	# 			else:
-	# 				row[28] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+	 	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
+			if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over":
+				if row[13] and float(row[13]) > 0.0:
+		 			submitted_payments_rental_amount = []
+					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments = agreement_doc.payments_record
+					if payments:
+						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")					
+						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
+						for payment_r in payments:
+							if payment_r.check_box_of_submit == 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[28] = xirr(submitted_payments_rental_amount,0.1)
+							if row[28]:
+								XIRR = round((float(row[28]) * 100),2)
+								if XIRR:
+									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+						except Exception,e:
+							row[28] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
+						# print "\nContract Term is over XIRR",row[28] 
+				else:
+					row[28] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 			
-	# 		if row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
- # 				if row[13] and float(row[13]) > 0.0:
-	#  				submitted_payments_rental_amount = []
-	#  				pay_off_date = ""
-	#  				total_payment_received = 0.0
-	# 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments = agreement_doc.payments_record
-	#  				if payments:
-	#  					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
-	# 					submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
-	#  					for payment_r in payments_record_doc:
-	# 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
-	# 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
-	# 						if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								submitted_payments_rental_amount.append((payment_r.due_date,0))
-	# 							else:
-	# 								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
-	# 						if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
-	# 							pay_off_date = payment_r.payment_date
-	# 							total_payment_received = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
-	# 					submitted_payments_rental_amount.append((pay_off_date,total_payment_received))
-	# 					frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
-	# 				   	try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[28] = xirr(submitted_payments_rental_amount,0.1)
-	# 						if row[28]:
-	# 							XIRR = round((float(row[28])* 100),2)
-	# 							if XIRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
-	# 					except Exception,e:
-	# 						row[28] = ""
-	# 						frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-	# 					# print "\n90d SAC",XIIR 
-	# 			else:
-	# 				row[28] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+			if row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
+ 				if row[13] and float(row[13]) > 0.0:
+	 				submitted_payments_rental_amount = []
+	 				pay_off_date = ""
+	 				total_payment_received = 0.0
+					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments = agreement_doc.payments_record
+	 				if payments:
+	 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
+	 					for payment_r in payments_record_doc:
+							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
+								pay_off_date = payment_r.payment_date
+								total_payment_received = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
+						submitted_payments_rental_amount.append((pay_off_date,total_payment_received))
+						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
+					   	try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[28] = xirr(submitted_payments_rental_amount,0.1)
+							if row[28]:
+								XIRR = round((float(row[28])* 100),2)
+								if XIRR:
+									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+						except Exception,e:
+							row[28] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+						# print "\n90d SAC",XIIR 
+				else:
+					row[28] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 		
- # 			if row[12] and float(row[12]) > 0 and row[21] =="30% Early buy offer":
- # 				if row[13] and float(row[13]) > 0.0:
-	#  				submitted_payments_rental_amount = []
-	#  				payment_history = ""
-	# 				Total_payoff_amount =""
-	# 				payment_date =''
-	# 				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
-	# 				payments = agreement_doc.payments_record
-	#  				if payments:
-	#  					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
-	# 					submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
-	#  					for payment_r in payments_record_doc:
-	# 						payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
-	# 						payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
-	# 						if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
-	# 							if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
-	# 								submitted_payments_rental_amount.append((payment_r.due_date,0))
-	# 							else:
-	# 								submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
-	# 							# submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
-	#  						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
-	# 							payment_history = payment_r.payment_history
-	# 					Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-	# 					payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
-	# 					submitted_payments_rental_amount.append((payment_date,Total_payoff_amount))
-	# 					frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
-	# 					try:
-	# 						# print "submitted_payments_rental_amount",submitted_payments_rental_amount
-	# 						row[28] = xirr(submitted_payments_rental_amount,0.1)
-	# 						if row[28]:
-	# 							XIRR = round((float(row[28]) * 100),2)
-	# 							if XIRR:
-	# 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
-	# 					except Exception,e:
-	# 							row[28] = ""
-	# 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-	# 					# print "\n30% Early buy offer",row[28] 
-	# 			else:
-	# 				row[28] ="Wholesale price is not set"
-	# 				frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-	# 		else:
-	# 			row[28] = ""
-	# 	else:
-	# 		row[28] = ""
+ 			if row[12] and float(row[12]) > 0 and row[21] =="30% Early buy offer":
+ 				if row[13] and float(row[13]) > 0.0:
+	 				submitted_payments_rental_amount = []
+	 				payment_history = ""
+					Total_payoff_amount =""
+					payment_date =''
+					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments = agreement_doc.payments_record
+	 				if payments:
+	 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
+	 					for payment_r in payments_record_doc:
+							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
+							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
+							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+									submitted_payments_rental_amount.append((payment_r.due_date,0))
+								else:
+									submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+								# submitted_payments_rental_amount.append((payment_r.payment_date,payment_r.monthly_rental_amount))
+	 						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
+								payment_history = payment_r.payment_history
+						Total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
+						payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
+						submitted_payments_rental_amount.append((payment_date,Total_payoff_amount))
+						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
+							row[28] = xirr(submitted_payments_rental_amount,0.1)
+							if row[28]:
+								XIRR = round((float(row[28]) * 100),2)
+								if XIRR:
+									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+						except Exception,e:
+								row[28] = ""
+								frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+						# print "\n30% Early buy offer",row[28] 
+				else:
+					row[28] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+			else:
+				row[28] = ""
+		else:
+			row[28] = ""
 
 
 """
@@ -1025,135 +1026,149 @@ def payments_done_by_api(customer):
 	get_bonus_summary(customer)
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
+	payments = []
+	for agreement in customer_agreements:
+		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
+		for row in agreement_doc.payments_record:
+			if row.check_box_of_submit == 0:
+				payments.append({ row.due_date:row.payment_id }) 
+		payments.sort()
 	args = {'values':{}}
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
-	for agreement in [e[0] for e in customer_agreements]:
-		customer_bonus = []
-		payments_detalis_list = []
-		payment_ids_list = []
-		monthly_rental_amount = []
-		merchandise_status = ""
-		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		add_bonus_of_one_eur = []
-		add_bonus_of_two_eur = []
-		late_payments = []
-		late_fees = []
-		merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
-		for row in customer_agreement.payments_record:
+	for payment in payments:
+		for key in payment:
+			if frappe.db.exists("Customer Agreement", payment[key].split('-P')[0]):	
+				customer_agreement = frappe.get_doc("Customer Agreement",payment[key].split('-P')[0])	
+				for row in customer_agreement.payments_record:
+					if row.due_date == key:
+						customer_bonus = []
+						payments_detalis_list = []
+						payment_ids_list = []
+						monthly_rental_amount = []
+						merchandise_status = ""
+						# customer_agreement = frappe.get_doc("Customer Agreement",payment[key].split('-P')[0])
+						add_bonus_of_one_eur = []
+						add_bonus_of_two_eur = []
+						late_payments = []
+						late_fees = []
+						merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
+						if row.check_box_of_submit == 0 and row.payment_id == payment[key]:
+							# Late Payment
+							if (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
+								customer_doc = frappe.get_doc("Customer",customer)
+								flagged_receivables = customer_doc.flagged_receivables
+								if date_diff(now_date,row.due_date) > 3:
+									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+									late_payments.append(row.monthly_rental_amount)
+									if customer_agreement.late_fees_updated == "No":
+										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+									late_fees.append(customer_agreement.late_fees)
+								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+								if float(flagged_receivables) >= total_charges:
+									payment_ids_list.append(row.payment_id)
+									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+									monthly_rental_amount.append(row.monthly_rental_amount)
+									row.update({
+										"check_box":1,
+										"check_box_of_submit":1,
+										"payment_date":now_date,
+									})
+									row.save(ignore_permissions = True)
+									customer_doc.flagged_receivables = flagged_receivables - total_charges
+									customer_doc.save(ignore_permissions=True)
+									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+							
+							# Todays Payment (on_time Payments)
+							if getdate(row.due_date) == now_date:
+								customer_doc = frappe.get_doc("Customer",customer)
+								flagged_receivables = customer_doc.flagged_receivables
+								if date_diff(now_date,row.due_date) > 3:
+									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+									late_payments.append(row.monthly_rental_amount)
+									if customer_agreement.late_fees_updated == "No":
+										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+								late_fees.append(customer_agreement.late_fees)
+								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+								if float(flagged_receivables) >= total_charges:				
+									payment_ids_list.append(row.payment_id)
+									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+									monthly_rental_amount.append(row.monthly_rental_amount)
+									if row.idx != 1:
+										add_bonus_of_one_eur.append(row.idx)
+									row.update({
+										"check_box":1,
+										"check_box_of_submit":1,
+										"payment_date":now_date,
+										'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+										'bonus_type':"On Time Bonus" if row.idx != 1 else ""
+									})
+									row.save(ignore_permissions = True)
+									customer_doc.flagged_receivables = flagged_receivables - total_charges
+									customer_doc.save(ignore_permissions=True)
+									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+					
+							# Early Payments (Future Payments)
+							if firstDay_of_month <= getdate(row.due_date):	
+								customer_doc = frappe.get_doc("Customer",customer)
+								flagged_receivables = customer_doc.flagged_receivables
+								if date_diff(now_date,row.due_date) > 3:
+									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+									late_payments.append(row.monthly_rental_amount)
+									if customer_agreement.late_fees_updated == "No":
+										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))					
+									late_fees.append(customer_agreement.late_fees)
+								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+								if float(flagged_receivables) >= total_charges:
+									payment_ids_list.append(row.payment_id)
+									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+									monthly_rental_amount.append(row.monthly_rental_amount)
+									if row.idx != 1:
+										add_bonus_of_two_eur.append(row.idx)
+									row.update({
+										"check_box":1,
+										"check_box_of_submit":1,
+										"payment_date":now_date,
+										'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+										'bonus_type':"Early Bonus" if row.idx != 1 else "",
+									})
+									row.save(ignore_permissions = True)
+									customer_doc.flagged_receivables = flagged_receivables - total_charges
+									customer_doc.save(ignore_permissions=True)
+									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 
-			if row.check_box_of_submit == 0 and (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
-				customer_doc = frappe.get_doc("Customer",customer)
-				flagged_receivables = customer_doc.flagged_receivables
-				if date_diff(now_date,row.due_date) > 3:
-					no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-					late_payments.append(row.monthly_rental_amount)
-					if customer_agreement.late_fees_updated == "No":
-						customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-					late_fees.append(customer_agreement.late_fees)
-				total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-				if float(flagged_receivables) >= total_charges:
-					payment_ids_list.append(row.payment_id)
-					payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-					monthly_rental_amount.append(row.monthly_rental_amount)
-					row.update({
-						"check_box":1,
-						"check_box_of_submit":1,
-						"payment_date":now_date,
-					})
-					row.save(ignore_permissions = True)
-					customer_doc.flagged_receivables = flagged_receivables - total_charges
-					customer_doc.save(ignore_permissions=True)
-					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)	
-			
-			if row.check_box_of_submit == 0 and getdate(row.due_date) == now_date:
-				customer_doc = frappe.get_doc("Customer",customer)
-				flagged_receivables = customer_doc.flagged_receivables
-				if date_diff(now_date,row.due_date) > 3:
-					no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-					late_payments.append(row.monthly_rental_amount)
-					if customer_agreement.late_fees_updated == "No":
-						customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-					late_fees.append(customer_agreement.late_fees)
-				total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-				if float(flagged_receivables) >= total_charges:
-					payment_ids_list.append(row.payment_id)
-					payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-					monthly_rental_amount.append(row.monthly_rental_amount)
-					if row.idx != 1:
-						add_bonus_of_one_eur.append(row.idx)
-					row.update({
-						"check_box":1,
-						"check_box_of_submit":1,
-						"payment_date":now_date,
-						'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
-						'bonus_type':"On Time Bonus" if row.idx != 1 else ""
-					})
-					row.save(ignore_permissions = True)
-					customer_doc.flagged_receivables = flagged_receivables - total_charges
-					customer_doc.save(ignore_permissions=True)
-					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)	
- 
-			if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date):
-			# if row.check_box_of_submit == 0 and firstDay_of_month <= getdate(row.due_date) <= last_day_of_month and getdate(row.due_date) > now_date:
-				customer_doc = frappe.get_doc("Customer",customer)
-				flagged_receivables = customer_doc.flagged_receivables
-				if date_diff(now_date,row.due_date) > 3:
-					no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-					late_payments.append(row.monthly_rental_amount)
-					if customer_agreement.late_fees_updated == "No":
-						customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))					
-					late_fees.append(customer_agreement.late_fees)
-				total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-				if float(flagged_receivables) >= total_charges:
-					payment_ids_list.append(row.payment_id)
-					payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-					monthly_rental_amount.append(row.monthly_rental_amount)
-					if row.idx != 1:
-						add_bonus_of_two_eur.append(row.idx)
-					row.update({
-						"check_box":1,
-						"check_box_of_submit":1,
-						"payment_date":now_date,
-						'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
-						'bonus_type':"Early Bonus" if row.idx != 1 else "",
-					})
-					row.save(ignore_permissions = True)
-					customer_doc.flagged_receivables = flagged_receivables - total_charges
-					customer_doc.save(ignore_permissions=True)
-					auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)			
-
-		if len(payment_ids_list) > 0:
-			customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
-			customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-			customer_agreement.late_payment = sum(late_payments)
-			customer_bonus.append(customer_agreement.bonus)
-			customer_agreement.save(ignore_permissions = True)
-			customer_doc = frappe.get_doc("Customer",customer)
-			customer_doc.bonus = sum(customer_bonus) if customer_bonus else 0
-			# customer_doc.bonus = customer_doc.bonus + sum(customer_bonus) if customer_bonus else 0
-			customer_doc.save(ignore_permissions=True)
-			set_values_in_agreement(customer_agreement)
-			args['assigned_bonus_discount'] = ""
-			args['customer'] = customer
-			args['receivables'] = frappe.get_doc("Customer",customer).receivables
-			args['add_in_receivables'] = frappe.get_doc("Customer",customer).receivables
-			args['payment_date'] = str(now_date)
-			args['rental_payment'] = sum(monthly_rental_amount)
-			args['payment_type'] = "Normal Payment"
-			args['late_fees'] = sum(map(float,late_fees))
-			args['values']['amount_paid_by_customer'] = 0
-			args['values']['bank_card'] = 0
-			args['values']['bank_transfer'] = 0
-			args['values']['discount'] = 0
-			args['values']['bonus'] = 0
-			args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-			args['total_charges'] = 0
-			args['total_amount'] = 0
-			args['special_associate'] = "Automatic API"
-			make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
-			
+						if len(payment_ids_list) > 0:
+							customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
+							bonus_amount = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+							customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+							customer_agreement.late_payment = sum(late_payments)
+							customer_bonus.append(customer_agreement.bonus)
+							customer_agreement.save(ignore_permissions = True)
+							customer_doc = frappe.get_doc("Customer",customer)
+							customer_doc.bonus = customer_doc.bonus + bonus_amount 
+							# sum(customer_bonus) if customer_bonus else 0
+							# customer_doc.bonus = customer_doc.bonus + sum(customer_bonus) if customer_bonus else 0
+							customer_doc.save(ignore_permissions=True)
+							set_values_in_agreement(customer_agreement)
+							args['assigned_bonus_discount'] = ""
+							args['customer'] = customer
+							args['receivables'] = frappe.get_doc("Customer",customer).receivables
+							args['add_in_receivables'] = frappe.get_doc("Customer",customer).receivables
+							args['payment_date'] = str(now_date)
+							args['rental_payment'] = sum(monthly_rental_amount)
+							args['payment_type'] = "Normal Payment"
+							args['late_fees'] = sum(map(float,late_fees))
+							args['values']['amount_paid_by_customer'] = 0
+							args['values']['bank_card'] = 0
+							args['values']['bank_transfer'] = 0
+							args['values']['discount'] = 0
+							args['values']['bonus'] = 0
+							args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+							args['total_charges'] = 0
+							args['total_amount'] = 0
+							args['special_associate'] = "Automatic API"
+							make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
+	
 	cust_doc = frappe.get_doc("Customer",customer)
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
 	cust_doc.flagged_receivables = 0.0
 	cust_doc.save()
-
