@@ -24,7 +24,7 @@ payments_received = Class.extend({
 	set_fields: function() {
 		var me = this;
 		// / <div class='col-xs-2 payment_type_filter'></div>\
-		html = "<html></head><div>\
+		html = "<div>\
 				<div class='col-xs-2 customer'></div>\
 				<div class='col-xs-2 payment_type_filter'></div>\
 				<div class='col-xs-1 from_date'></div>\
