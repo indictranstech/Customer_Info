@@ -24,14 +24,14 @@ payments_received = Class.extend({
 	set_fields: function() {
 		var me = this;
 		// / <div class='col-xs-2 payment_type_filter'></div>\
-		html = "<div>\
+		html = "<html></head><div>\
 				<div class='col-xs-2 customer'></div>\
 				<div class='col-xs-2 payment_type_filter'></div>\
-				<div class='col-xs-2 from_date'></div>\
-  				<div class='col-xs-2 to_date'></div>\
+				<div class='col-xs-1 from_date'></div>\
+  				<div class='col-xs-1 to_date'></div>\
   				<div class='col-xs-2 agreement'></div>\
   				<div class='col-xs-2 data_limit'></div>\
-  				<div class='col-xs-2' ></div>\
+  				<div class='col-xs-2 submit' style ='margin-top: 10px;font-size: 25px;'></div>\
   				</div>\
 				<table id='tableSearchResults' class='table table-hover  table-striped table-condensed' style='font-size:12px;margin-bottom: 0px;'>\
 			     	<thead>\
@@ -56,6 +56,7 @@ payments_received = Class.extend({
 			            </tr>\
 			        </thead></table>"
 		me.page.html(html)
+		// me.page.getElementsByClassName("btn").css({ 'display': "block" });
 		me.customer_link = frappe.ui.form.make_control({
 			parent: me.page.find(".customer"),
 			df: {
@@ -127,38 +128,58 @@ payments_received = Class.extend({
 			render_input: true
 		});
 		me.payment_type_filter.refresh();
+
+		me.submit = frappe.ui.form.make_control({
+		parent: me.page.find(".submit"),
+
+		df: {
+				fieldtype: "Button",
+				fieldname: "submit",
+				label:"Submit",
+				// options:["","Rental Payment","Modification Of Receivables","90d SAC","Early buy"],
+				// placeholder:"Payment Type"
+			},
+			render_input: true
+		});
+		me.submit.refresh();		
 		
 		this.render_payments_details();	
-
+		me.submit.$input.css("font-size", "15px","padding-top","50pxpx");
 		me.customer_link.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
+			// var old_me = me;
+			// old_me.render_payments_details()
 		});
 
 		me.from_date.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
+			// var old_me = me;
+			// old_me.render_payments_details()
 		});
 
 		me.to_date.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
+			// var old_me = me;
+			// old_me.render_payments_details()
 		});
 
 		me.agreement.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
+			// var old_me = me;
+			// old_me.render_payments_details()
 		});
 
 		me.data_limit.$input.on("change", function(){
-			var old_me = me;
-			old_me.render_payments_details()
+			// var old_me = me;
+			// old_me.render_payments_details()
 		});
 
 		me.payment_type_filter.$input.on("change", function(){
+			// var old_me = me;
+			// old_me.render_payments_details()
+		});
+
+		me.submit.$input.on("click", function(){
 			var old_me = me;
 			old_me.render_payments_details()
-		});
+		});	
+
 	},
 	render_payments_details: function() {
 		var me = this;
