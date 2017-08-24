@@ -1145,8 +1145,6 @@ def payments_done_by_api(customer):
 							customer_agreement.save(ignore_permissions = True)
 							customer_doc = frappe.get_doc("Customer",customer)
 							customer_doc.bonus = customer_doc.bonus + bonus_amount 
-							# sum(customer_bonus) if customer_bonus else 0
-							# customer_doc.bonus = customer_doc.bonus + sum(customer_bonus) if customer_bonus else 0
 							customer_doc.save(ignore_permissions=True)
 							set_values_in_agreement(customer_agreement)
 							args['assigned_bonus_discount'] = ""
