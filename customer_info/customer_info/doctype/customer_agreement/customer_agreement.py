@@ -15,7 +15,7 @@ from datetime import datetime, timedelta,date
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
-#from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
+# from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 from datetime import datetime, timedelta,date
 from frappe.utils import flt, get_datetime, get_time, getdate
 from customer_info.customer_info.report.customer_agreements_report.financial import xirr
@@ -35,8 +35,16 @@ class CustomerAgreement(Document):
 		self.changed_merchandise_status_according_to_agreement_status()
 		self.payment_date_comment()
 		self.get_active_agreement_month()
+		self.merchandise_return_agreement_closing()
 		#self.remove_bonus_of_customer()
-		
+	
+	def merchandise_return_agreement_closing(self):
+		if self.merchandise_status == "Returned to supplier":		
+			item =frappe.get_doc("Item",self.product)
+			default_warehouse = "8101 – Ištrinta, grąžinta tiekėjui, sugadinta, naudojama įmonės reikmėms, pasibaigė sutartis, išsipirko anksčiau. - BK"
+			item.default_warehouse = default_warehouse
+			item.save(ignore_permissions=True)
+
 	def change_sold_date_of_item(self):
 		"""
 			change solde date when agreement is closed and agreement_closing_suspending_reason 
@@ -1137,8 +1145,6 @@ def payments_done_by_api(customer):
 							customer_agreement.save(ignore_permissions = True)
 							customer_doc = frappe.get_doc("Customer",customer)
 							customer_doc.bonus = customer_doc.bonus + bonus_amount 
-							# sum(customer_bonus) if customer_bonus else 0
-							# customer_doc.bonus = customer_doc.bonus + sum(customer_bonus) if customer_bonus else 0
 							customer_doc.save(ignore_permissions=True)
 							set_values_in_agreement(customer_agreement)
 							args['assigned_bonus_discount'] = ""
