@@ -68,7 +68,9 @@ class CustomerAgreement(Document):
 		if self.agreement_status == "Closed" and self.agreement_closing_suspending_reason == "Return":
 			self.merchandise_status = "Used"
 		if self.agreement_status == "Suspended":
-			self.merchandise_status = "Suspended"
+			pass
+			# self.merchandise_status = "Suspended"
+
 		if  self.agreement_status == "Suspended" and self.agreement_closing_suspending_reason == "Fraud/Stolen":
 			self.merchandise_status = "Stolen"
 		if self.agreement_status == "Open" and self.agreement_closing_suspending_reason:
@@ -1018,7 +1020,10 @@ Add bonus for payments
 Process payments
 Reduce receivables
 """
-def payments_done_by_api(customer):
+def payments_done_by_api():
+# def payments_done_by_api(customer):
+
+	customer = "NC"
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -1031,8 +1036,8 @@ def payments_done_by_api(customer):
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
 			if row.check_box_of_submit == 0:
-				payments.append({ row.due_date:row.payment_id }) 
-		payments.sort()
+				payments.append({ row.due_date:row.payment_id })
+	payments.sort()
 	args = {'values':{}}
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
 	for payment in payments:
