@@ -20,6 +20,7 @@ def get_data():
 	result = frappe.db.sql("""select
 								ca.name,
 								ca.migrated_agreement_id,
+								ca.agreement_status,
 								cus.first_name,
 								cus.last_name,
 								cus.prersonal_code,
@@ -48,19 +49,19 @@ def get_data():
 	for row in result:
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
-												order by ca.date limit 1""".format(row[22]),as_list=1)[0][0]
+												order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
-			row[22] = row[23]
+			row[23] = row[24]
 			print "Agree----",row[0]
-			print "row18",row[18],"row23",row[23],"row22",row[22]
-			if float(row[23]) > 0.0:
-				row[18] ="{0:.2f}".format(float(str(row[18])) - float(str(row[23]))) if row[23] and row[18] else row[18]
+			print "row18",row[19],"row23",row[24],"row22",row[23]
+			if float(row[24]) > 0.0:
+				row[18] ="{0:.2f}".format(float(str(row[19])) - float(str(row[24]))) if row[24] and row[19] else row[19]
 			else: 
 				# print "float",float(row[23])
-				row[18] = "{0:.2f}".format(float(str(row[18])) + abs(float(str(row[23])))) if row[23] and row[18] else row[18]
-				print "row18",row[18],"row23",row[23],"row22",row[22]		
+				row[19] = "{0:.2f}".format(float(str(row[19])) + abs(float(str(row[24])))) if row[24] and row[19] else row[19]
+				print "row18",row[19],"row23",row[24],"row22",row[23]		
 		else:
-			row[22] = ""
+			row[23] = ""
 	return result
 
 
@@ -68,6 +69,7 @@ def get_colums():
 	columns = [
 			("Sutarties nr") + ":Link/Customer Agreement:80",
 			("Migracinis sutarties nr.") + ":Data:70",
+			("Sutarties statusas") + "Data:70",			
 			("Kliento vardas") + ":Data:130",
 			("Pavardė") + ":Data:100",
 			("Asmens kodas") + ":Data:100",
