@@ -94,9 +94,9 @@ def calculate_late_fee(row):
 	else:
 		row[7] = late_fees
 		if row[5]<0:
-			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]
+			row[8] = row[6] + row[7] + row[5]
 		elif row[5]>0:
-			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]   
+			row[8] = row[6] + row[7] + row[5]   
 		else:
 			row[8] = row[6] + row[7] + row[5]
 
