@@ -70,6 +70,7 @@ def get_condtion(from_date,to_date):
 def calculate_late_fee(row):
 	# if customer_agreement.late_fees_updated == "No":
 			# if no_of_late_days > 180:
+	# row=row.encode('utf-8')
 	late_payment_list_with_date = {}
 	now_date = datetime.now().date()
 	# for payment_record in row:
@@ -79,17 +80,25 @@ def calculate_late_fee(row):
 	no_of_late_days_new += date_diff(now_date,row[0])					
 	if no_of_late_days_new > 180:				
 		late_payment_list_with_date[row[4]] = row[0]
-	maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
-	late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
-	no_of_late_days = date_diff(now_date,late_date)
-	late_fees_rate = frappe.get_doc("Customer Agreement",row[1]).late_fees_rate
-	row[8] = "{0:.2f}".format(float(no_of_late_days * row[6] * (late_fees_rate/100)))
-	if row[5]<0:
-		row[8] = row[6] + row[7] + row[5]
-	elif row[5]>0:
-		row[8] = row[6] + row[7] - row[5]   
+		maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
+		late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
+		no_of_late_days = date_diff(now_date,late_date)
+		late_fees_rate = frappe.get_doc("Customer Agreement",row[1]).late_fees_rate
+		row[7] = "{0:.2f}".format(float(no_of_late_days * row[6] * (late_fees_rate/100)))
+		if row[5]<0:
+			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]
+		elif row[5]>0:
+			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]  
+		else:
+			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]
 	else:
-		row[8] = row[6] +row[7] + row[5]
+		row[7] = late_fees
+		if row[5]<0:
+			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]
+		elif row[5]>0:
+			row[8] = row[6] + float(row[7].encode('utf-8')) + row[5]   
+		else:
+			row[8] = row[6] + row[7] + row[5]
 
 	return row
 
