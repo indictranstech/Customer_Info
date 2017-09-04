@@ -69,7 +69,7 @@ def get_colums():
 	columns = [
 			("Sutarties nr") + ":Link/Customer Agreement:80",
 			("Migracinis sutarties nr.") + ":Data:70",
-			("Sutarties statusas") + "Data:70",			
+			("Sutarties statusas"),			
 			("Kliento vardas") + ":Data:130",
 			("Pavardė") + ":Data:100",
 			("Asmens kodas") + ":Data:100",
