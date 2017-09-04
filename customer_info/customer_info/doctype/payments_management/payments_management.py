@@ -515,7 +515,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
 				no_of_late_days = date_diff(now_date,late_date)
 				customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-
+			else:
+				customer_agreement.late_fees = 0.0
 
 		customer_agreement.bonus = customer_agreement.bonus + add_bonus - subtract_bonus
 		# if  flag != "Make Refund":
