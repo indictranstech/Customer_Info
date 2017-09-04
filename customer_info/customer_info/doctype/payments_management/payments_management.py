@@ -15,7 +15,8 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
 from customer_info.customer_info.doctype.customer_agreement.customer_agreement import update_due_dates_of_payments
-
+from datetime import timedelta
+import operator
 
 class PaymentsManagement(Document):
 	pass
@@ -148,6 +149,7 @@ def calculate_total_charges(customer,flag,payment_date):
 					changed leter fees formula
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * 0.02
 					"""
+
 					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)
 					if agreement in agreements_and_late_fees_dict.keys():
 						agreements_and_late_fees_dict[agreement] += late_fee
@@ -324,6 +326,7 @@ def update_campaign_discount(agreement,campaign_discount):
 
 @frappe.whitelist()
 def get_customer_agreement(customer,payment_date,flag=None):
+
 	#WHEN DATEDIFF(suspension_date,now()) > 0 AND contact_result = "WBI" THEN DATE_FORMAT(suspension_date,'%d-%m-%Y')
 	condition =  "and agreement_status = '{0}' ".format("Suspended" if flag else "Open") 
 	suspended_until_date = ",suspended_until" if flag else ""
@@ -355,8 +358,6 @@ def get_customer_agreement(customer,payment_date,flag=None):
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
-		
-
 		if entry[3] == 0:
 			entry[3] = frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
@@ -431,8 +432,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	if customer_agreement.payments_record:
 		for row in customer_agreement.payments_record:
 			if row.check_box == 1 and row.check_box_of_submit == 0:
-				received_payments.append(row.monthly_rental_amount)
-			
+				received_payments.append(row.monthly_rental_amount)	
 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3 and row.check_box == 1 and row.check_box_of_submit == 0:
 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
 				late_payments.append(row.monthly_rental_amount)	
@@ -498,8 +498,24 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + (len(add_bonus_of_one_eur)*1 - len(remove_bonus_of_one_eur)*1)  # update early payment bonus
 		customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  (len(add_bonus_of_two_eur)*2 - len(remove_bonus_of_two_eur)*2) # update on time payment bonus
 		
+		
+		# Earlier Late fees Calculations 
+		# Algorithm changed on request of Ticket Number 208
+		# if customer_agreement.late_fees_updated == "No":
+		# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		if customer_agreement.late_fees_updated == "No":
-			customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+			if no_of_late_days > 180:
+				late_payment_list_with_date = {}
+				for payment_record in customer_agreement.payments_record:
+					no_of_late_days_new = 0
+					no_of_late_days_new += date_diff(payment_record.payment_date,payment_record.due_date)					
+					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 180:				
+						late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
+				maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
+				late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
+				no_of_late_days = date_diff(now_date,late_date)
+				customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+
 
 		customer_agreement.bonus = customer_agreement.bonus + add_bonus - subtract_bonus
 		# if  flag != "Make Refund":
