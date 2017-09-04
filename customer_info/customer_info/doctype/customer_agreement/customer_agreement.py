@@ -667,8 +667,8 @@ def auto_payment_notification(customer,agreement,last_payment):
 def closed_agreement_notification(customer,agreement):
 	date = frappe.utils.data.now_datetime()
 	frappe.sendmail(
-				recipients = "sukrut.j@indictranstech.com",
-				# recipients = "lukas@povilauskas.lt",
+				# recipients = "sukrut.j@indictranstech.com",
+				recipients = "lukas@povilauskas.lt",
 				sender = "pagalba@bekredito.lt",
 				subject = "Closed Agreemnet Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/closed_agreement_notification.html", {"agreement":agreement,"customer": customer,"date": date}),
