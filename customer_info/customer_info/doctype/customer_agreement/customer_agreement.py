@@ -1231,10 +1231,9 @@ Add bonus for payments
 Process payments
 Reduce receivables
 """
-def payments_done_by_api():
-# def payments_done_by_api(customer):
-
-	customer = "NC"
+# def payments_done_by_api():
+def payments_done_by_api(customer):
+	# customer = ""
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -1292,7 +1291,7 @@ def payments_done_by_api():
 									row.save(ignore_permissions = True)
 									customer_doc.flagged_receivables = flagged_receivables - total_charges
 									customer_doc.save(ignore_permissions=True)
-									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 							
 							# Todays Payment (on_time Payments)
 							if getdate(row.due_date) == now_date:
@@ -1321,7 +1320,7 @@ def payments_done_by_api():
 									row.save(ignore_permissions = True)
 									customer_doc.flagged_receivables = flagged_receivables - total_charges
 									customer_doc.save(ignore_permissions=True)
-									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 					
 							# Early Payments (Future Payments)
 							if firstDay_of_month <= getdate(row.due_date):	
@@ -1350,7 +1349,7 @@ def payments_done_by_api():
 									row.save(ignore_permissions = True)
 									customer_doc.flagged_receivables = flagged_receivables - total_charges
 									customer_doc.save(ignore_permissions=True)
-									auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 
 						if len(payment_ids_list) > 0:
 							customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
@@ -1380,7 +1379,7 @@ def payments_done_by_api():
 							args['total_charges'] = 0
 							args['total_amount'] = 0
 							args['special_associate'] = "Automatic API"
-							make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
+							# make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
 	
 	cust_doc = frappe.get_doc("Customer",customer)
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
