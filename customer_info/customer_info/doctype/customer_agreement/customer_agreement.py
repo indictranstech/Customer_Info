@@ -1379,7 +1379,7 @@ def payments_done_by_api(customer):
 							args['total_charges'] = 0
 							args['total_amount'] = 0
 							args['special_associate'] = "Automatic API"
-							# make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
+							make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
 	
 	cust_doc = frappe.get_doc("Customer",customer)
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
