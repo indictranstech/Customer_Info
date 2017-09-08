@@ -504,29 +504,34 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		# if customer_agreement.late_fees_updated == "No":
 		# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		if customer_agreement.late_fees_updated == "No":
-			if no_of_late_days > 0:
-				no_of_late_days_greater_than_180 = 0
-				if no_of_late_days < 180:
-					no_of_late_days_greater_than_180 = no_of_late_days 
-				elif no_of_late_days > 180:
-					no_of_late_days_greater_than_180 = 180
-				customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-
+			# late_days_list =[]
 			# if no_of_late_days > 0:
-			# 	late_payment_list_with_date = {}
-			# 	for payment_record in customer_agreement.payments_record:
-			# 		no_of_late_days_new = 0
-			# 		no_of_late_days_new += date_diff(payment_record.payment_date,payment_record.due_date)					
-			# 		if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 180:				
-			# 			late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
-			# 			maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
-			# 			# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
-			# 			if no_of_late_days_new < 180:
-			# 				no_of_late_days_greater_than_180 = no_of_late_days 
-			# 			elif no_of_late_days_new > 180:
-			# 				no_of_late_days_greater_than_180 = 180
+			# 	no_of_late_days_greater_than_180 = 0
+			# 	if no_of_late_days < 180:
+			# 		no_of_late_days_greater_than_180 = no_of_late_days 
+			# 	elif no_of_late_days > 180:
+			# 		no_of_late_days_greater_than_180 = 180
+			# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 
-						# customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+			if no_of_late_days > 0:
+				late_payment_list_with_date = {}
+				late_days_list =[]
+				for payment_record in customer_agreement.payments_record:
+					no_of_late_days_new = 0
+					no_of_late_days_new += date_diff(payment_record.payment_date,payment_record.due_date)					
+					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 0:				
+						late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
+						maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
+						# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
+
+						if no_of_late_days_new < 180:						
+							no_of_late_days_greater_than_180 = no_of_late_days_new 
+						elif no_of_late_days_new > 180:
+							no_of_late_days_greater_than_180 = 180
+						# late_days_list.append("{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100))).encode('utf-8'))
+						late_days_list.append(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+						customer_agreement.late_fees = sum(late_days_list)
+						
 					# else:
 						# customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_new * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 
