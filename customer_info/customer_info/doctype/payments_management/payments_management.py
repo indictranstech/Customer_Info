@@ -530,7 +530,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 							no_of_late_days_greater_than_180 = 180
 						# late_days_list.append("{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100))).encode('utf-8'))
 						late_days_list.append(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-						customer_agreement.late_fees = sum(late_days_list)
+						customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
 						
 					# else:
 						# customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_new * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
