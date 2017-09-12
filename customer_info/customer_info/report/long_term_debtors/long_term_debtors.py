@@ -6,6 +6,9 @@
 from __future__ import unicode_literals
 import frappe
 from datetime import datetime, timedelta,date
+from datetime import datetime, timedelta,date
+from frappe.utils import flt, get_datetime, get_time, getdate
+from frappe.utils import date_diff
 
 
 def execute(filters=None):
@@ -38,7 +41,7 @@ def get_data():
 								concat(ca.product_category," ",ca.product),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select sum(t1.monthly_rental_amount) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
+								ca.late_fees,
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),
 								ca.late_fees_rate,
 								cus.name,
@@ -46,6 +49,9 @@ def get_data():
 								from `tabCustomer Agreement` ca ,`tabCustomer` cus
 								where ca.customer = cus.name and ca.debtor = "Yes"
 								""".format(now_date),as_list=1,debug=1)
+	for row in result:
+			row= calculate_late_fee(row)
+
 	for row in result:
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
@@ -63,6 +69,25 @@ def get_data():
 		else:
 			row[23] = ""
 	return result
+
+def calculate_late_fee(row):
+	now_date = datetime.now().date()
+	late_fees_list = []
+	late_fees = 0.0
+	no_of_late_days = 0
+	for days in frappe.get_doc("Customer Agreement",row[0]).payments_record:
+		no_of_late_days_new = 0
+		no_of_late_days_new += date_diff(now_date,days.due_date)
+		late_fees_rate = frappe.get_doc("Customer Agreement",row[0]).late_fees_rate
+		monthly_rental_amount =	frappe.get_doc("Customer Agreement",row[0]).payments_record[1].monthly_rental_amount
+		if no_of_late_days_new > 180 and days.check_box_of_submit == 0 :
+			no_of_late_days = 180
+			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
+		elif no_of_late_days_new > 0 and no_of_late_days_new < 180 and days.check_box_of_submit == 0: 
+			no_of_late_days = no_of_late_days_new
+			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
+	row[20] = "{0:.2f}".format(sum(late_fees_list))
+	return row
 
 
 def get_colums():
