@@ -16,7 +16,7 @@ def execute(filters=None):
 def get_data(filters):
 	if filters:
 		now_date = datetime.now().date()
-		result = frappe.db.sql("""select t1.due_date, 
+		result = frappe.db.sql("""select t1.Due_date, 
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0
 									THEN DATEDIFF('{1}',t1.due_date) ELSE 0 END AS difference,
 									t1.payment_id,
@@ -27,8 +27,7 @@ def get_data(filters):
 									t2.debtor as debtor,
 									REPLACE(t3.company_phone_1,'+',''),
 									t3.bonus,
-									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 3 
-									THEN (DATEDIFF('{1}',t1.due_date) - 3) * t1.monthly_rental_amount * (t2.late_fees_rate/100) ELSE 0 END AS late_fees,
+									t2.late_fees,
 									"total_due",
 									t3.receivables,
 									CASE WHEN t2.discounted_payments_left > 0 THEN t2.campaign_discount ELSE 0 END as campaign_discount,
@@ -46,6 +45,10 @@ def get_data(filters):
 											ELSE 1=1 END
 										and t1.check_box_of_submit != 1
 											order by t1.due_date""" .format(filters.get('date'),now_date),as_list=1,debug=1)
+
+		for row in result:
+			row= calculate_late_fee(row)			
+
 		# for l in result:
 		# 	if float(l[9]):
 		# 		total_due = l[9] + l[3]
@@ -58,7 +61,7 @@ def get_data(filters):
 		# 	l[8] = "{0:.2f}".format(float(l[8]))
 		for l in result:
 			if float(l[10]):
-				total_due = l[10] + l[3]
+				total_due = float(l[10].encode('utf-8')) + l[3]
 				l[11] = "{0:.2f}".format(total_due)
 				l[12] = "{0:.2f}".format(total_due - l[12])
 			else:
@@ -71,7 +74,18 @@ def get_data(filters):
 
 		return result
 	else:
-		return []	
+		return []
+def calculate_late_fee(row):
+	late_fees_rate = frappe.get_doc("Customer Agreement",row[2][0:9].encode('utf-8')).late_fees_rate
+	if int(row[1]) > 180:
+		no_of_late_days = 180
+		row[10] = "{0:.2f}".format(float(no_of_late_days * row[3] * (late_fees_rate/100)))
+	else:
+		row[10] = "{0:.2f}".format(float( int(row[1]) * row[3] * (late_fees_rate/100)))
+
+	return row
+
+
 
 def get_colums():
 	columns = [("Due Date") + ":Date:80", ("Late Days") + ":Int:70",
