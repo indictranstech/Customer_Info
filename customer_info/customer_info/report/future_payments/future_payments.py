@@ -22,7 +22,7 @@ def get_data(filters):
 						t2.customer,
 						t2.debtor,
 						t1.payment_id,
-,						t3.receivables,
+						t3.receivables,
 						t1.monthly_rental_amount,
 						t2.late_fees,
 						t2.total_due
