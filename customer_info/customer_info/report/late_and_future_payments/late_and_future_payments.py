@@ -16,7 +16,7 @@ def execute(filters=None):
 def get_data(filters):
 	if filters:
 		now_date = datetime.now().date()
-		result = frappe.db.sql("""select t1.Due_date, 
+		result = frappe.db.sql("""select t1.due_date, 
 									CASE WHEN t1.due_date < '{1}' AND DATEDIFF('{1}',t1.due_date) > 0
 									THEN DATEDIFF('{1}',t1.due_date) ELSE 0 END AS difference,
 									t1.payment_id,
