@@ -41,7 +41,7 @@ def get_data():
 								concat(ca.product_category," ",ca.product),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select sum(t1.monthly_rental_amount) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								ca.late_fees,
+								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),
 								ca.late_fees_rate,
 								cus.name,
@@ -57,6 +57,7 @@ def get_data():
 												where customer = '{0}'
 												order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
+
 			row[23] = row[24]
 			print "Agree----",row[0]
 			print "row18",row[19],"row23",row[24],"row22",row[23]
@@ -87,6 +88,7 @@ def calculate_late_fee(row):
 			no_of_late_days = no_of_late_days_new
 			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
 	row[20] = "{0:.2f}".format(sum(late_fees_list))
+	row[21] = row[20] + row[]
 	return row
 
 
@@ -124,6 +126,7 @@ def get_colums():
 # 	columns = [
 # 			("Agreement Number") + ":Link/Customer Agreement:80",
 # 			("Migrated agreement ID") + ":Data:70",
+# 			("Status"),
 # 			("Customer Name") + ":Data:130",
 # 			("Surname") + ":Float:100",
 # 			("Personal Code") + ":Data:100",
@@ -144,7 +147,6 @@ def get_colums():
 # 			("Late Fees") + ":Data:90",
 # 			("Late Payments + Late Fees") + ":Data:100",
 # 			("Late Fees Rate %")+ ":Data:100",
-# 			#("Permoka+/Nepriemoka-") + ":Data:100"
 # 			("Receivables")+":Data:100"
 # 			]
 # 	return columns
