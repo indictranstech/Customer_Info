@@ -88,7 +88,7 @@ def calculate_late_fee(row):
 			no_of_late_days = no_of_late_days_new
 			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
 	row[20] = "{0:.2f}".format(sum(late_fees_list))
-	row[21] = row[20] + row[]
+	# row[21] = row[20] + row[]
 	return row
 
 
