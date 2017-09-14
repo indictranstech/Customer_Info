@@ -1385,3 +1385,63 @@ def payments_done_by_api(customer):
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
 	cust_doc.flagged_receivables = 0.0
 	cust_doc.save()
+
+# @frappe.whitelist()
+# def get_late_fees():
+# 	result = frappe.db.sql("""select 
+# 				cus.first_name,
+# 				cus.last_name,
+# 				cus.prersonal_code,
+# 				ca.name,
+# 				ca.agreement_status,
+# 				ca.date,
+# 				ca.agreement_close_date,
+# 				ca.product_category,
+# 				item.brand,
+# 				format(ca.monthly_rental_payment,2),
+# 				format(ca.agreement_period,2),
+# 				format(ca.s90d_sac_price,2),
+# 				item.purchase_price_with_vat,
+# 				item.wholesale_price,
+# 				item.transportation_costs_incoming,
+# 				item.transportation_costs_outgoing,
+# 				format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+# 				format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+# 				format(ca.monthly_rental_payment * ca.agreement_period,2),
+# 				format(ca.payments_made,2),
+# 				case when ca.agreement_status = "Closed" then ca.agreement_close_date
+# 				when ca.agreement_status = "Suspended" then ca.suspended_from
+# 				else "-" end as agreement_closing_suspension_date,
+# 				case when ca.agreement_closing_suspending_reason = "Early buy offer" then
+# 				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
+# 				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
+# 				case when ca.agreement_close_date then period_diff(date_format(ca.agreement_close_date, "%Y%m"), date_format(ca.date, "%Y%m")) else period_diff(date_format(now(), "%Y%m"), date_format(ca.date, "%Y%m")) end as active_agreement_months,
+# 				format(ca.payments_made - item.purchase_price_with_vat,2),
+# 				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+# 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
+# 				ca.campaign_discount_code,
+# 				ca.irr,
+# 				ca.xirr
+# 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
+# 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
+	
+# 	for row in result:
+# 		now_date = datetime.now().date()
+# 		date_difference = 0
+# 		late_fees_payments = []
+# 		pending_payments = []
+# 		customer_agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+# 		payments_record_doc = customer_agreement_doc.payments_record
+# 		if customer_agreement_doc.agreement_status == "Open":			
+# 			for each_payment in payments_record_doc:
+# 				late_date_difference = date_diff(now_date,each_payment.due_date)
+# 				if late_date_difference > 180 :
+# 				 	print late_date_difference
+# 				elif late_date_difference < 0 and each_payment.check_box_of_submit == 0:
+# 					pending_payments.append(each_payment.due_date)
+# 			print pending_payments
+
+
+
+
+			
