@@ -61,7 +61,7 @@ def get_data(filters):
 		# 	l[8] = "{0:.2f}".format(float(l[8]))
 		for l in result:
 			if float(l[10]):
-				total_due = float(l[10].encode('utf-8')) + l[3]
+				total_due = float(l[10]) + l[3]
 				l[11] = "{0:.2f}".format(total_due)
 				l[12] = "{0:.2f}".format(total_due - l[12])
 			else:
@@ -77,12 +77,14 @@ def get_data(filters):
 		return []
 def calculate_late_fee(row):
 	late_fees_rate = frappe.get_doc("Customer Agreement",row[2][0:9].encode('utf-8')).late_fees_rate
-	if int(row[1]) > 180:
+	if int(row[1]) > 180 :
 		no_of_late_days = 180
 		row[10] = "{0:.2f}".format(float(no_of_late_days * row[3] * (late_fees_rate/100)))
-	else:
+	elif int(row[1]) > 3:
 		row[10] = "{0:.2f}".format(float( int(row[1]) * row[3] * (late_fees_rate/100)))
-
+	else:
+		no_of_late_days = 0.0 
+		row[10] = "{0:.2f}".format(float( no_of_late_days * row[3] * (late_fees_rate/100)))
 	return row
 
 
