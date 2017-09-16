@@ -135,7 +135,6 @@ def calculate_total_charges(customer,flag,payment_date):
 	
 	for agreement in [e[0] for e in customer_agreement]:
 		customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-		print "checking datetime of agreement--@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", customer_agreement.modified, customer_agreement.name
 		late_fees_of_agreement = []
 		rental_amount_of_late_payments = []
 		for row in customer_agreement.payments_record:
@@ -302,7 +301,6 @@ def update_late_fees(agreement,late_fees):
 def update_campaign_discount(agreement,campaign_discount):
 	#if float(campaign_discount) > 0:
 	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
-	print "update campiang discount-----------------", customer_agreement.modified, customer_agreement.name
 	customer_agreement.discount_updated = "Yes"
 	#customer_agreement.campaign_discount = campaign_discount
 	customer_agreement.discount = campaign_discount
@@ -1241,3 +1239,14 @@ def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,recei
 	return total
 	# if float(amount_paid_by_customer) >= float(total):
 	# 	return float(total)
+
+@frappe.whitelist()
+def execute_schedular():	
+	result = frappe.db.sql("""
+		select name from `tabCustomer`
+		""", as_list = 1)
+	for row in result:
+		customer = row[0]
+		flag = "Onload"
+		now_date = datetime.now().date()
+		calculate_total_charges(customer,flag,now_date)
