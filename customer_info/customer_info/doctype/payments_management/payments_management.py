@@ -1241,3 +1241,15 @@ def calculate_underpayment(agreements,payment_date,amount_paid_by_customer,recei
 	return total
 	# if float(amount_paid_by_customer) >= float(total):
 	# 	return float(total)
+
+@frappe.whitelist()
+def execute_schedular():	
+	result = frappe.db.sql("""
+		select name from `tabCustomer`
+		""", as_list = 1)
+	for row in result:
+		customer = row[0]
+		print row
+		flag = "Onload"
+		now_date = datetime.now().date()
+		calculate_total_charges(customer,flag,now_date)
