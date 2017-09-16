@@ -49,10 +49,9 @@ def get_data():
 								from `tabCustomer Agreement` ca ,`tabCustomer` cus
 								where ca.customer = cus.name and ca.debtor = "Yes"
 								""".format(now_date),as_list=1,debug=1)
-	for row in result:
-			row= calculate_late_fee(row)
 
 	for row in result:
+		row= calculate_late_fee(row)
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
 												order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
