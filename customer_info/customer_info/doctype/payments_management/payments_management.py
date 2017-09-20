@@ -353,6 +353,7 @@ def get_customer_agreement(customer,payment_date,flag=None):
 	}
 
 	for entry in data['list_of_agreement']:
+		print "\n\n\data",data
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
 										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
@@ -428,11 +429,16 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
 	
 	if customer_agreement.payments_record:
+		print "customer_agreement",customer_agreement.name
 		for row in customer_agreement.payments_record:
 			if row.check_box == 1 and row.check_box_of_submit == 0:
 				received_payments.append(row.monthly_rental_amount)	
 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3 and row.check_box == 1 and row.check_box_of_submit == 0:
-				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+				no_of_late_days += (date_diff(row.payment_date,row.due_date) - 3)
+				print "row.monthly_rental_amount",row.monthly_rental_amount
+				print "row.due_date",row.due_date
+				print "row.payemnt_date",row.payment_date
+				print "late days",date_diff(row.payment_date,row.due_date)
 				late_payments.append(row.monthly_rental_amount)	
 
 			if not row.payment_date:

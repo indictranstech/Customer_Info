@@ -668,7 +668,7 @@ def closed_agreement_notification(customer,agreement):
 	date = frappe.utils.data.now_datetime()
 	frappe.sendmail(
 				# recipients = "sukrut.j@indictranstech.com",
-				recipients = "lukas@povilauskas.lt",
+				recipients = "bekredito@bekredito.lt",
 				sender = "pagalba@bekredito.lt",
 				subject = "Closed Agreemnet Notification For Agreement "+ agreement,
 				message = frappe.render_template("templates/email/closed_agreement_notification.html", {"agreement":agreement,"customer": customer,"date": date}),
@@ -1233,8 +1233,6 @@ Reduce receivables
 """
 # def payments_done_by_api():
 def payments_done_by_api(customer):
-	import pdb
-	pdb.set_trace()
 	# customer = ""
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
@@ -1267,7 +1265,7 @@ def payments_done_by_api(customer):
 						add_bonus_of_one_eur = []
 						add_bonus_of_two_eur = []
 						late_payments = []
-						late_fees = []
+						late_fees = []												
 						merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
 						if row.check_box_of_submit == 0 and row.payment_id == payment[key]:
 							# Late Payment
@@ -1282,6 +1280,8 @@ def payments_done_by_api(customer):
 									late_fees.append(customer_agreement.late_fees)
 								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 								if float(flagged_receivables) >= total_charges:
+									# campaign_discount = frappe.get_doc("Customer Agreement",customer_agreement).campaign_discount
+									# discounted_payments_left = frappe.get_doc("Customer Agreement",customer_agreement).discounted_payments_left
 									payment_ids_list.append(row.payment_id)
 									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 									monthly_rental_amount.append(row.monthly_rental_amount)
