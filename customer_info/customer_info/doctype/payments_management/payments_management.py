@@ -375,7 +375,7 @@ def get_customer_agreement(customer,payment_date,flag=None):
 
 		if float(entry[3]) > 0:
 			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
-	print "\n\ndata",data
+	# print "\n\ndata",data
 	return data	
 
 
