@@ -145,7 +145,7 @@ def calculate_total_charges(customer,flag,payment_date):
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
 					
-					late_fee = (date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)
+					late_fee =round(float((date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)))
 					# print "late_fee",late_fee
 					if agreement in agreements_and_late_fees_dict.keys():
 						agreements_and_late_fees_dict[agreement] += late_fee
@@ -176,13 +176,14 @@ def calculate_total_charges(customer,flag,payment_date):
 						agreements_and_late_fees_dict[agreement] = late_fee
 					rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 
-		#print rental_amount_of_late_payments,"rental_amount_of_late_payments","\n\n\n\n\n\n\n"				
+		print rental_amount_of_late_payments,"rental_amount_of_late_payments","\n\n\n\n\n\n\n"				
 		customer_agreement.late_payment = sum(rental_amount_of_late_payments)	# 	updating by addition of rental payment of late payment of agreement
 		#customer_agreement.total_late_payments = sum(rental_amount_of_late_payments)
 
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = float("{0:.2f}".format(sum(late_fees_of_agreement)))
-
+			# customer_agreement.late_fees = sum(late_fees_of_agreement)
+			# print "__________________________",late_fees_of_agreement.encode('utf-8')
 		if customer_agreement.discount_updated == "Yes":
 			#agreements_discount_list.append(customer_agreement.campaign_discount)
 			agreements_discount_list.append(customer_agreement.discount)
