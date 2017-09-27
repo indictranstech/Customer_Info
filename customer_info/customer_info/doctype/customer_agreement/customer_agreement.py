@@ -1241,148 +1241,155 @@ def payments_done_by_api(customer):
 	get_bonus_summary(customer)
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
-	payments = []
+	payments = {}
+	payments_sorted = []
 	for agreement in customer_agreements:
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
 			if row.check_box_of_submit == 0:
-				payments.append({ row.due_date:row.payment_id })
-	payments.sort()
+				payments[row.payment_id] = row.due_date
+	for key, value in sorted(payments.iteritems(), key=lambda (k,v): (v,k)):
+		payments_sorted.append(key)    
 	args = {'values':{}}
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
-	for payment in payments:
-		for key in payment:
-			if frappe.db.exists("Customer Agreement", payment[key].split('-P')[0]):	
-				customer_agreement = frappe.get_doc("Customer Agreement",payment[key].split('-P')[0])	
-				for row in customer_agreement.payments_record:
-					if row.due_date == key:
-						customer_bonus = []
-						payments_detalis_list = []
-						payment_ids_list = []
-						monthly_rental_amount = []
-						merchandise_status = ""
-						# customer_agreement = frappe.get_doc("Customer Agreement",payment[key].split('-P')[0])
-						add_bonus_of_one_eur = []
-						add_bonus_of_two_eur = []
-						late_payments = []
-						late_fees = []												
-						merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
-						if row.check_box_of_submit == 0 and row.payment_id == payment[key]:
-							# Late Payment
-							if (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
-								customer_doc = frappe.get_doc("Customer",customer)
-								flagged_receivables = customer_doc.flagged_receivables
-								if date_diff(now_date,row.due_date) > 3:
-									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-									late_payments.append(row.monthly_rental_amount)
-									if customer_agreement.late_fees_updated == "No":
-										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-									late_fees.append(customer_agreement.late_fees)
-								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-								if float(flagged_receivables) >= total_charges:
-									# campaign_discount = frappe.get_doc("Customer Agreement",customer_agreement).campaign_discount
-									# discounted_payments_left = frappe.get_doc("Customer Agreement",customer_agreement).discounted_payments_left
-									payment_ids_list.append(row.payment_id)
-									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-									monthly_rental_amount.append(row.monthly_rental_amount)
-									row.update({
-										"check_box":1,
-										"check_box_of_submit":1,
-										"payment_date":now_date,
-									})
-									row.save(ignore_permissions = True)
-									customer_doc.flagged_receivables = flagged_receivables - total_charges
-									customer_doc.save(ignore_permissions=True)
-									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
-							
-							# Todays Payment (on_time Payments)
-							if getdate(row.due_date) == now_date:
-								customer_doc = frappe.get_doc("Customer",customer)
-								flagged_receivables = customer_doc.flagged_receivables
-								if date_diff(now_date,row.due_date) > 3:
-									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-									late_payments.append(row.monthly_rental_amount)
-									if customer_agreement.late_fees_updated == "No":
-										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-								late_fees.append(customer_agreement.late_fees)
-								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-								if float(flagged_receivables) >= total_charges:				
-									payment_ids_list.append(row.payment_id)
-									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-									monthly_rental_amount.append(row.monthly_rental_amount)
-									if row.idx != 1:
-										add_bonus_of_one_eur.append(row.idx)
-									row.update({
-										"check_box":1,
-										"check_box_of_submit":1,
-										"payment_date":now_date,
-										'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
-										'bonus_type':"On Time Bonus" if row.idx != 1 else ""
-									})
-									row.save(ignore_permissions = True)
-									customer_doc.flagged_receivables = flagged_receivables - total_charges
-									customer_doc.save(ignore_permissions=True)
-									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
-					
-							# Early Payments (Future Payments)
-							if firstDay_of_month <= getdate(row.due_date):	
-								customer_doc = frappe.get_doc("Customer",customer)
-								flagged_receivables = customer_doc.flagged_receivables
-								if date_diff(now_date,row.due_date) > 3:
-									no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-									late_payments.append(row.monthly_rental_amount)
-									if customer_agreement.late_fees_updated == "No":
-										customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))					
-									late_fees.append(customer_agreement.late_fees)
-								total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
-								if float(flagged_receivables) >= total_charges:
-									payment_ids_list.append(row.payment_id)
-									payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
-									monthly_rental_amount.append(row.monthly_rental_amount)
-									if row.idx != 1:
-										add_bonus_of_two_eur.append(row.idx)
-									row.update({
-										"check_box":1,
-										"check_box_of_submit":1,
-										"payment_date":now_date,
-										'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
-										'bonus_type':"Early Bonus" if row.idx != 1 else "",
-									})
-									row.save(ignore_permissions = True)
-									customer_doc.flagged_receivables = flagged_receivables - total_charges
-									customer_doc.save(ignore_permissions=True)
-									# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
-
-						if len(payment_ids_list) > 0:
-							customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
-							bonus_amount = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-							customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-							customer_agreement.late_payment = sum(late_payments)
-							customer_bonus.append(customer_agreement.bonus)
-							customer_agreement.save(ignore_permissions = True)
+	# print "____",payments_sorted
+	for payment in payments_sorted:
+		# print "payment",payment
+		if frappe.db.exists("Customer Agreement", payment.split('-P')[0]):				
+			customer_agreement = frappe.get_doc("Customer Agreement",payment.split('-P')[0])	
+			# print "___",customer_agreement.name
+		 	for row in customer_agreement.payments_record:
+				if row.payment_id == payment:
+					customer_bonus = []
+					payments_detalis_list = []
+					payment_ids_list = []
+					monthly_rental_amount = []
+					merchandise_status = ""
+					# customer_agreement = frappe.get_doc("Customer Agreement",payment[key].split('-P')[0])
+					add_bonus_of_one_eur = []
+					add_bonus_of_two_eur = []
+					late_payments = []
+					late_fees = []												
+					merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
+			
+					if row.check_box_of_submit == 0 and row.payment_id == payment:
+						# Late Payment
+						if (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
 							customer_doc = frappe.get_doc("Customer",customer)
-							customer_doc.bonus = customer_doc.bonus + bonus_amount 
-							customer_doc.save(ignore_permissions=True)
-							set_values_in_agreement(customer_agreement)
-							args['assigned_bonus_discount'] = ""
-							args['customer'] = customer
-							args['receivables'] = frappe.get_doc("Customer",customer).receivables
-							args['add_in_receivables'] = frappe.get_doc("Customer",customer).receivables
-							args['payment_date'] = str(now_date)
-							args['rental_payment'] = sum(monthly_rental_amount)
-							args['payment_type'] = "Normal Payment"
-							args['late_fees'] = sum(map(float,late_fees))
-							args['values']['amount_paid_by_customer'] = 0
-							args['values']['bank_card'] = 0
-							args['values']['bank_transfer'] = 0
-							args['values']['discount'] = 0
-							args['values']['bonus'] = 0
-							args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
-							args['total_charges'] = 0
-							args['total_amount'] = 0
-							args['special_associate'] = "Automatic API"
-							make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
-	
+							flagged_receivables = customer_doc.flagged_receivables
+							if date_diff(now_date,row.due_date) > 3:
+								no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+								late_payments.append(row.monthly_rental_amount)
+								if customer_agreement.late_fees_updated == "No":
+									customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+								late_fees.append(customer_agreement.late_fees)
+							total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+							if float(flagged_receivables) >= total_charges:
+								# campaign_discount = frappe.get_doc("Customer Agreement",customer_agreement).campaign_discount
+								# discounted_payments_left = frappe.get_doc("Customer Agreement",customer_agreement).discounted_payments_left
+								payment_ids_list.append(row.payment_id)
+								payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+								monthly_rental_amount.append(row.monthly_rental_amount)
+								row.update({
+									"check_box":1,
+									"check_box_of_submit":1,
+									"payment_date":now_date,
+								})
+								row.save(ignore_permissions = True)
+								customer_doc.flagged_receivables = flagged_receivables - total_charges
+								customer_doc.save(ignore_permissions=True)
+								# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+								# print "____Latepayments__",row.payment_id
+						# Todays Payment (on_time Payments)
+						if getdate(row.due_date) == now_date:
+							customer_doc = frappe.get_doc("Customer",customer)
+							flagged_receivables = customer_doc.flagged_receivables
+							if date_diff(now_date,row.due_date) > 3:
+								no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+								late_payments.append(row.monthly_rental_amount)
+								if customer_agreement.late_fees_updated == "No":
+									customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+							late_fees.append(customer_agreement.late_fees)
+							total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+							if float(flagged_receivables) >= total_charges:				
+								payment_ids_list.append(row.payment_id)
+								payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+								monthly_rental_amount.append(row.monthly_rental_amount)
+								if row.idx != 1:
+									add_bonus_of_one_eur.append(row.idx)
+								row.update({
+									"check_box":1,
+									"check_box_of_submit":1,
+									"payment_date":now_date,
+									'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+									'bonus_type':"On Time Bonus" if row.idx != 1 else ""
+								})
+								row.save(ignore_permissions = True)
+								customer_doc.flagged_receivables = flagged_receivables - total_charges
+								customer_doc.save(ignore_permissions=True)
+								# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+								# print "____Todayspayments__",row.payment_id
+						# Early Payments (Future Payments)
+						if firstDay_of_month <= getdate(row.due_date) and getdate(row.due_date) > now_date:	
+							customer_doc = frappe.get_doc("Customer",customer)
+							flagged_receivables = customer_doc.flagged_receivables
+							if date_diff(now_date,row.due_date) > 3:
+								no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+								late_payments.append(row.monthly_rental_amount)
+								if customer_agreement.late_fees_updated == "No":
+									customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))					
+								late_fees.append(customer_agreement.late_fees)
+							total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
+							if float(flagged_receivables) >= total_charges:
+								payment_ids_list.append(row.payment_id)
+								payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
+								monthly_rental_amount.append(row.monthly_rental_amount)
+								if row.idx != 1:
+									add_bonus_of_two_eur.append(row.idx)
+								row.update({
+									"check_box":1,
+									"check_box_of_submit":1,
+									"payment_date":now_date,
+									'add_bonus_to_this_payment':1 if row.idx != 1 else 0,
+									'bonus_type':"Early Bonus" if row.idx != 1 else "",
+								})
+								row.save(ignore_permissions = True)
+								customer_doc.flagged_receivables = flagged_receivables - total_charges
+								customer_doc.save(ignore_permissions=True)
+								# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
+								# print "____Earlypayments__",row.payment_id
+					
+					if len(payment_ids_list) > 0:
+						customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  len(add_bonus_of_two_eur)*2
+						bonus_amount = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+						customer_agreement.bonus = customer_agreement.bonus + len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+						customer_agreement.late_payment = sum(late_payments)
+						customer_bonus.append(customer_agreement.bonus)
+						customer_agreement.save(ignore_permissions = True)
+						customer_doc = frappe.get_doc("Customer",customer)
+						customer_doc.bonus = customer_doc.bonus + bonus_amount 
+						customer_doc.save(ignore_permissions=True)
+						set_values_in_agreement(customer_agreement)
+						args['assigned_bonus_discount'] = ""
+						args['customer'] = customer
+						args['receivables'] = frappe.get_doc("Customer",customer).receivables
+						args['add_in_receivables'] = frappe.get_doc("Customer",customer).receivables
+						args['payment_date'] = str(now_date)
+						args['rental_payment'] = sum(monthly_rental_amount)
+						args['payment_type'] = "Normal Payment"
+						args['late_fees'] = sum(map(float,late_fees))
+						args['values']['amount_paid_by_customer'] = 0
+						args['values']['bank_card'] = 0
+						args['values']['bank_transfer'] = 0
+						args['values']['discount'] = 0
+						args['values']['bonus'] = 0
+						args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+						args['total_charges'] = 0
+						args['total_amount'] = 0
+						args['special_associate'] = "Automatic API"
+						make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")		
+						# print "_____Payment Done For____",payment
+						# print "__\n\n\n"
 	cust_doc = frappe.get_doc("Customer",customer)
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
 	cust_doc.flagged_receivables = 0.0
