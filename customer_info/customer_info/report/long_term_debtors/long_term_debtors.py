@@ -41,8 +41,8 @@ def get_data():
 								concat(ca.product_category," ",ca.product),
 								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
 								(select sum(t1.monthly_rental_amount) AS balance from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),
-								(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),
+								ca.late_fees,
+							    ca.late_fees,
 								ca.late_fees_rate,
 								cus.name,
 								cus.receivables
@@ -51,48 +51,26 @@ def get_data():
 								""".format(now_date),as_list=1,debug=1)
 
 	for row in result:
-		row[21] = frappe.get_doc("Customer Agreement",row[0]).late_fees
-		# row= calculate_late_fee(row)
+
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
 												order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
 
 			row[23] = row[24]
-			print "Agree----",row[0]
-			print "row18",row[19],"row23",row[24],"row22",row[23]
+			# print "Agree----",row[0]
+			# print "row18",row[19],"row23",row[24],"row22",row[23]
 			if float(row[24]) > 0.0:
 				row[18] ="{0:.2f}".format(float(str(row[19])) - float(str(row[24]))) if row[24] and row[19] else row[19]
 			else: 
 				# print "float",float(row[23])
 				row[19] = "{0:.2f}".format(float(str(row[19])) + abs(float(str(row[24])))) if row[24] and row[19] else row[19]
-				print "row18",row[19],"row23",row[24],"row22",row[23]		
+				# print "row18",row[19],"row23",row[24],"row22",row[23]		
 		else:
 			row[23] = ""
-	return result
 
-# def calculate_late_fee(row):
-# 	now_date = datetime.now().date()
-# 	late_fees_list = []
-# 	late_fees = 0.0
-# 	no_of_late_days = 0
-# 	for days in frappe.get_doc("Customer Agreement",row[0]).payments_record:
-# 		no_of_late_days_new = 0
-# 		no_of_late_days_new += date_diff(now_date,days.due_date)
-# 		late_fees_rate = frappe.get_doc("Customer Agreement",row[0]).late_fees_rate
-# 		monthly_rental_amount =	frappe.get_doc("Customer Agreement",row[0]).payments_record[1].monthly_rental_amount
-# 		if no_of_late_days_new > 180 and days.check_box_of_submit == 0 :
-# 			no_of_late_days = 180
-# 			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
-# 		elif no_of_late_days_new > 3 and no_of_late_days_new < 180 and days.check_box_of_submit == 0: 
-# 			no_of_late_days = no_of_late_days_new
-# 			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))
-# 		elif no_of_late_days_new < 3 and days.check_box_of_submit == 0: 
-# 			no_of_late_days = 0.0
-# 			late_fees_list.append(float(no_of_late_days * monthly_rental_amount * (late_fees_rate/100)))			
-# 	row[20] = "{0:.2f}".format(sum(late_fees_list))
-# 	# row[21] = row[20] + row[]
-# 	return row
+		row[21] = "{0:.2f}".format(flt(str(row[18])) +flt(str(row[20]))) if row[18] and row[20] else 0
+	return result
 
 
 def get_colums():
@@ -153,3 +131,9 @@ def get_colums():
 # 			("Receivables")+":Data:100"
 # 			]
 # 	return columns
+
+
+	"""
+(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100) ELSE 0 END),2) AS late_fees from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0),	
+(select format(sum(CASE WHEN t1.due_date < '{0}' AND DATEDIFF('{0}',t1.due_date) > 3  THEN (DATEDIFF('{0}',t1.due_date) - 3) * t1.monthly_rental_amount * (ca.late_fees_rate/100)+t1.monthly_rental_amount ELSE 0 END),2) AS late_payments from `tabPayments Record` t1 where t1.parent=ca.name and t1.check_box_of_submit = 0 and t1.no_of_payments <> "Payment 1"),	
+	"""
