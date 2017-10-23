@@ -736,7 +736,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_r.check_box_of_submit == 1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									payments_rental_amount.append(0)
@@ -791,7 +791,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")						
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_r.check_box_of_submit == 1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									payments_rental_amount.append(0)
@@ -853,7 +853,7 @@ def get_IRR_XIRR():
 
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									payments_rental_amount.append(0)
@@ -920,7 +920,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment" and payment_r.check_box_of_submit ==1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									payments_rental_amount.append(0)
@@ -988,7 +988,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done							
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
 							if payment_r.check_box_of_submit == 1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									submitted_payments_rental_amount.append((payment_r.due_date,0))
@@ -1046,7 +1046,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_r.check_box_of_submit == 1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									submitted_payments_rental_amount.append((payment_r.due_date,0))
@@ -1106,7 +1106,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									submitted_payments_rental_amount.append((payment_r.due_date,0))
@@ -1173,7 +1173,7 @@ def get_IRR_XIRR():
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							if 	payment_history and payment_r.add_bonus_to_this_payment == 1:
 								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"new_bonus")/number_of_payments_done
+								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_type == "Normal Payment" and payoff_cond == "Rental Payment" and payment_r.check_box_of_submit ==1:
 								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
 									submitted_payments_rental_amount.append((payment_r.due_date,0))
