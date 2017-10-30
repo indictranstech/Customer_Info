@@ -873,11 +873,11 @@ def get_IRR_XIRR():
 									payments_rental_amount.append(payment_r.monthly_rental_amount)
 									# payments_rental_amount.append(payment_r.monthly_rental_amount)
 							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
-								total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
+								total_payment_received = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
 								receivables_collected = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables_collected")
 								receivables = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables")
-								total_calculated = float(total_payoff_amount) - float(receivables_collected)
-								_90d_sec = float(receivables) + float(total_calculated)
+								# total_calculated = float(total_payoff_amount) - float(receivables_collected)
+								_90d_sec = float(receivables) + float(total_payment_received)
 
 						payments_rental_amount.append(_90d_sec)
 						submitted_payments_rental_amount.extend(payments_rental_amount)				
@@ -1129,8 +1129,8 @@ def get_IRR_XIRR():
 								total_payment_received = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"total_payment_received")
 								receivables_collected = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables_collected")								
 								receivables = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables")
-								total_calculated = float(total_payoff_amount) - float(receivables_collected)
-								_90d_sec = float(receivables) + float(total_calculated)
+								# total_calculated = float(total_payoff_amount) - float(receivables_collected)
+								_90d_sec = float(receivables) + float(total_payment_received)
 						submitted_payments_rental_amount.append((pay_off_date,_90d_sec))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
 					   	try:
@@ -1233,7 +1233,7 @@ Reduce receivables
 """
 # def payments_done_by_api():
 def payments_done_by_api(customer):
-	# customer = ""
+	
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
