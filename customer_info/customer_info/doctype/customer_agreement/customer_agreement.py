@@ -1380,7 +1380,7 @@ def payments_done_by_api(customer):
 						args['late_fees'] = sum(map(float,late_fees))
 						args['values']['amount_paid_by_customer'] = 0
 						args['values']['bank_card'] = 0
-						args['values']['bank_transfer'] = 0
+						args['values']['bank_transfer'] = sum(monthly_rental_amount)
 						args['values']['discount'] = 0
 						args['values']['bonus'] = 0
 						args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
