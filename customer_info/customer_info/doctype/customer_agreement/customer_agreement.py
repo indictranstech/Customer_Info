@@ -942,8 +942,10 @@ def get_IRR_XIRR():
 							if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
 								payment_history = payment_r.payment_history
 						total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-						receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")						
-						early_buy_amount = 	float(total_payoff_amount) - float(receivables_collected) 					
+						#receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")						
+						receivables = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables")
+						# early_buy_amount = 	float(total_payoff_amount) - float(receivables_collected) 					
+						early_buy_amount = 	float(total_payoff_amount) + float(receivables) 					
 						payments_rental_amount.append(float(early_buy_amount)) if early_buy_amount else ""
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
@@ -1195,8 +1197,10 @@ def get_IRR_XIRR():
 	 						if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" and payment_r.check_box_of_submit ==1:
 								payment_history = payment_r.payment_history
 						total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-						receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
-						early_buy_amount = 	float(total_payoff_amount) - float(receivables_collected)
+						# receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
+						receivables = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"receivables")
+						# early_buy_amount = 	float(total_payoff_amount) - float(receivables_collected)
+						early_buy_amount = 	float(total_payoff_amount) + float(receivables)
 						payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
 						submitted_payments_rental_amount.append((payment_date,early_buy_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
