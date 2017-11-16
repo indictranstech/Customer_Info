@@ -812,6 +812,8 @@ def get_IRR_XIRR():
 							# payments_rental_amount.append(payment_r.monthly_rental_amount)
 						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						frappe.db.set_value("Customer Agreement",row[3],"real_agreement_income",round(sum(submitted_payments_rental_amount[1:]),2))
+						print "",round(sum(submitted_payments_rental_amount[1:]),2)
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
@@ -882,6 +884,8 @@ def get_IRR_XIRR():
 						payments_rental_amount.append(_90d_sec)
 						submitted_payments_rental_amount.extend(payments_rental_amount)				
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						print "",round(sum(submitted_payments_rental_amount[1:]),2)
+						frappe.db.set_value("Customer Agreement",row[3],"real_agreement_income",round(sum(submitted_payments_rental_amount[1:]),2))
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount	
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
@@ -949,6 +953,8 @@ def get_IRR_XIRR():
 						payments_rental_amount.append(float(early_buy_amount)) if early_buy_amount else ""
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
+						frappe.db.set_value("Customer Agreement",row[3],"real_agreement_income",round(sum(submitted_payments_rental_amount[1:]),2))
+						print "",round(sum(submitted_payments_rental_amount[1:]),2)
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
@@ -966,7 +972,7 @@ def get_IRR_XIRR():
 			else:
 				row[27] = ""
  		else:
- 			row[27] = ""
+				row[27] = ""
 
  		#XIIR Calculations
  		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
