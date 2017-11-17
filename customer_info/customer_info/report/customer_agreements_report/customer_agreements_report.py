@@ -36,16 +36,15 @@ def get_data():
 				format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format(ca.monthly_rental_payment * ca.agreement_period,2),
-				format(ca.real_agreement_income,2),
+				case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
+				else format(ca.payments_made,2) end as real_agreement_income,
 				case when ca.agreement_status = "Closed" then ca.agreement_close_date
 				when ca.agreement_status = "Suspended" then ca.suspended_from
 				else "-" end as agreement_closing_suspension_date,
 				case when ca.agreement_closing_suspending_reason = "Early buy offer" then
 				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
 				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
-
 				case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
-
 				format(ca.payments_made - item.purchase_price_with_vat,2),
 				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
