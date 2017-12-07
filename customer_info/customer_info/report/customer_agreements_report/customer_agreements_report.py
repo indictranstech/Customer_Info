@@ -49,6 +49,7 @@ def get_data():
 				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
 				ca.campaign_discount_code,
+				case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment ,
 				ca.irr,
 				ca.xirr
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
@@ -56,21 +57,21 @@ def get_data():
 
 
 	for row in result:
-		if row[26] and row[26] != "Wholesale price is not set":
-			if row[26] != "" or row[27]!="0.000000":
+		if row[28] and row[28] != "Wholesale price is not set":
+			if row[28] != "" or row[28]!="0.000000":
 				try:
-					row[26] =round(float(row[26]),2)
-					row[26] = str(row[26]) + "%"
+					row[28] =round(float(row[28]),2)
+					row[28] = str(row[28]) + "%"
 				except Exception,e:
-					row[26] =row[26]
+					row[28] =row[28]
 		
-		if row[27] and row[27] != "Wholesale price is not set":
-			if row[27] != "" or row[27]!="0.000000" :
+		if row[29] and row[29] != "Wholesale price is not set":
+			if row[29] != "" or row[29]!="0.000000" :
 				try:
-					row[27] =round(float(row[27]),2)
-					row[27] = str(row[27]) + "%"
+					row[29] =round(float(row[29]),2)
+					row[29] = str(row[29]) + "%"
 				except Exception,e:
-					row[27] =row[27]
+					row[29] =row[29]
 	return result
 	
 	
@@ -103,6 +104,7 @@ def get_colums():
 				("Real agreement profit %") + ":Data:100",
 				("Remaining months till the end of agreement") + ":Data:100",
 				("Campaign discount code") + ":Link/Campaign Discount Code:150",
+				("Without advance payment")+":Data:150",
 				("IRR") + ":Data:150",
 				("XIRR")+":Data:150",
 			]
