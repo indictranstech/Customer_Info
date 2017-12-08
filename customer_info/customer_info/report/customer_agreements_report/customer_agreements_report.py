@@ -55,13 +55,12 @@ def get_data():
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 
-
 	for row in result:
 		if row[28] and row[28] != "Wholesale price is not set":
 			if row[28] != "" or row[28]!="0.000000":
 				try:
 					row[28] =round(float(row[28]),2)
-					row[28] = str(row[28]) + "%"
+					# row[28] = str(row[28]) + "%"
 				except Exception,e:
 					row[28] =row[28]
 		
@@ -69,9 +68,13 @@ def get_data():
 			if row[29] != "" or row[29]!="0.000000" :
 				try:
 					row[29] =round(float(row[29]),2)
-					row[29] = str(row[29]) + "%"
+					# row[29] = str(row[29]) + "%"
 				except Exception,e:
 					row[29] =row[29]
+	xirr_averages = get_xirr_averages(result)
+	if xirr_averages:
+		last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',u'XIRR Averages',xirr_averages]
+		result.append(last_row)
 	return result
 	
 	
@@ -109,3 +112,12 @@ def get_colums():
 				("XIRR")+":Data:150",
 			]
 	return columns
+
+def get_xirr_averages(result):
+	xirr_averages = 0.0
+	wholesale_price_total = 0
+	for row in result:
+		if row[3] and row[29] !='Wholesale price is not set':
+			xirr_averages = xirr_averages + round(flt(row[13]) * (flt(row[29])/100),2)
+			wholesale_price_total = wholesale_price_total + flt(row[13])			
+	return round(flt(xirr_averages/wholesale_price_total),2)
