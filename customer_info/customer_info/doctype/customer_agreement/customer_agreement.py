@@ -121,6 +121,8 @@ class CustomerAgreement(Document):
 		customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
 		self.add_item_log()
+		self.get_tirr()
+		print "_________________________-"
 
 	def add_bonus_for_this_agreement(self):
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
@@ -313,6 +315,40 @@ class CustomerAgreement(Document):
 			comment = comment+"\n"+product_doc.log if product_doc.log else comment
 			product_doc.add_comment("Comment",comment)  
 			product_doc.save(ignore_permissions=1)
+
+	#Theoretic IRR (tirr) value
+	def get_tirr(self):
+		if self.payments_record and self.product:
+			payments_rental_amount = []
+			campaign_discount = 0
+			discounted_payments_left = 0
+			product_doc = frappe.get_doc("Item",self.product)
+			if product_doc.wholesale_price:
+				initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
+				payments_rental_amount.append(initial_price)
+				
+				if self.campaign_discount and self.discounted_payments_left:
+					campaign_discount = self.campaign_discount
+					discounted_payments_left = self.discounted_payments_left 
+				
+				for row in self.payments_record:
+					if campaign_discount > 0 and discounted_payments_left > 0:					
+						payments_rental_amount.append((row.monthly_rental_amount -campaign_discount))
+						discounted_payments_left = discounted_payments_left -1
+					else:
+						payments_rental_amount.append(row.monthly_rental_amount) 
+				try:
+					tirr = round(irr(payments_rental_amount),5) if len(payments_rental_amount) > 1 else ""
+					if tirr:						
+						tirr = round((float(tirr) * 12 * 100),2)
+						frappe.db.set_value("Customer Agreement",self.name,"tirr",tirr)
+				except Exception,e:
+					tirr = ""
+					frappe.db.set_value("Customer Agreement",self.name,"tirr",tirr)
+			else:
+				tirr ="Wholesale price is not set"
+				frappe.db.set_value("Customer Agreement",self.name,"tirr",tirr)
+	
 			
 def reset_contact_result_of_sent_sms():
 	now_date = datetime.now().date()
