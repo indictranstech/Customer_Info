@@ -711,6 +711,7 @@ def closed_agreement_notification(customer,agreement):
 
 
 # Schedular for Calculating IRR and XIRR values will save to respective customer Agreement
+@frappe.whitelist()
 def get_IRR_XIRR():
 	now_date = datetime.now().date()
 	result = frappe.db.sql("""select 
@@ -1277,6 +1278,7 @@ Process payments_ids
 Reduce receivables
 """
 # def payments_done_by_api():
+@frappe.whitelist()
 def payments_done_by_api(customer):
 	
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
@@ -1439,4 +1441,44 @@ def payments_done_by_api(customer):
 	cust_doc.receivables = float(cust_doc.receivables) + float(cust_doc.flagged_receivables)
 	cust_doc.flagged_receivables = 0.0
 	cust_doc.save()
-	
+
+#Theoretic IRR (tirr) value
+@frappe.whitelist()
+def tirr_schedular():
+	agreements = frappe.db.get_all("Customer Agreement")
+	for agreement in agreements:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
+		if agreement_doc:
+			if agreement_doc.payments_record and agreement_doc.product:
+				payments_rental_amount = []
+				campaign_discount = 0
+				discounted_payments_left = 0
+				product_doc = frappe.get_doc("Item",agreement_doc.product)
+				if product_doc.wholesale_price:
+					initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
+					payments_rental_amount.append(initial_price)
+					
+					if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
+						campaign_discount = agreement_doc.campaign_discount
+						discounted_payments_left = agreement_doc.discounted_payments_left 
+					
+					for row in agreement_doc.payments_record:
+						if campaign_discount > 0 and discounted_payments_left > 0:					
+							payments_rental_amount.append((row.monthly_rental_amount -campaign_discount))
+							discounted_payments_left = discounted_payments_left -1
+						else:
+							payments_rental_amount.append(row.monthly_rental_amount) 
+					try:
+						tirr = round(irr(payments_rental_amount),5) if len(payments_rental_amount) > 1 else ""
+						if tirr:
+							tirr = round((float(tirr) * 12 * 100),2)
+							agreement_doc.tirr = tirr
+					except Exception,e:
+						tirr = ""
+						agreement_doc.tirr = tirr
+				else:
+					tirr ="Wholesale price is not set"
+					agreement_doc.tirr = tirr
+		agreement_doc.flags.ignore_permissions = 1
+		agreement_doc.flags.ignore_mandatory = 1		
+		agreement_doc.save()
