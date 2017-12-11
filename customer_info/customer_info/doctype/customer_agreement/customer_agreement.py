@@ -340,6 +340,7 @@ class CustomerAgreement(Document):
 					tirr = round(irr(payments_rental_amount),5) if len(payments_rental_amount) > 1 else ""
 					if tirr:						
 						tirr = round((float(tirr) * 12 * 100),2)
+						frappe.db.set_value("Customer Agreement",self.name,"tirr_calculation_value",str(payments_rental_amount))
 						frappe.db.set_value("Customer Agreement",self.name,"tirr",tirr)
 				except Exception,e:
 					tirr = ""
@@ -1469,6 +1470,7 @@ def tirr_schedular():
 						else:
 							payments_rental_amount.append(row.monthly_rental_amount) 
 					try:
+						agreement_doc.tirr_calculation_value = str(payments_rental_amount)
 						tirr = round(irr(payments_rental_amount),5) if len(payments_rental_amount) > 1 else ""
 						if tirr:
 							tirr = round((float(tirr) * 12 * 100),2)

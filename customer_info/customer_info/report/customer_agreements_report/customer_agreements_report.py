@@ -33,8 +33,8 @@ def get_data():
 				item.wholesale_price,
 				item.transportation_costs_incoming,
 				item.transportation_costs_outgoing,
-				format((ca.s90d_sac_price - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
-				format((ca.monthly_rental_payment * ca.agreement_period -item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+				format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
+				format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
 				format(ca.monthly_rental_payment * ca.agreement_period,2),
 				case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
 				else format(ca.payments_made,2) end as real_agreement_income,
@@ -45,13 +45,14 @@ def get_data():
 				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
 				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
 				case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
-				format(ca.payments_made - item.purchase_price_with_vat,2),
-				format((ca.payments_made - item.purchase_price_with_vat)/item.purchase_price_with_vat * 100,2),
+				format(ca.payments_made - item.wholesale_price,2),
+				format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
 				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
 				ca.campaign_discount_code,
 				case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment ,
 				ca.irr,
-				ca.xirr
+				ca.xirr,
+				ca.tirr
 				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 
@@ -110,6 +111,7 @@ def get_colums():
 				("Without advance payment")+":Data:150",
 				("IRR") + ":Data:150",
 				("XIRR")+":Data:150",
+				("TIRR")+":Data:150"
 			]
 	return columns
 
