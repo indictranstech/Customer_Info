@@ -122,7 +122,6 @@ class CustomerAgreement(Document):
 		customer_agreement.save(ignore_permissions=True)
 		self.add_item_log()
 		self.get_tirr()
-		print "_________________________-"
 
 	def add_bonus_for_this_agreement(self):
 		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
@@ -774,7 +773,7 @@ def get_IRR_XIRR():
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done
 							if payment_r.check_box_of_submit == 1:
-								if date_diff(payment_r.payment_date,payment_r.due_date) > 1:
+								if date_diff(payment_r.payment_date,payment_r.due_date) > 30:
 									payments_rental_amount.append(0)
 								if is_discount or is_campaign_discount and camp_disc_amount or payment_r.add_bonus_to_this_payment == 1:
 									if is_discount:								
@@ -849,7 +848,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend(payments_rental_amount) # Processed Payments
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"real_agreement_income",round(sum(submitted_payments_rental_amount[1:]),2))
-						print "",round(sum(submitted_payments_rental_amount[1:]),2)
+						# print "",round(sum(submitted_payments_rental_amount[1:]),2)
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
@@ -990,7 +989,7 @@ def get_IRR_XIRR():
 						submitted_payments_rental_amount.extend(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",row[3],"irr_calculation_value",str(submitted_payments_rental_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"real_agreement_income",round(sum(submitted_payments_rental_amount[1:]),2))
-						print "",round(sum(submitted_payments_rental_amount[1:]),2)
+						# print "",round(sum(submitted_payments_rental_amount[1:]),2)
 						try:
 							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[27] = round(irr(submitted_payments_rental_amount),5) if len(submitted_payments_rental_amount) > 1 else ""
