@@ -6,79 +6,163 @@ import frappe
 # from numpy import irr
 from datetime import datetime, timedelta,date
 from frappe.utils import flt, get_datetime, get_time, getdate
+import json
 # from customer_info.customer_info.report.customer_agreements_report.financial import xirr
 
 def execute(filters=None):
 	columns, data = [], []
 	columns = get_colums()
-	data = get_data()
+	data = get_data(filters)
 	return columns, data
 
-def get_data():
-	now_date = datetime.now().date()
-	result = frappe.db.sql("""select
-				cus.first_name,
-				cus.last_name,
-				cus.prersonal_code,
-				ca.name,
-				ca.agreement_status,
-				ca.date,
-				ca.agreement_close_date,
-				ca.product_category,
-				item.brand,
-				item.serial_number,
-				format(ca.monthly_rental_payment,2),
-				format(ca.agreement_period,2),
-				format(ca.s90d_sac_price,2),
-				item.wholesale_price,
-				item.transportation_costs_incoming,
-				item.transportation_costs_outgoing,
-				format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
-				format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
-				format(ca.monthly_rental_payment * ca.agreement_period,2),
-				case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
-				else format(ca.payments_made,2) end as real_agreement_income,
-				case when ca.agreement_status = "Closed" then ca.agreement_close_date
-				when ca.agreement_status = "Suspended" then ca.suspended_from
-				else "-" end as agreement_closing_suspension_date,
-				case when ca.agreement_closing_suspending_reason = "Early buy offer" then
-				concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
-				else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
-				case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
-				format(ca.payments_made - item.wholesale_price,2),
-				format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
-				format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
-				ca.campaign_discount_code,
-				case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment ,
-				ca.irr,
-				ca.xirr,
-				ca.tirr
-				from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
-				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
-
-	for row in result:
-		if row[28] and row[28] != "Wholesale price is not set":
-			if row[28] != "" or row[28]!="0.000000":
-				try:
-					row[28] =round(float(row[28]),2)
-					# row[28] = str(row[28]) + "%"
-				except Exception,e:
-					row[28] =row[28]
+def get_data(filters):
+	if filters:
+		cond_dict = []
+		filters = dict(filters)
+		now_date = datetime.now().date()
+		filters_keys = filters.keys()
+		cond   = ""
+		for key in filters_keys:
+			if key =='agreement_period':
+				cond = cond + " and ca.agreement_period = {0}".format(str(filters[key]))
+			if key == 'agreement_status':
+				cond = cond + " and ca.agreement_status = '{0}'".format(str(filters[key]))
+			if key == 'agreement_close_reason':
+				cond = cond + " and ca.agreement_closing_suspending_reason = '{0}'".format(str(filters[key]))
+		if 'agreement_start_date_from' and 'agreement_start_date_to' in filters_keys:
+				if filters['agreement_start_date_from'] != now_date and filters['agreement_start_date_to'] != now_date:
+					cond = cond + "and ca.date BETWEEN '{0}' and '{1}'".format(str(filters['agreement_start_date_from']),str(filters['agreement_start_date_to']))
+		if 'agreement_close_date_from' and 'agreement_close_date_to' in filters_keys:
+				if filters['agreement_close_date_from'] != now_date and filters['agreement_close_date_to'] != now_date:
+					cond = cond + "and ca.agreement_close_date BETWEEN '{0}' and '{1}'".format(str(filters['agreement_close_date_from']),str(filters['agreement_close_date_to']))
 		
-		if row[29] and row[29] != "Wholesale price is not set":
-			if row[29] != "" or row[29]!="0.000000" :
-				try:
-					row[29] =round(float(row[29]),2)
-					# row[29] = str(row[29]) + "%"
-				except Exception,e:
-					row[29] =row[29]
-	xirr_averages = get_xirr_averages(result)
-	if xirr_averages:
-		last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',u'XIRR Averages',xirr_averages]
-		result.append(last_row)
-	return result
-	
-	
+		result = frappe.db.sql("""select
+					cus.first_name,
+					cus.last_name,
+					cus.prersonal_code,
+					ca.name,
+					ca.agreement_status,
+					ca.date,
+					ca.agreement_close_date,
+					ca.product_category,
+					item.brand,
+					item.serial_number,
+					format(ca.monthly_rental_payment,2),
+					format(ca.agreement_period,2),
+					format(ca.s90d_sac_price,2),
+					item.wholesale_price,
+					item.transportation_costs_incoming,
+					item.transportation_costs_outgoing,
+					format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
+					format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
+					format(ca.monthly_rental_payment * ca.agreement_period,2),
+					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
+					else format(ca.payments_made,2) end as real_agreement_income,
+					case when ca.agreement_status = "Closed" then ca.agreement_close_date
+					when ca.agreement_status = "Suspended" then ca.suspended_from
+					else "-" end as agreement_closing_suspension_date,
+					case when ca.agreement_closing_suspending_reason = "Early buy offer" then
+					concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
+					else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
+					case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
+					format(ca.payments_made - item.wholesale_price,2),
+					format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
+					format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
+					ca.campaign_discount_code,
+					case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment ,
+					ca.irr,
+					ca.xirr,
+					ca.tirr
+					from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
+					where ca.customer = cus.name and ca.product = item.name {0} """.format(cond),as_list=1,debug=1)
+
+		for row in result:
+			if row[28] and row[28] != "Wholesale price is not set":
+				if row[28] != "" or row[28]!="0.000000":
+					try:
+						row[28] =round(float(row[28]),2)
+						# row[28] = str(row[28]) + "%"
+					except Exception,e:
+						row[28] =row[28]
+			
+			if row[29] and row[29] != "Wholesale price is not set":
+				if row[29] != "" or row[29]!="0.000000" :
+					try:
+						row[29] =round(float(row[29]),2)
+						# row[29] = str(row[29]) + "%"
+					except Exception,e:
+						row[29] =row[29]
+		xirr_averages = get_xirr_averages(result)
+		if xirr_averages:
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',u'XIRR Averages',xirr_averages]
+			result.append(last_row)
+		
+		return result
+	else:	
+		now_date = datetime.now().date()
+		result = frappe.db.sql("""select
+					cus.first_name,
+					cus.last_name,
+					cus.prersonal_code,
+					ca.name,
+					ca.agreement_status,
+					ca.date,
+					ca.agreement_close_date,
+					ca.product_category,
+					item.brand,
+					item.serial_number,
+					format(ca.monthly_rental_payment,2),
+					format(ca.agreement_period,2),
+					format(ca.s90d_sac_price,2),
+					item.wholesale_price,
+					item.transportation_costs_incoming,
+					item.transportation_costs_outgoing,
+					format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
+					format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
+					format(ca.monthly_rental_payment * ca.agreement_period,2),
+					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
+					else format(ca.payments_made,2) end as real_agreement_income,
+					case when ca.agreement_status = "Closed" then ca.agreement_close_date
+					when ca.agreement_status = "Suspended" then ca.suspended_from
+					else "-" end as agreement_closing_suspension_date,
+					case when ca.agreement_closing_suspending_reason = "Early buy offer" then
+					concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
+					else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
+					case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
+					format(ca.payments_made - item.wholesale_price,2),
+					format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
+					format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
+					ca.campaign_discount_code,
+					case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment ,
+					ca.irr,
+					ca.xirr,
+					ca.tirr
+					from `tabCustomer Agreement` ca ,`tabCustomer` cus,`tabItem` item
+					where ca.customer = cus.name and ca.product = item.name""",as_list=1)
+
+		for row in result:
+			if row[28] and row[28] != "Wholesale price is not set":
+				if row[28] != "" or row[28]!="0.000000":
+					try:
+						row[28] =round(float(row[28]),2)
+						# row[28] = str(row[28]) + "%"
+					except Exception,e:
+						row[28] =row[28]
+			
+			if row[29] and row[29] != "Wholesale price is not set":
+				if row[29] != "" or row[29]!="0.000000" :
+					try:
+						row[29] =round(float(row[29]),2)
+						# row[29] = str(row[29]) + "%"
+					except Exception,e:
+						row[29] =row[29]
+		xirr_averages = get_xirr_averages(result)
+		if xirr_averages:
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',u'XIRR Averages',xirr_averages]
+			result.append(last_row)
+		return result
+		
+		
 def get_colums():
 	columns = [
 				("Customer Name") + ":Data:100",
@@ -117,9 +201,12 @@ def get_colums():
 
 def get_xirr_averages(result):
 	xirr_averages = 0.0
-	wholesale_price_total = 0
+	wholesale_price_total = 0.0
 	for row in result:
 		if row[3] and row[29] !='Wholesale price is not set':
 			xirr_averages = xirr_averages + round(flt(row[13]) * (flt(row[29])/100),2)
-			wholesale_price_total = wholesale_price_total + flt(row[13])			
-	return round(flt(xirr_averages/wholesale_price_total),2)
+			wholesale_price_total = wholesale_price_total + flt(row[13])
+	if wholesale_price_total != 0.0:
+		return round(flt(xirr_averages/wholesale_price_total),2)
+	else:
+		return 0.0
