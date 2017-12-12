@@ -27,7 +27,7 @@ def get_data(filters):
 				cond = cond + " and ca.agreement_period = {0}".format(str(filters[key]))
 			if key == 'agreement_status':
 				cond = cond + " and ca.agreement_status = '{0}'".format(str(filters[key]))
-			if key == 'agreement_close_reason':
+			if key == 'agreement_close_reason' and filters['agreement_close_reason']:
 				cond = cond + " and ca.agreement_closing_suspending_reason = '{0}'".format(str(filters[key]))
 		if 'agreement_start_date_from' and 'agreement_start_date_to' in filters_keys:
 				if filters['agreement_start_date_from'] != now_date and filters['agreement_start_date_to'] != now_date:
