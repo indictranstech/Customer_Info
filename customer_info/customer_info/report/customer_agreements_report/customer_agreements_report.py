@@ -208,6 +208,10 @@ def get_colums():
 
 
 def get_agreement_status(result):
+	'''
+	"New" - when customer had no agreements before creating this agreement
+	"Existing" - when customer had agreements before creating this agreement
+	'''
 	for row in result:
 		agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 					 where customer ='{0}' and  date >'{1}'""".format(row[3],row[6]))
