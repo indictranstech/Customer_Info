@@ -1919,7 +1919,10 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					elif late_days > 30:
 						late_month = int(late_days/30)
 						index = int(payment.idx) + late_month
-						amount = flt(payments_rental_amount[index])
+						if index >= len(payments_rental_amount):
+							payments_rental_amount.append(0)
+						else:
+							amount = flt(payments_rental_amount[index])
 						if payment.payment_history:		
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 							if(late_fees_updated == "Yes"):
