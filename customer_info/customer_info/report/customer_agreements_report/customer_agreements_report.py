@@ -40,6 +40,7 @@ def get_data(filters):
 					cus.first_name,
 					cus.last_name,
 					cus.prersonal_code,
+					cus.name,
 					ca.name,
 					ca.agreement_status,
 					ca.date,
@@ -92,11 +93,12 @@ def get_data(filters):
 						# row[29] = str(row[29]) + "%"
 					except Exception,e:
 						row[30] =row[30]
+		result = get_customer_status(result)
 		result = calculate_real_agreement_income(result)
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',irr_average,xirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
 			result.append(last_row)
 		
 		return result
@@ -159,12 +161,12 @@ def get_data(filters):
 						# row[29] = str(row[29]) + "%"
 					except Exception,e:
 						row[30] =row[30]
-		result = get_agreement_status(result)
+		result = get_customer_status(result)
 		result = calculate_real_agreement_income(result)
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'', u'',irr_average,xirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
 			result.append(last_row)
 		return result
 		
@@ -200,14 +202,14 @@ def get_colums():
 				("Remaining months till the end of agreement") + ":Data:100",
 				("Campaign discount code") + ":Link/Campaign Discount Code:150",
 				("Without advance payment")+":Data:150",
-				("IRR") + ":Data:150",
-				("XIRR")+":Data:150",
-				("TIRR")+":Data:150"
+				("IRR %") + ":Data:150",
+				("XIRR %")+":Data:150",
+				("TIRR %")+":Data:150"
 			]
 	return columns
 
 
-def get_agreement_status(result):
+def get_customer_status(result):
 	'''
 	"New" - when customer had no agreements before creating this agreement
 	"Existing" - when customer had agreements before creating this agreement
@@ -227,7 +229,16 @@ def calculate_real_agreement_income(result):
 	'''
 	for row in result:
 		if row[20] and row[14]:
-			row[21] = flt(row[20]) - flt((row[14]+row[15]+row[16]),2)
+			realagreement_income = wholesale_price = transportation_costs = 0.0
+			if row[20]: 
+				realagreement_income =flt(row[20])
+			if row[14]:
+				wholesale_price = flt(row[14])
+			if row[15]:
+				transportation_costs = flt(row[15])
+			if row[16]:
+				transportation_costs = transportation_costs + flt(row[16])
+			row[21] = round(realagreement_income - ( wholesale_price + transportation_costs),2) 
 	return result
 
 def get_irr_averages(result):
