@@ -943,14 +943,11 @@ def calculate_irr():
 			product_doc = frappe.get_doc("Item",agreement_doc.product)
 			if product_doc.wholesale_price:
 				initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
-				print "initial_price",initial_price
 				payments_rental_amount.append(initial_price)
 				
 				if agreement_doc.agreement_status == "Open":
 
 					payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record])
-					print "-agreement_doc.name-",agreement_doc.name
-					print "payments_rental_amount",payments_rental_amount
 					campaign_discount = 0
 					discounted_payments_left = 0
 
@@ -959,7 +956,6 @@ def calculate_irr():
 						discounted_payments_left = agreement_doc.discounted_payments_left 
 			
 					for payment in agreement_doc.payments_record:
-						print "Payment No -",payment.idx
 						payments_rental_amount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 						if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
 							if not payment.check_box_of_submit == 1:
@@ -974,7 +970,6 @@ def calculate_irr():
 										# payments_rental_amount.append((payments_rental_amount[idx] - campaign_discount))
 										# print "(0 - campaign_discount)",(0 - campaign_discount)
 										discounted_payments_left = discounted_payments_left -1
-					print "payments_rental_amount",payments_rental_amount
 					payments_for_irr = payments_rental_amount
 					frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
 					try:
@@ -982,7 +977,6 @@ def calculate_irr():
 						if irr_val:						
 							IRR = round((float(irr_val) * 12 * 100),2)
 							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-							print "_IRR_",IRR
 					except Exception,e:
 						irr_val = ""
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
@@ -991,31 +985,23 @@ def calculate_irr():
 
 					if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
 						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
-						print "Agreement Doc.name-",agreement_doc.name
-						# print "payments_rental_amount",payments_rental_amount
 						for payment in agreement_doc.payments_record:
-							print "Payment No -",payment.idx
 							paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
 							if paymentsrentalamount:
 								payments_rental_amount = paymentsrentalamount
-						print "payments_rental_amount",payments_rental_amount
 						payments_for_irr = payments_rental_amount
-						# print "payments_rental_amount",payments_rental_amount,type(payments_rental_amount)
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
 						try:
 							irr_val = round(irr(payments_for_irr),5)
-							# print "irr_val",irr_val
 							if irr_val:						
 								IRR = round((float(irr_val) * 12 * 100),2)
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-								print "IRR",IRR
 						except Exception,e:
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
 					if agreement_doc.agreement_closing_suspending_reason == "90d SAC":
-						print "Agreement Doc.name-",agreement_doc.name
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1029,7 +1015,6 @@ def calculate_irr():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-								print "Payment No-",payment.idx
 								paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 								if paymentsrentalamount:
 									payments_rental_amount =paymentsrentalamount
@@ -1046,41 +1031,32 @@ def calculate_irr():
 						# Bonus Calculation
 						if payment_history:
 							number_of_payments_done = len(payment_history.split(",")) - 1
-							print "payment.payment_history",payment.payment_history
 							bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
-							print "bonus_calculation",bonus_calculation
 				
 						# Discount Calculation and Campaign Discount Calculation
 						if is_discount or is_campaign_discount or camp_disc_amount:
 							if is_discount:								
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
-								print "discount_calculation",discount_calculation
 							if is_campaign_discount and camp_disc_amount:
 								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 								campaign_discount_calculation =  camp_disc_amount
-								print "campaign_discount_calculation",campaign_discount_calculation
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						_90d_sec = flt(receivables) + flt(total_payment_received) - amount
 						payments_rental_amount.append(_90d_sec) if _90d_sec else 0
-						
-						print "payments_rental_amount",payments_rental_amount					
 						payments_for_irr = payments_rental_amount
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
 						try:
 							irr_val = round(irr(payments_for_irr),5)
-							# print "irr_val",irr_val
 							if irr_val:						
 								IRR = round((float(irr_val) * 12 * 100),2)
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-								print "IRR",IRR
 						except Exception,e:
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
 					if agreement_doc.agreement_closing_suspending_reason == "Early buy offer":
-						print "Agreement Doc.name-",agreement_doc.name
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1094,7 +1070,6 @@ def calculate_irr():
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-								print "Payment No-",payment.idx
 								paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 								if paymentsrentalamount:
 									payments_rental_amount = paymentsrentalamount
@@ -1107,47 +1082,44 @@ def calculate_irr():
 						is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
 						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 						camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
-						print "payment_history",payment_history
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						# Bonus Calculation
 						if payment_history:
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
-							print "bonus_calculation",bonus_calculation
-				
 						# Discount Calculation and Campaign Discount Calculation
 						if is_discount or is_campaign_discount or camp_disc_amount:
 							if is_discount:								
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
-								print "discount_calculation",discount_calculation
 							if is_campaign_discount and camp_disc_amount:
 								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 								campaign_discount_calculation =  camp_disc_amount
-								print "campaign_discount_calculation",campaign_discount_calculation
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						early_buy_amount = 	flt(total_payoff_amount) + flt(receivables) - flt(amount)					
 						payments_rental_amount.append(flt(early_buy_amount)) if early_buy_amount else 0
-						print "payments_rental_amount",payments_rental_amount					
 						payments_for_irr = payments_rental_amount
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
 						try:
 							irr_val = round(irr(payments_for_irr),5)
-							# print "irr_val",irr_val
 							if irr_val:						
 								IRR = round((float(irr_val) * 12 * 100),2)
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-								print "IRR",IRR
 						except Exception,e:
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+					if agreement_doc.agreement_closing_suspending_reason == "Merchandise returned to supplier":
+						if agreement_doc:
+							agreement_doc.irr =	agreement_doc.xirr = agreement_doc.tirr = " "
+							agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
+							agreement_doc.real_agreement_income = 0.0
+							agreement_doc.save()	
 			else:
 				frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr","Wholesale price is not set")
 
 
 def validate_payment_for_irr(payment,payments_rental_amount,agreement):
-	print "_________________________________________________________________________"
 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
 	late_fees = amount = bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0	
 	index = 0
@@ -1156,7 +1128,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 		if payment.check_box_of_submit == 1:
 			late_days = date_diff(payment.payment_date,payment.due_date)
 			# For Late Payment
-			print "late_days",late_days
 			if late_days > 0 and payment.idx == 1:
 				# If Payement Is First
 				if late_days > 14 and late_days < 30:
@@ -1214,9 +1185,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 				# Else Payement Is Not First
 				if late_days > 30:
 					late_month = int(late_days/30)
-					print "late_month",late_month
 					index = int(payment.idx) + late_month
-					print "index",index,len(payments_rental_amount)
 					if index >= len(payments_rental_amount):
 						payments_rental_amount.append(0)
 					else:
@@ -1254,19 +1223,13 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 							amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
 			elif late_days < -3:
 				# For Early Payment
-				# print "late_days",late_days
 				if payment.idx != 1:
 					early_days = abs(late_days)
 					if early_days > 3 and early_days <= 33:
-						print "early_days",early_days
 						index = int(payment.idx) - 1
-						print "index",index
 						amount = flt(payments_rental_amount[index])
-						print "amount",amount
 						amount = amount + flt(payment.monthly_rental_amount)
-						print "amount +",amount
 					else:
-						# print "early_days",early_days
 						early_month = int(early_days/30)
 						x = (early_month * 30) + 3
 						y = ((early_month + 1) * 30) + 3
@@ -1280,10 +1243,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 			# For Normal Payment
 			else:
 				index = int(payment.idx)
-				print "index",index
 				amount = flt(payments_rental_amount[index])
 				amount = amount + flt(payment.monthly_rental_amount)
-				print "amount",amount
 			'''
 				Calculating bonus,discount,campaign
 				Substracting bonus,discount,campaign from monthly rental payment
@@ -1292,30 +1253,21 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 			is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
 			is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 			camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
-			print "payment_history",payment_history
-			print "is_discount",is_discount
-			print "is_campaign_discount",is_campaign_discount
-			print "camp_disc_amount",camp_disc_amount
 			
 			bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
 			# Bonus Calculation
 			if payment_history:
 				number_of_payments_done = len(payment_history.split(",")) - 1
 				bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")/number_of_payments_done
-				print "bonus_calculation",bonus_calculation
 			
 			# Discount Calculation and Campaign Discount Calculation
 			if is_discount or is_campaign_discount or camp_disc_amount :
 				if is_discount:								
 					number_of_payments_done = len(payment_history.split(",")) - 1
 					discount_calculation = is_discount/number_of_payments_done
-					print "discount_calculation",discount_calculation
 				if is_campaign_discount and camp_disc_amount:
 					total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 					campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-					# number_of_payments_done = len(payment_history.split(",")) - 1
-					# campaign_discount_calculation =  camp_disc_amount/number_of_payments_done
-					print "campaign_discount_calculation",campaign_discount_calculation
 			amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 		else:
 			index = int(payment.idx)
@@ -1323,18 +1275,14 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 			amount = amount + flt(payment.monthly_rental_amount)
 		
 		amount =round(amount,2)
-		print "FInal AMount ",amount
-		print "Index",index
 		if index >= len(payments_rental_amount):
 			payments_rental_amount.insert(index,amount)
 		else:	
 			payments_rental_amount[index] = amount
-		print  "payments_rental_amount",payments_rental_amount
 		return payments_rental_amount
 
 	if agreement_doc.agreement_status == "Closed":
 		if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
-			# print "_Rental Payment_",payment.monthly_rental_amount
 			if payment.check_box_of_submit == 1:
 				late_days = date_diff(payment.payment_date,payment.due_date)
 				# For Late Payment
@@ -1356,7 +1304,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 							else:
 								late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-							print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					elif late_days > 30:
 						late_month = int(late_days/30)
 						index = int(payment.idx) + late_month
@@ -1377,7 +1324,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 							else:
 								late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-							print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					else:
 						index = int(payment.idx)
 						amount = flt(payments_rental_amount[index])
@@ -1395,20 +1341,15 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 								late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-							print "Payment ",index ," Is late by",late_days,"and amount =",amount
 				elif late_days > 0:
 					# Payement Is Not First
-					print "Late Days",late_days
 					if late_days > 30:
 						late_month = int(late_days/30)
-						print "late_month",late_month
 						index = int(payment.idx) + late_month
-						print "index for payment",index
 						if index >= len(payments_rental_amount):
 							payments_rental_amount.append(0)
 						else:
 							amount = flt(payments_rental_amount[index])
-						print "Previous Amount",amount
 						if payment.payment_history:
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 							if(late_fees_updated == "Yes"):
@@ -1417,25 +1358,17 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								if payment_id == payment.payment_id:
 									updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-									print "updated_late_fees",updated_late_fees
-									print "After Late fees amount",amount
 								else:
 									amount = amount + flt(payment.monthly_rental_amount)
-									print "2nd Payment Amount",amount
 							else:
 								late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "late_fees",late_fees
-								print "amount",amount
-							print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					else:
 						index = int(payment.idx)
-						print "Payment index",index
 						if index >= len(payments_rental_amount):
 							payments_rental_amount.append(0)
 						else:
 							amount = flt(payments_rental_amount[index])
-						print "_Amount In List_",amount
 						if payment.payment_history:
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 							if(late_fees_updated == "Yes"):
@@ -1444,64 +1377,39 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								if payment_id == payment.payment_id:
 									updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-									print "updated_late_fees",updated_late_fees
-									print "After Late fees amount",amount
 								else:
 									amount = amount + flt(payment.monthly_rental_amount)
-									print "2nd Payment Amount",amount
 							else:
 								late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 								late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "late_fees",late_fees
-								print "amount",amount
-							print "Payment ",index ," Is late by",late_days,"and amount =",amount
 				elif late_days < -3:
 					# For Early Payment
-					print "Early Payment"
 					if payment.idx != 1:
 						early_days = abs(late_days)
-						print "early_days",early_days
 						if early_days > 3 and early_days <= 33:
 							index = int(payment.idx) - 1
 							amount = flt(payments_rental_amount[index])
-							print "Previous amount",amount
 							amount = amount + flt(payment.monthly_rental_amount)
-							print "index",index
-							print "Amount",amount
-							print "Payment ",index ," Is early by",early_days,"and amount =",amount
 						else:
 							early_month = int(early_days/30)
 							x = (early_month * 30) + 3
 							y = ((early_month + 1) * 30) + 3
-							print "x",x
-							print "y",y
-							print "early_month",early_month
-							print "early_days",early_days
 							index = int(payment.idx) - int(early_month)
-							print '__index',index
 							amount = flt(payments_rental_amount[index])
-							print "Previous amount",amount
 							amount = amount + flt(payment.monthly_rental_amount)
-							print "index",index
-							print "Amount",amount
-							print "Payment ",index ," Is early by",early_days,"and amount =",amount
 					else:
 						index = int(payment.idx)
-						print "index",index
 						amount = flt(payments_rental_amount[index])
 						amount = amount + flt(payment.monthly_rental_amount)
-						print "Payment ",index ," Is Normal Payment and amount =",amount
 				# For Normal Payment
 				else:
 					index = int(payment.idx)
-					print  "index",index
 					if index >= len(payments_rental_amount):
 						payments_rental_amount.append(0)
 					else:	
 						amount = flt(payments_rental_amount[index])
 					amount = amount + flt(payment.monthly_rental_amount)
-					print "Payment ",index ," Is Normal Payment and amount =",amount
 				'''
 					Calculating bonus,discount,campaign
 					Substracting bonus,discount,campaign from monthly rental payment
@@ -1516,32 +1424,25 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 				if payment_history:
 					number_of_payments_done = len(payment_history.split(",")) - 1
 					bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")/number_of_payments_done
-					print "bonus_calculation",bonus_calculation
 				
 				# Discount Calculation and Campaign Discount Calculation
 				if is_discount or is_campaign_discount or camp_disc_amount :
 					if is_discount:								
 						number_of_payments_done = len(payment_history.split(",")) - 1
 						discount_calculation = is_discount/number_of_payments_done
-						print "discount_calculation",discount_calculation
 					if is_campaign_discount and camp_disc_amount:
 						total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 						campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-						print "campaign_discount_calculation",campaign_discount_calculation
 				# print "amount",amount	
 				amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 				amount =round(amount,2)
-				print "amount",amount
-				print "index",index
 				if index >= len(payments_rental_amount):
 					payments_rental_amount.insert(index,amount)
 				else:	
 					payments_rental_amount[index] = amount
-				print  "payments_rental_amount",payments_rental_amount
 				return payments_rental_amount
 
 		if agreement_doc.agreement_closing_suspending_reason == "90d SAC":
-			print " In"
 			if payment.check_box_of_submit == 1:
 				payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 				payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1567,7 +1468,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						elif late_days > 30:
 							late_month = int(late_days/30)
 							index = int(payment.idx) + late_month
@@ -1585,7 +1485,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
 							amount = flt(payments_rental_amount[index])
@@ -1603,17 +1502,12 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					elif late_days > 0:
 						# Payement Is Not First
-						print "Late Days",late_days
 						if late_days > 30:
 							late_month = int(late_days/30)
-							print "late_month",late_month
 							index = int(payment.idx) + late_month
-							print "index for payment",index
 							amount = flt(payments_rental_amount[index])
-							print "_Previous Amount",amount
 							if payment.payment_history:
 								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 								if(late_fees_updated == "Yes"):
@@ -1622,22 +1516,14 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									if payment_id == payment.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
-							print "Payment index",index
 							amount = flt(payments_rental_amount[index])
-							print "_Amount In List_",amount
 							if payment.payment_history:
 								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 								if(late_fees_updated == "Yes"):
@@ -1646,55 +1532,31 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									if payment_id == payment.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					elif late_days < -3:
 						# For Early Payment
-						print "Early Payment"
 						if payment.idx != 1:
 							early_days = abs(late_days)
-							print "early_days",early_days
 							if early_days > 3 and early_days <= 33:
 								index = int(payment.idx) - 1
 								amount = flt(payments_rental_amount[index])
-								print "Previous amount",amount
 								amount = amount + flt(payment.monthly_rental_amount)
-								print "index",index
-								print "Amount",amount
-								print "Payment ",index ," Is early by",early_days,"and amount =",amount
 							else:
 								early_month = int(early_days/30)
 								x = (early_month * 30) + 3
 								y = ((early_month + 1) * 30) + 3
-								print "x",x
-								print "y",y
-								print "early_month",early_month
-								print "early_days",early_days
-								print "payment.idx",payment.idx
-								print "early_month",early_month
 								index = int(payment.idx) - int(early_month)
-								print '__index',index
 								amount = flt(payments_rental_amount[index])
-								print "Previous amount",amount
 								amount = amount + flt(payment.monthly_rental_amount)
-								print "index",index
-								print "Amount",amount
-								print "Payment ",index ," Is early by",early_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
 							amount = flt(payments_rental_amount[index])
 							amount = amount + flt(payment.monthly_rental_amount)
-							print "Payment ",index ," Is Normal Payment and amount =",amount
 					# For Normal Payment
 					else:
 						index = int(payment.idx)
@@ -1703,7 +1565,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 						else:
 							amount = flt(payments_rental_amount[index])
 						amount = amount + flt(payment.monthly_rental_amount)
-						print "Payment ",index ," Is Normal Payment and amount =",amount
 					'''
 						Calculating bonus,discount,campaign
 						Substracting bonus,discount,campaign from monthly rental payment
@@ -1718,32 +1579,25 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					if payment_history:
 						number_of_payments_done = len(payment_history.split(",")) - 1
 						bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")/number_of_payments_done
-						print "bonus_calculation",bonus_calculation
 					
 					# Discount Calculation and Campaign Discount Calculation
 					if is_discount or is_campaign_discount or camp_disc_amount :
 						if is_discount:								
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							discount_calculation = is_discount/number_of_payments_done
-							print "discount_calculation",discount_calculation
 						if is_campaign_discount and camp_disc_amount:
 							total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 							campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-							print "campaign_discount_calculation",campaign_discount_calculation
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation -bonus_calculation
 					amount =round(amount,2)
-					print "amount",amount
-					print "index",index
 					if index > len(payments_rental_amount):
 						payments_rental_amount.insert(index,amount)
 					else:	
 						payments_rental_amount[index] = amount
-					print  "payments_rental_amount",payments_rental_amount
 					return payments_rental_amount			
 
 		if agreement_doc.agreement_closing_suspending_reason == "Early buy offer":
-			print " In"
 			if payment.check_box_of_submit == 1:
 				payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 				payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1769,7 +1623,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						elif late_days > 30:
 							late_month = int(late_days/30)
 							index = int(payment.idx) + late_month
@@ -1787,7 +1640,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
 							amount = flt(payments_rental_amount[index])
@@ -1805,20 +1657,15 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					elif late_days > 0:
 						# Payement Is Not First
-						print "Late Days",late_days
 						if late_days > 30:
 							late_month = int(late_days/30)
-							print "late_month",late_month
 							index = int(payment.idx) + late_month
-							print "index for payment",index
 							if index >= len(payments_rental_amount):
 								payments_rental_amount.append(0)
 							else:
 								amount = flt(payments_rental_amount[index])
-							print "_Previous Amount",amount
 							if payment.payment_history:
 								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 								if(late_fees_updated == "Yes"):
@@ -1827,25 +1674,17 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									if payment_id == payment.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
-							print "Payment index",index
 							if index >= len(payments_rental_amount):
 								payments_rental_amount.append(0)
 							else:
 								amount = flt(payments_rental_amount[index])
-							print "_Amount In List_",amount
 							if payment.payment_history:
 								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
 								if(late_fees_updated == "Yes"):
@@ -1854,54 +1693,31 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 									if payment_id == payment.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
 									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
 									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount
-								print "Payment ",index ," Is late by",late_days,"and amount =",amount
 					elif late_days < -3:
 						# For Early Payment
-						print "Early Payment"
 						if payment.idx != 1:
 							early_days = abs(late_days)
-							print "early_days",early_days
 							if early_days > 3 and early_days <= 33:
 								index = int(payment.idx) - 1
 								amount = flt(payments_rental_amount[index])
-								print "Previous amount",amount
 								amount = amount + flt(payment.monthly_rental_amount)
-								print "index",index
-								print "Amount",amount
-								print "Payment ",index ," Is early by",early_days,"and amount =",amount
 							else:
 								early_month = int(early_days/30)
 								x = (early_month * 30) + 3
 								y = ((early_month + 1) * 30) + 3
-								print "x",x
-								print "y",y
-								print "early_month",early_month
-								print "early_days",early_days
-								print "early_month",early_month
 								index = int(payment.idx) - int(early_month)
-								print '__index',index
 								amount = flt(payments_rental_amount[index])
-								print "Previous amount",amount
 								amount = amount + flt(payment.monthly_rental_amount)
-								print "index",index
-								print "Amount",amount
-								print "Payment ",index ," Is early by",early_days,"and amount =",amount
 						else:
 							index = int(payment.idx)
 							amount = flt(payments_rental_amount[index])
 							amount = amount + flt(payment.monthly_rental_amount)
-							print "Payment ",index ," Is Normal Payment and amount =",amount
 					# For Normal Payment
 					else:
 						index = int(payment.idx)
@@ -1910,7 +1726,6 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 						else:
 							amount = flt(payments_rental_amount[index])
 						amount = amount + flt(payment.monthly_rental_amount)
-						print "Payment ",index ," Is Normal Payment and amount =",amount
 					'''
 						Calculating bonus,discount,campaign
 						Substracting bonus,discount,campaign from monthly rental payment
@@ -1940,15 +1755,177 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 					amount =round(amount,2)
-					print "amount",amount
-					print "index",index
 					if index > len(payments_rental_amount):
 						payments_rental_amount.insert(index,amount)
 					else:	
 						payments_rental_amount[index] = amount
-					print  "payments_rental_amount",payments_rental_amount
-					return payments_rental_amount			
+					return payments_rental_amount	
 
+		if agreement_doc.agreement_closing_suspending_reason == "Return" or  agreement_doc.agreement_closing_suspending_reason =="Financial Difficulties":
+			if payment.check_box_of_submit == 1:
+				payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
+				payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
+				
+				if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
+					late_days = date_diff(payment.payment_date,payment.due_date)
+					# For Late Payment
+					if late_days > 0 and payment.idx == 1:
+						# If Payement Is First
+						if late_days > 14 and late_days < 30:
+							index = int(payment.idx) + 1
+							amount = flt(payments_rental_amount[index])
+							if payment.payment_history:
+								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment.monthly_rental_amount)
+								else:
+									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
+									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
+						elif late_days > 30:
+							late_month = int(late_days/30)
+							index = int(payment.idx) + late_month
+							amount = flt(payments_rental_amount[index])
+							if payment.payment_history:		
+								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment.monthly_rental_amount)
+								else:
+									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
+									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
+						else:
+							index = int(payment.idx)
+							amount = flt(payments_rental_amount[index])
+							if payment.payment_history:
+								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment.monthly_rental_amount)
+								else:
+									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
+									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
+					elif late_days > 0:
+						# Payement Is Not First
+						if late_days > 30:
+							late_month = int(late_days/30)
+							index = int(payment.idx) + late_month
+							if index >= len(payments_rental_amount):
+								payments_rental_amount.append(0)
+							else:
+								amount = flt(payments_rental_amount[index])
+							if payment.payment_history:
+								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment.monthly_rental_amount)
+								else:
+									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
+									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
+						else:
+							index = int(payment.idx)
+							if index >= len(payments_rental_amount):
+								payments_rental_amount.append(0)
+							else:
+								amount = flt(payments_rental_amount[index])
+							if payment.payment_history:
+								late_fees_updated = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees_updated")
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+										amount = amount + flt(payment.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment.monthly_rental_amount)
+								else:
+									late_fees1 = frappe.db.get_value("Payments History",{"name":payment.payment_history},"late_fees")
+									late_fees = get_late_fees(agreement,payment.due_date,payment.payment_date,payment.monthly_rental_amount)
+									amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
+					elif late_days < -3:
+						# For Early Payment
+						if payment.idx != 1:
+							early_days = abs(late_days)
+							if early_days > 3 and early_days <= 33:
+								index = int(payment.idx) - 1
+								amount = flt(payments_rental_amount[index])
+								amount = amount + flt(payment.monthly_rental_amount)
+							else:
+								early_month = int(early_days/30)
+								x = (early_month * 30) + 3
+								y = ((early_month + 1) * 30) + 3
+								index = int(payment.idx) - int(early_month)
+								amount = flt(payments_rental_amount[index])
+								amount = amount + flt(payment.monthly_rental_amount)
+						else:
+							index = int(payment.idx)
+							amount = flt(payments_rental_amount[index])
+							amount = amount + flt(payment.monthly_rental_amount)
+					# For Normal Payment
+					else:
+						index = int(payment.idx)
+						if index >= len(payments_rental_amount):
+							payments_rental_amount.append(0)
+						else:
+							amount = flt(payments_rental_amount[index])
+						amount = amount + flt(payment.monthly_rental_amount)
+					'''
+						Calculating bonus,discount,campaign
+						Substracting bonus,discount,campaign from monthly rental payment
+					'''
+					payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+					is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
+					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+					camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
+					
+					bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
+					# Bonus Calculation
+					if payment_history :
+						number_of_payments_done = len(payment_history.split(",")) - 1
+						bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")/number_of_payments_done
+						# print "bonus_calculation",bonus_calculation
+					
+					# Discount Calculation and Campaign Discount Calculation
+					if is_discount or is_campaign_discount and camp_disc_amount :
+						if is_discount:								
+							number_of_payments_done = len(payment_history.split(",")) - 1
+							discount_calculation = is_discount/number_of_payments_done
+							# print "discount_calculation",discount_calculation
+						if is_campaign_discount and camp_disc_amount:
+							total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+							campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+							# print "campaign_discount_calculation",campaign_discount_calculation
+					# print "amount",amount	
+					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+					amount =round(amount,2)
+					if index > len(payments_rental_amount):
+						payments_rental_amount.insert(index,amount)
+					else:	
+						payments_rental_amount[index] = amount
+					return payments_rental_amount			
+		
+		
 def get_late_fees(agreement_name,date1,date2,rental_payment):
 	date_diffirence = date_diff(date2,date1)
 	late_fees_amount = 0
@@ -1959,8 +1936,10 @@ def get_late_fees(agreement_name,date1,date2,rental_payment):
 		return late_fees_amount
 	else:
 		return 0
-
-
+'''
+Calculate XIRR 
+Every Status have different algorithm.
+'''
 @frappe.whitelist()
 def calculate_xirr():
 	now_date = datetime.now().date()
@@ -2003,68 +1982,52 @@ def calculate_xirr():
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 	
 	for row in result:
-		print "Agreement:",row[3]
  		#XIIR Calculations
+ 		# if row[3] == "BK-012986":
  		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0: 
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
-					bonus_calculation = 0.0
-					discount_calculation = 0.0
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
 					if payments:
 						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
 						for payment_r in payments:
-							print "_________________________________________________________________________________________________"
-							print "Payment",payment_r.idx
-							bonus_calculation = 0.0
-							discount_calculation = 0.0
-							campaign_discount_calculation = 0.0								
+							bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0								
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
 							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")							
-							#Calculating bonus,discount,campaign Substracting bonus,discount,campaign from monthly rental payment'''
 							
+							# Calculating bonus,discount,campaign Substracting bonus,discount,campaign from monthly rental payment'''
 							if payment_r.check_box_of_submit == 1:
-								
 								bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
 								amount = late_fees = 0.0	
-								
 								if(late_fees_updated == "Yes"):
 									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
 									if payment_id == payment_r.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees")
 										amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment_r.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
 									amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount		
 						
 								if payment_history:
 									number_of_payments_done = len(payment_history.split(",")) - 1
 									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
-									print "bonus_calculation",bonus_calculation
 								
 								if is_discount or is_campaign_discount and camp_disc_amount:
 									if is_discount:
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										discount_calculation = is_discount/number_of_payments_done
-										print "discount_calculation",discount_calculation
 									if is_campaign_discount and camp_disc_amount:
 										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-										print "campaign_discount_calculation",campaign_discount_calculation
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 
@@ -2077,7 +2040,6 @@ def calculate_xirr():
 							XIRR = round((float(row[28]) * 100),2)
 							if XIRR:					
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
-								print "XIRR :",XIRR		
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	 		
@@ -2086,19 +2048,16 @@ def calculate_xirr():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
 	 	
 	 	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
+			
 			if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over":
 				if row[13] and float(row[13]) > 0.0:
-					bonus_calculation = 0.0
-					discount_calculation = 0.0
-		 			submitted_payments_rental_amount = []
+					submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
 					if payments:
 						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")					
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
 						for payment_r in payments:
-							print "_________________________________________________________________________________________________"
-							print "Payment",payment_r.idx
 							bonus_calculation = 0.0
 							discount_calculation = 0.0
 							campaign_discount_calculation = 0.0								
@@ -2111,81 +2070,60 @@ def calculate_xirr():
 								Substracting bonus,discount,campaign from monthly rental payment
 							'''
 							if payment_r.check_box_of_submit == 1:
-								
 								bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
 								amount = late_fees = 0.0
-								
 								if(late_fees_updated == "Yes"):
 									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
 									if payment_id == payment_r.payment_id:
 										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees")
 										amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
-										print "updated_late_fees",updated_late_fees
-										print "After Late fees amount",amount
 									else:
 										amount = amount + flt(payment_r.monthly_rental_amount)
-										print "2nd Payment Amount",amount
 								else:
 									late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
 									amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-									print "late_fees",late_fees
-									print "amount",amount		
-						
 								if payment_history:
 									number_of_payments_done = len(payment_history.split(",")) - 1
 									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
-									print "bonus_calculation",bonus_calculation
-								
 								if is_discount or is_campaign_discount or camp_disc_amount:
 									if is_discount:
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										discount_calculation = is_discount/number_of_payments_done
-										print "discount_calculation",discount_calculation
 									if is_campaign_discount and camp_disc_amount:
 										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-										print "campaign_discount_calculation",campaign_discount_calculation
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
-						print "submitted_payments_rental_amount",submitted_payments_rental_amount
 						try:
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							if row[28]:
 								XIRR = round((float(row[28]) * 100),2)
 								if XIRR:
-									print "XIRR",XIRR
 									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
-							print "\nContract Term is over XIRR",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 			
 			elif row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
- 				if row[13] and float(row[13]) > 0.0:
-	 				submitted_payments_rental_amount = []
-	 				pay_off_date = ""
-	 				total_payment_received = 0.0
-	 				_90d_sec = 0.0
-	 				bonus_calculation = 0.0
-	 				discount_calculation = 0.0
+				if row[13] and float(row[13]) > 0.0:
+					submitted_payments_rental_amount = []
+					pay_off_date = ""
+					total_payment_received = 0.0
+					_90d_sec = 0.0
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
-	 				if payments:
-	 					purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
+					if payments:
+						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
-	 					_90dsac_paymnet_history = ''
-	 					pay_off_date = ''
-	 					for payment_r in payments:
-	 						print "_________________________________________________________________________________________________"
-							print "Payment",payment_r.idx
-							bonus_calculation = 0.0
-							discount_calculation = 0.0
-							campaign_discount_calculation = 0.0		 						
+						_90dsac_paymnet_history = ''
+						pay_off_date = ''
+						for payment_r in payments:
+							bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0		 						
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
@@ -2197,33 +2135,25 @@ def calculate_xirr():
 								Substracting bonus,discount,campaign from monthly rental payment
 							'''
 							if payment_r.check_box_of_submit == 1:
-								
 								payment_history = ''
 								if payment_type == "Normal Payment" and payoff_cond == "Rental Payment":
 									bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
 									amount = late_fees = 0.0	
-						
 									if(late_fees_updated == "Yes"):
 										payment_ids_list = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 										payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
 										if payment_id == payment_r.payment_id:
 											updated_late_fees = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees")
 											amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
-											print "updated_late_fees",updated_late_fees
-											print "After Late fees amount",amount
 										else:
 											amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-											print "2nd Payment Amount",amount
 									else:
 										late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
 										amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-										print "late_fees",late_fees
-										print "amount",amount		
 							
 									if payment_history:
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
-										print "bonus_calculation",bonus_calculation
 									
 									if is_discount or is_campaign_discount or camp_disc_amount:
 										if is_discount:
@@ -2232,14 +2162,12 @@ def calculate_xirr():
 												discount_calculation = is_discount/number_of_payments_done
 											else: 
 												discount_calculation = is_discount
-											print "discount_calculation",discount_calculation
 										if is_campaign_discount and camp_disc_amount:
 											total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 											if total_discount_agreements > 0:
 												campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 											else:
 												campaign_discount_calculation = camp_disc_amount
-											print "campaign_discount_calculation",campaign_discount_calculation
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 								
@@ -2257,38 +2185,19 @@ def calculate_xirr():
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						amount = late_fees = 0.0
 
-						# if(late_fees_updated == "Yes"):
-						# 	payment_ids_list = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"payments_ids")
-						# 	payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
-						# 	if payment_id == payment_r.payment_id:
-						# 		updated_late_fees = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"late_fees")
-						# 		amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
-						# 		print "updated_late_fees",updated_late_fees
-						# 		print "After Late fees amount",amount
-						# 	else:
-						# 		amount = amount + flt(payment_r.monthly_rental_amount)
-						# 		print "2nd Payment Amount",amount
-						# else:
-						# 	late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
-						# 	amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-						# 	print "late_fees",late_fees
-						# 	print "amount",amount
 						# Bonus Calculation
 						if payment_history:
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							bonus_calculation = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"bonus")
-							print "bonus_calculation",bonus_calculation
 				
 						# Discount Calculation and Campaign Discount Calculation
 						if is_discount or is_campaign_discount or camp_disc_amount:
 							if is_discount:								
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
-								print "discount_calculation",discount_calculation
 							if is_campaign_discount and camp_disc_amount:
 								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 								campaign_discount_calculation =  camp_disc_amount
-								print "campaign_discount_calculation",campaign_discount_calculation
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						
 						total_payment_received = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"total_payment_received")
@@ -2298,17 +2207,14 @@ def calculate_xirr():
 						submitted_payments_rental_amount.append((pay_off_date,_90d_sec))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount	
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							if row[28]:
 								XIRR = round((float(row[28])* 100),2)
 								if XIRR:
 									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
-									print "XIRR",XIRR
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-							print "\n90d SAC"
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
@@ -2316,11 +2222,6 @@ def calculate_xirr():
  			elif row[12] and float(row[12]) > 0 and row[21] =="Early buy offer":
  				if row[13] and float(row[13]) > 0.0:
 	 				submitted_payments_rental_amount = []
-	 				bonus_calculation = 0.0
-	 				discount_calculation = 0.0
-	 				payment_history = ""
-					Total_payoff_amount =""
-					payment_date =''
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
 	 				if payments:
@@ -2329,11 +2230,7 @@ def calculate_xirr():
 	 					early_buy_paymnet_history = ''
 	 					pay_off_date = ''
 	 					for payment_r in payments:
-	 						print "_________________________________________________________________________________________________"
-							print "Payment",payment_r.idx
-							bonus_calculation = 0.0
-							discount_calculation = 0.0
-							campaign_discount_calculation = 0.0		 						
+							bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0		 						
 							payment_type = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
@@ -2341,38 +2238,31 @@ def calculate_xirr():
 							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
+							
 							'''	Calculating bonus,discount,campaign
 								Substracting bonus,discount,campaign from monthly rental payment
 							'''
 							if payment_r.check_box_of_submit == 1:
-								
 								payment_history = ''
 								if payment_type == "Normal Payment" and payoff_cond == "Rental Payment":
 									bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
 									amount = late_fees = 0.0
-						
 									if(late_fees_updated == "Yes"):
 										payment_ids_list = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 										payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
 										if payment_id == payment_r.payment_id:
 											updated_late_fees = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees")
 											amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
-											print "updated_late_fees",updated_late_fees
-											print "After Late fees amount",amount
 										else:
 											amount = amount + flt(payment_r.monthly_rental_amount)
-											print "2nd Payment Amount",amount
 									else:
 										late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
 										amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
-										print "late_fees",late_fees
-										print "amount",amount		
 							
 									if payment_history:
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
-										print "bonus_calculation",bonus_calculation
-									
+
 									if is_discount or is_campaign_discount or camp_disc_amount:
 										if is_discount:
 											number_of_payments_done = len(payment_history.split(",")) - 1
@@ -2380,11 +2270,9 @@ def calculate_xirr():
 												discount_calculation = is_discount/number_of_payments_done
 											else:
 												discount_calculation = is_discount
-											print "discount_calculation",discount_calculation
 										if is_campaign_discount and camp_disc_amount:
 											total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 											campaign_discount_calculation =  camp_disc_amount
-											print "campaign_discount_calculation",campaign_discount_calculation
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 								
@@ -2405,18 +2293,15 @@ def calculate_xirr():
 						if payment_history:
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							bonus_calculation = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"bonus")
-							print "bonus_calculation",bonus_calculation
 				
 						# Discount Calculation and Campaign Discount Calculation
 						if is_discount or is_campaign_discount or camp_disc_amount:
 							if is_discount:								
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
-								print "discount_calculation",discount_calculation
 							if is_campaign_discount and camp_disc_amount:
 								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 								campaign_discount_calculation =  camp_disc_amount
-								print "campaign_discount_calculation",campaign_discount_calculation
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						total_payoff_amount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"total_payment_received")
 						receivables = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"receivables")
@@ -2425,21 +2310,82 @@ def calculate_xirr():
 						submitted_payments_rental_amount.append((payment_date,early_buy_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
-							print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							if row[28]:
 								XIRR = round((float(row[28]) * 100),2)
 								if XIRR:
-									print "XIRR",XIRR
 									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
 						except Exception,e:
 								row[28] = ""
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-								print "\n30% Early buy offer",row[28] 
 				else:
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
-			else:
+			
+			elif row[12] and float(row[12]) > 0 and row[21] =="Return" or row[21] =="Financial Difficulties":
+				if row[13] and float(row[13]) > 0.0:
+					submitted_payments_rental_amount = []
+					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+					payments = agreement_doc.payments_record
+					if payments:
+						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")					
+						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
+						for payment_r in payments:							
+							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
+							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
+							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
+							'''	Calculating bonus,discount,campaign
+								Substracting bonus,discount,campaign from monthly rental payment
+							'''
+							if payment_r.check_box_of_submit == 1:
+								bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
+								amount = late_fees = 0.0
+								if(late_fees_updated == "Yes"):
+									payment_ids_list = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
+									payment_id = payment_ids_list.split(",")[0].split("/")[0].split('"')[1]
+									if payment_id == payment_r.payment_id:
+										updated_late_fees = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees")
+										amount = amount + flt(payment_r.monthly_rental_amount) +flt(updated_late_fees)
+									else:
+										amount = amount + flt(payment_r.monthly_rental_amount)
+								else:
+									late_fees = get_late_fees(row[3],payment_r.due_date,payment_r.payment_date,payment_r.monthly_rental_amount)
+									amount = amount + flt(payment_r.monthly_rental_amount) +flt(late_fees)
+								if payment_history:
+									number_of_payments_done = len(payment_history.split(",")) - 1
+									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
+								if is_discount or is_campaign_discount or camp_disc_amount:
+									if is_discount:
+										number_of_payments_done = len(payment_history.split(",")) - 1
+										discount_calculation = is_discount/number_of_payments_done
+									if is_campaign_discount and camp_disc_amount:
+										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
+						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
+						try:
+							row[28] = xirr(submitted_payments_rental_amount,0.1)
+							if row[28]:
+								XIRR = round((float(row[28]) * 100),2)
+								if XIRR:
+									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+						except Exception,e:
+							row[28] = ""
+							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
+				else:
+					row[28] ="Wholesale price is not set"
+					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
+			elif row[12] and float(row[12]) > 0 and row[21] =="Merchandise returned to supplier":
+				agreement_doc = frappe.get_doc("Customer Agreement",row[3])
+				if agreement_doc:
+					agreement_doc.irr =	agreement_doc.xirr = agreement_doc.tirr = " "
+					agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
+					agreement_doc.real_agreement_income = 0.0
+					agreement_doc.save()
+			else:	
 				row[28] = ""
 		else:
 			row[28] = ""
