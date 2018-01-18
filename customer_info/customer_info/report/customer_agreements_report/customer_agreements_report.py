@@ -40,6 +40,7 @@ def get_data(filters):
 					cus.first_name,
 					cus.last_name,
 					cus.prersonal_code,
+					cus.city,
 					cus.name,
 					ca.name,
 					ca.agreement_status,
@@ -108,6 +109,7 @@ def get_data(filters):
 					cus.first_name,
 					cus.last_name,
 					cus.prersonal_code,
+					cus.city,
 					cus.name,
 					ca.name,
 					ca.agreement_status,
@@ -146,27 +148,27 @@ def get_data(filters):
 					where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 
 		for row in result:
-			if row[29] and row[30] != "Wholesale price is not set":
-				if row[29] != "" or row[29]!="0.000000":
-					try:
-						row[29] =round(float(row[29]),2)
-						# row[28] = str(row[28]) + "%"
-					except Exception,e:
-						row[29] =row[29]
-			
-			if row[30] and row[30] != "Wholesale price is not set":
-				if row[30] != "" or row[30]!="0.000000" :
+			if row[30] and row[31] != "Wholesale price is not set":
+				if row[30] != "" or row[31]!="0.000000":
 					try:
 						row[30] =round(float(row[30]),2)
-						# row[29] = str(row[29]) + "%"
+						# row[28] = str(row[28]) + "%"
 					except Exception,e:
 						row[30] =row[30]
+			
+			if row[31] and row[31] != "Wholesale price is not set":
+				if row[31] != "" or row[31]!="0.000000" :
+					try:
+						row[31] =round(float(row[31]),2)
+						# row[29] = str(row[29]) + "%"
+					except Exception,e:
+						row[31] =row[31]
 		result = get_customer_status(result)
 		result = calculate_real_agreement_income(result)
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
 			result.append(last_row)
 		return result
 		
@@ -176,6 +178,7 @@ def get_colums():
 				("Customer Name") + ":Data:100",
 				("Surname") + ":Data:100",
 				("Personal Code") + ":Data:100",
+				("City/Town") + ":Data:100",
 				("Customer Status") + ":Data:100",
 				("Agreement Number") + ":Link/Customer Agreement:150",
 				("Agreement Status") + ":Data:100",
@@ -216,11 +219,11 @@ def get_customer_status(result):
 	'''
 	for row in result:
 		agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
-					 where customer ='{0}' and  date >'{1}'""".format(row[3],row[6]))
+					 where customer ='{0}' and  date < '{1}'""".format(row[4],row[7]),debug =1)
 		if agreements:
-			row[3] = 'Existing'
+			row[4] = 'Existing'
 		else:
-			row[3] = 'New'
+			row[4] = 'New'
 	return result
 
 def calculate_real_agreement_income(result):
@@ -228,17 +231,17 @@ def calculate_real_agreement_income(result):
 	Real agreement profit EUR = Real agreements incomes - Wholesale price - Transportation costs
 	'''
 	for row in result:
-		if row[20] and row[14]:
+		if row[21] and row[15]:
 			realagreement_income = wholesale_price = transportation_costs = 0.0
-			if row[20]: 
-				realagreement_income =flt(row[20])
-			if row[14]:
-				wholesale_price = flt(row[14])
+			if row[21]: 
+				realagreement_income =flt(row[21])
 			if row[15]:
-				transportation_costs = flt(row[15])
+				wholesale_price = flt(row[15])
 			if row[16]:
-				transportation_costs = transportation_costs + flt(row[16])
-			row[21] = round(realagreement_income - ( wholesale_price + transportation_costs),2) 
+				transportation_costs = flt(row[16])
+			if row[17]:
+				transportation_costs = transportation_costs + flt(row[17])
+			row[22] = round(realagreement_income - ( wholesale_price + transportation_costs),2) 
 	return result
 
 def get_irr_averages(result):
@@ -251,9 +254,9 @@ def get_irr_averages(result):
 	irr_average = 0.0
 	wholesale_price_total = 0.0
 	for row in result:
-		if row[4] and row[29] !='Wholesale price is not set':
-			irr_average = irr_average + round(flt(row[14]) * (flt(row[29])),2)
-			wholesale_price_total = wholesale_price_total + flt(row[14])
+		if row[5] and row[30] !='Wholesale price is not set':
+			irr_average = irr_average + round(flt(row[15]) * (flt(row[30])),2)
+			wholesale_price_total = wholesale_price_total + flt(row[15])
 	if wholesale_price_total != 0.0:
 		return round(flt(irr_average/wholesale_price_total),2)
 	else:
@@ -270,9 +273,9 @@ def get_xirr_averages(result):
 	xirr_average = 0.0
 	wholesale_price_total = 0.0
 	for row in result:
-		if row[4] and row[30] !='Wholesale price is not set':
-			xirr_average = xirr_average + round(flt(row[14]) * (flt(row[30])),2)
-			wholesale_price_total = wholesale_price_total + flt(row[14])
+		if row[5] and row[31] !='Wholesale price is not set':
+			xirr_average = xirr_average + round(flt(row[15]) * (flt(row[31])),2)
+			wholesale_price_total = wholesale_price_total + flt(row[15])
 	if wholesale_price_total != 0.0:
 		return round(flt(xirr_average/wholesale_price_total),2)
 	else:
