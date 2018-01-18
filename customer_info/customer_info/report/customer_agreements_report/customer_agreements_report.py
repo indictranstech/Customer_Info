@@ -99,7 +99,7 @@ def get_data(filters):
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages]
 			result.append(last_row)
 		
 		return result
