@@ -1056,7 +1056,7 @@ def calculate_irr():
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
-					if agreement_doc.agreement_closing_suspending_reason == "Early buy offer":
+					if agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason =="30% Early buy offer":
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1597,7 +1597,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 						payments_rental_amount[index] = amount
 					return payments_rental_amount			
 
-		if agreement_doc.agreement_closing_suspending_reason == "Early buy offer":
+		if agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason == "30% Early buy offer":
 			if payment.check_box_of_submit == 1:
 				payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 				payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1983,13 +1983,19 @@ def calculate_xirr():
 	
 	for row in result:
  		#XIIR Calculations
- 		# if row[3] == "BK-012986":
+ 		# if row[3] == "BK-011227":
  		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 			if row[12] and float(row[12])>0: 
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
 					payments = agreement_doc.payments_record
+					campaign_discount = discounted_payments_left = 0
+					
+					if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
+						campaign_discount = agreement_doc.campaign_discount
+						discounted_payments_left = agreement_doc.discounted_payments_left
+					
 					if payments:
 						purchase_date = frappe.db.get_value("Item",{"name":agreement_doc.product},"purchase_date")
 						submitted_payments_rental_amount = [(purchase_date,-(float(row[13])+float(row[14])+float(row[15])))]
@@ -2029,11 +2035,18 @@ def calculate_xirr():
 										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 
 							if payment_r.check_box_of_submit == 0 and payment_r.due_date >= getdate(now_date):
-								submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))	
-						
+								if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
+									if campaign_discount > 0 and discounted_payments_left > 0:
+										amount = payment_r.monthly_rental_amount
+										amount = amount - campaign_discount
+										discounted_payments_left = discounted_payments_left -1
+										submitted_payments_rental_amount.append((payment_r.due_date,amount))	
+									else:
+										submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							row[28] = xirr(submitted_payments_rental_amount,0.1)	
@@ -2048,7 +2061,6 @@ def calculate_xirr():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
 	 	
 	 	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
-			
 			if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over":
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
@@ -2094,6 +2106,7 @@ def calculate_xirr():
 										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
@@ -2169,6 +2182,7 @@ def calculate_xirr():
 											else:
 												campaign_discount_calculation = camp_disc_amount
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+									amount = round(amount,2)
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 								
 								if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
@@ -2219,7 +2233,7 @@ def calculate_xirr():
 					row[28] ="Wholesale price is not set"
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 		
- 			elif row[12] and float(row[12]) > 0 and row[21] =="Early buy offer":
+ 			elif row[12] and float(row[12]) > 0 and row[21] == "Early buy offer" or row[21] == "30% Early buy offer":
  				if row[13] and float(row[13]) > 0.0:
 	 				submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
@@ -2274,6 +2288,7 @@ def calculate_xirr():
 											total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 											campaign_discount_calculation =  camp_disc_amount
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+									amount = round(amount,2)
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 								
 								if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" or payoff_cond =="Early buy-40":
@@ -2305,7 +2320,7 @@ def calculate_xirr():
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						total_payoff_amount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"total_payment_received")
 						receivables = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"receivables")
-						early_buy_amount = 	float(total_payoff_amount) + float(receivables) - flt(amount)
+						early_buy_amount = 	flt(total_payoff_amount) + flt(receivables) - flt(amount)
 						payment_date = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"payment_date")
 						submitted_payments_rental_amount.append((payment_date,early_buy_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
@@ -2364,6 +2379,7 @@ def calculate_xirr():
 										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
 										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
+								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
@@ -2385,7 +2401,7 @@ def calculate_xirr():
 					agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
 					agreement_doc.real_agreement_income = 0.0
 					agreement_doc.save()
-			else:	
+			else:
 				row[28] = ""
 		else:
 			row[28] = ""
