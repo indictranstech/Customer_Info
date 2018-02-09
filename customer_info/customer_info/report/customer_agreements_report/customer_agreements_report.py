@@ -101,7 +101,7 @@ def get_data(filters):
 		tirr_averages = get_tirr_averages(result)
 		print "tirr_averages",tirr_averages
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',tirr_averages,u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
 			result.append(last_row)
 		
 		return result
@@ -296,7 +296,7 @@ def get_tirr_averages(result):
 	wholesale_price_total = 0.0
 	for row in result:
 		if row[5] and row[31] !='Wholesale price is not set':
-			tirr_average = tirr_average + round(flt(row[15]) * (flt(row[31])),2)
+			tirr_average = tirr_average + round(flt(row[15]) * (flt(row[32])),2)
 			wholesale_price_total = wholesale_price_total + flt(row[15])
 	if wholesale_price_total != 0.0:
 		return round(flt(tirr_average/wholesale_price_total),2)
