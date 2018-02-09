@@ -99,7 +99,6 @@ def get_data(filters):
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		tirr_averages = get_tirr_averages(result)
-		print "tirr_averages",tirr_averages
 		if xirr_averages or irr_average:
 			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
 			result.append(last_row)
@@ -170,7 +169,6 @@ def get_data(filters):
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		tirr_averages = get_tirr_averages(result)
-		print "\n\n\ntirr_averages",tirr_averages
 		if xirr_averages or irr_average:
 			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
 			result.append(last_row)
