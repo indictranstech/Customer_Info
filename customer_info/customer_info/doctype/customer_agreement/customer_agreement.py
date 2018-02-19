@@ -936,7 +936,7 @@ def calculate_irr():
 	agreements = frappe.db.get_all("Customer Agreement")
 	for agreement in agreements:
 	 	agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
-	# agreement_doc = frappe.get_doc("Customer Agreement","BK-010504")
+	# agreement_doc = frappe.get_doc("Customer Agreement","BK-012808")
 	# if agreement_doc:
 		payments_rental_amount = []
 		if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
@@ -944,8 +944,7 @@ def calculate_irr():
 			if product_doc.wholesale_price:
 				initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
 				payments_rental_amount.append(initial_price)
-				
-				if agreement_doc.agreement_status == "Open":
+				if str(agreement_doc.agreement_status) == "Open":
 
 					payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record])
 					campaign_discount = 0
@@ -981,7 +980,7 @@ def calculate_irr():
 						irr_val = ""
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
-				if agreement_doc.agreement_status == "Closed":
+				elif agreement_doc.agreement_status == "Closed":
 
 					if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
 						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
@@ -1001,7 +1000,7 @@ def calculate_irr():
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
-					if agreement_doc.agreement_closing_suspending_reason == "90d SAC":
+					elif agreement_doc.agreement_closing_suspending_reason == "90d SAC":
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1025,7 +1024,8 @@ def calculate_irr():
 						receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
 						receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
 						is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+						# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 						camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						# Bonus Calculation
@@ -1039,8 +1039,9 @@ def calculate_irr():
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
 							if is_campaign_discount and camp_disc_amount:
-								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-								campaign_discount_calculation =  camp_disc_amount
+								campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+								# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+								# campaign_discount_calculation =  camp_disc_amount
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						_90d_sec = flt(receivables) + flt(total_payment_received) - amount
 						payments_rental_amount.append(_90d_sec) if _90d_sec else 0
@@ -1056,7 +1057,7 @@ def calculate_irr():
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
-					if agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason =="30% Early buy offer":
+					elif agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason =="30% Early buy offer":
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
@@ -1080,7 +1081,8 @@ def calculate_irr():
 						receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
 						payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 						is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+						# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 						camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						# Bonus Calculation
@@ -1093,8 +1095,9 @@ def calculate_irr():
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
 							if is_campaign_discount and camp_disc_amount:
-								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-								campaign_discount_calculation =  camp_disc_amount
+								campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+								# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+								# campaign_discount_calculation =  camp_disc_amount
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						early_buy_amount = 	flt(total_payoff_amount) + flt(receivables) - flt(amount)					
 						payments_rental_amount.append(flt(early_buy_amount)) if early_buy_amount else 0
@@ -1109,7 +1112,26 @@ def calculate_irr():
 						except Exception,e:
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-					if agreement_doc.agreement_closing_suspending_reason == "Merchandise returned to supplier":
+					elif agreement_doc.agreement_closing_suspending_reason == "Return":
+						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
+						for payment in agreement_doc.payments_record:
+							paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
+							if paymentsrentalamount:
+								payments_rental_amount = paymentsrentalamount
+						payments_for_irr = payments_rental_amount
+						# frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
+						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+						try:
+							irr_val = round(irr(payments_for_irr),5)
+							if irr_val:						
+								IRR = round((float(irr_val) * 12 * 100),2)
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+						except Exception,e:
+								irr_val = ""
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+
+					
+					elif agreement_doc.agreement_closing_suspending_reason == "Merchandise returned to supplier":
 						if agreement_doc:
 							agreement_doc.irr =	agreement_doc.xirr = agreement_doc.tirr = " "
 							agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
@@ -1251,7 +1273,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 			'''
 			payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 			is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-			is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+			is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+			# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 			camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 			
 			bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
@@ -1266,8 +1289,9 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					number_of_payments_done = len(payment_history.split(",")) - 1
 					discount_calculation = is_discount/number_of_payments_done
 				if is_campaign_discount and camp_disc_amount:
-					total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-					campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+					campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+					# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+					# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 			amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 		else:
 			index = int(payment.idx)
@@ -1416,7 +1440,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 				'''
 				payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 				is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-				is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+				is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+				# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 				camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 				
 				bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
@@ -1431,8 +1456,9 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 						number_of_payments_done = len(payment_history.split(",")) - 1
 						discount_calculation = is_discount/number_of_payments_done
 					if is_campaign_discount and camp_disc_amount:
-						total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-						campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+						campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+						# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+						# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 				# print "amount",amount	
 				amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 				amount =round(amount,2)
@@ -1571,7 +1597,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					'''
 					payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 					is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+					# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
 					camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 					
 					bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
@@ -1586,8 +1613,9 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							discount_calculation = is_discount/number_of_payments_done
 						if is_campaign_discount and camp_disc_amount:
-							total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-							campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+							campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+							# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+							# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation -bonus_calculation
 					amount =round(amount,2)
@@ -1732,7 +1760,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					'''
 					payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 					is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+					# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 					camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 					
 					bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
@@ -1749,8 +1778,9 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 							discount_calculation = is_discount/number_of_payments_done
 							# print "discount_calculation",discount_calculation
 						if is_campaign_discount and camp_disc_amount:
-							total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-							campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+							# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+							campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+							# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 							# print "campaign_discount_calculation",campaign_discount_calculation
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
@@ -1896,7 +1926,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					'''
 					payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
 					is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+					is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+					# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
 					camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
 					
 					bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0
@@ -1907,14 +1938,15 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 						# print "bonus_calculation",bonus_calculation
 					
 					# Discount Calculation and Campaign Discount Calculation
-					if is_discount or is_campaign_discount and camp_disc_amount :
+					if is_discount or is_campaign_discount or camp_disc_amount :
 						if is_discount:								
 							number_of_payments_done = len(payment_history.split(",")) - 1
 							discount_calculation = is_discount/number_of_payments_done
 							# print "discount_calculation",discount_calculation
 						if is_campaign_discount and camp_disc_amount:
-							total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-							campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+							campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+							# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+							# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 							# print "campaign_discount_calculation",campaign_discount_calculation
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
@@ -1936,6 +1968,17 @@ def get_late_fees(agreement_name,date1,date2,rental_payment):
 		return late_fees_amount
 	else:
 		return 0
+
+'''Calculate Campaign discount'''
+
+def get_campaign_discount(campaign_discount_of_agreements,agreement):
+	campaign_discounts = campaign_discount_of_agreements.split(',')
+	for discount in campaign_discounts:
+		if agreement.name == discount.split('/')[0]:
+			return flt(discount.split('/')[1])
+		else:
+			return 0
+			
 '''
 Calculate XIRR 
 Every Status have different algorithm.
@@ -2003,7 +2046,8 @@ def calculate_xirr():
 							bonus_calculation = discount_calculation = campaign_discount_calculation = 0.0								
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")							
 							
@@ -2027,13 +2071,14 @@ def calculate_xirr():
 									number_of_payments_done = len(payment_history.split(",")) - 1
 									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"bonus")/number_of_payments_done							
 								
-								if is_discount or is_campaign_discount and camp_disc_amount:
+								if is_discount or is_campaign_discount or camp_disc_amount:
 									if is_discount:
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										discount_calculation = is_discount/number_of_payments_done
 									if is_campaign_discount and camp_disc_amount:
-										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+										campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+										# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
@@ -2075,7 +2120,8 @@ def calculate_xirr():
 							campaign_discount_calculation = 0.0								
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
 							'''	Calculating bonus,discount,campaign
@@ -2103,8 +2149,9 @@ def calculate_xirr():
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										discount_calculation = is_discount/number_of_payments_done
 									if is_campaign_discount and camp_disc_amount:
-										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+										campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+										# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
@@ -2141,7 +2188,8 @@ def calculate_xirr():
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
 							'''	Calculating bonus,discount,campaign
@@ -2176,11 +2224,12 @@ def calculate_xirr():
 											else: 
 												discount_calculation = is_discount
 										if is_campaign_discount and camp_disc_amount:
-											total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-											if total_discount_agreements > 0:
-												campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
-											else:
-												campaign_discount_calculation = camp_disc_amount
+											campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+											# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+											# # if total_discount_agreements > 0:
+											# 	campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+											# else:
+											# 	campaign_discount_calculation = camp_disc_amount
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 									amount = round(amount,2)
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
@@ -2194,7 +2243,8 @@ def calculate_xirr():
 						receivables = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"receivables")
 						payment_history = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"payments_ids")
 						is_discount = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"discount")
-						is_campaign_discount = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"assigned_bonus_and_discount")
+						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+						# is_campaign_discount = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"assigned_bonus_and_discount")
 						camp_disc_amount = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"campaign_discount")
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						amount = late_fees = 0.0
@@ -2210,8 +2260,9 @@ def calculate_xirr():
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
 							if is_campaign_discount and camp_disc_amount:
-								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-								campaign_discount_calculation =  camp_disc_amount
+								campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+								# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+								# campaign_discount_calculation =  camp_disc_amount
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						
 						total_payment_received = frappe.db.get_value("Payments History",{"name":_90dsac_paymnet_history},"total_payment_received")
@@ -2249,7 +2300,8 @@ def calculate_xirr():
 							payoff_cond = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payoff_cond")
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
 							
@@ -2285,8 +2337,9 @@ def calculate_xirr():
 											else:
 												discount_calculation = is_discount
 										if is_campaign_discount and camp_disc_amount:
-											total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-											campaign_discount_calculation =  camp_disc_amount
+											campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+											# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+											# campaign_discount_calculation =  camp_disc_amount
 									amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 									amount = round(amount,2)
 									submitted_payments_rental_amount.append((payment_r.payment_date,amount))
@@ -2300,7 +2353,8 @@ def calculate_xirr():
 						receivables_collected = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"receivables_collected")
 						receivables = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"receivables")
 						is_discount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"discount")
-						is_campaign_discount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"assigned_bonus_and_discount")
+						is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+						# is_campaign_discount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"assigned_bonus_and_discount")
 						camp_disc_amount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"campaign_discount")
 						bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
 						amount = 0.0
@@ -2315,8 +2369,9 @@ def calculate_xirr():
 								number_of_payments_done = len(payment_history.split(",")) - 1
 								discount_calculation = is_discount
 							if is_campaign_discount and camp_disc_amount:
-								total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-								campaign_discount_calculation =  camp_disc_amount
+								campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+								# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+								# campaign_discount_calculation =  camp_disc_amount
 						amount = bonus_calculation + discount_calculation + campaign_discount_calculation
 						total_payoff_amount = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"total_payment_received")
 						receivables = frappe.db.get_value("Payments History",{"name":early_buy_paymnet_history},"receivables")
@@ -2348,7 +2403,8 @@ def calculate_xirr():
 						for payment_r in payments:							
 							payment_history = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"payments_ids")
 							is_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"discount")							
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
+							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount_of_agreements")
+							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"assigned_bonus_and_discount")
 							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"campaign_discount")
 							late_fees_updated = frappe.db.get_value("Payments History",{"name":payment_r.payment_history},"late_fees_updated")
 							'''	Calculating bonus,discount,campaign
@@ -2376,8 +2432,9 @@ def calculate_xirr():
 										number_of_payments_done = len(payment_history.split(",")) - 1
 										discount_calculation = is_discount/number_of_payments_done
 									if is_campaign_discount and camp_disc_amount:
-										total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-										campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
+										campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+										# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										# campaign_discount_calculation =  camp_disc_amount/total_discount_agreements
 								amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 								amount = round(amount,2)
 								submitted_payments_rental_amount.append((payment_r.payment_date,amount))
