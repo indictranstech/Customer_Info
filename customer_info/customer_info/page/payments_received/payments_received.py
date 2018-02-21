@@ -93,7 +93,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_typ
 								late_fees_updated,payment_type,merchandise_status,
 								case when special_associate = "Automatic" or special_associate = "Automatic API" then special_associate else owner end as associate
 								from `tabPayments History` {0}
-								order by payment_date desc {1} """.format(cond,_cond),as_dict=1,debug=1)
+								order by payment_date desc {1} """.format(cond,_cond),as_dict=1)
 
 	# print "\n\ndata",data
 	
@@ -121,6 +121,7 @@ def get_payments_details(customer,from_date,to_date,agreement,data_limit,pmt_typ
 						format(sum(bank_transfer),2) as bank_transfer,format(sum(cash),2) as cash ,sum(receivables_collected) as receivables_collected,format(sum(bank_card),2) as bank_card,
 						format(sum(balance),2) as balance,format(sum(discount),2) as discount,format(sum(campaign_discount),2) as campaign_discount, format(sum(bonus),2) as bonus
 						from `tabPayments History` {0}""".format(cond,_cond),as_dict=1)
+	# print "total",total
 	total_payment_received = []
 
 	for row in data:
