@@ -1639,7 +1639,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation -bonus_calculation
 					amount =round(amount,2)
-					if index > len(payments_rental_amount):
+					if index >= len(payments_rental_amount):
 						payments_rental_amount.insert(index,amount)
 					else:	
 						payments_rental_amount[index] = amount
@@ -1812,7 +1812,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 					amount =round(amount,2)
-					if index > len(payments_rental_amount):
+					if index >= len(payments_rental_amount):
 						payments_rental_amount.insert(index,amount)
 					else:	
 						payments_rental_amount[index] = amount
@@ -1985,7 +1985,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 					# print "amount",amount	
 					amount = amount - discount_calculation - campaign_discount_calculation - bonus_calculation
 					amount =round(amount,2)
-					if index > len(payments_rental_amount):
+					if index >= len(payments_rental_amount):
 						payments_rental_amount.insert(index,amount)
 					else:	
 						payments_rental_amount[index] = amount
