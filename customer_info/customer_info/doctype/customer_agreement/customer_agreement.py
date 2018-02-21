@@ -21,6 +21,7 @@ from frappe.utils import flt, get_datetime, get_time, getdate
 from customer_info.customer_info.report.customer_agreements_report.financial import xirr
 from numpy import irr
 import re
+import math
 
 
 
@@ -936,7 +937,7 @@ def calculate_irr():
 	agreements = frappe.db.get_all("Customer Agreement")
 	for agreement in agreements:
 	 	agreement_doc = frappe.get_doc("Customer Agreement",agreement['name'])
-	# agreement_doc = frappe.get_doc("Customer Agreement","BK-012808")
+	# agreement_doc = frappe.get_doc("Customer Agreement","BK-012547")
 	# if agreement_doc:
 		payments_rental_amount = []
 		if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
@@ -958,16 +959,12 @@ def calculate_irr():
 						payments_rental_amount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 						if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
 							if not payment.check_box_of_submit == 1:
-								# payment_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
-								# print "Not Submitted",payment.idx
 								if campaign_discount > 0 and discounted_payments_left > 0:
 									idx = payment.idx
 									if payments_rental_amount[idx] > 0:
 										amount = payments_rental_amount[idx]
 										amount = amount - campaign_discount
 										payments_rental_amount[idx] = amount	
-										# payments_rental_amount.append((payments_rental_amount[idx] - campaign_discount))
-										# print "(0 - campaign_discount)",(0 - campaign_discount)
 										discounted_payments_left = discounted_payments_left -1
 					payments_for_irr = payments_rental_amount
 					frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
@@ -981,7 +978,6 @@ def calculate_irr():
 						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
 				elif agreement_doc.agreement_status == "Closed":
-
 					if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
 						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
 						for payment in agreement_doc.payments_record:
@@ -1009,6 +1005,7 @@ def calculate_irr():
 									
 						payment_history = ''
 						_90d_sec = 0.0
+						_last_payment_date = ''
 						# validate Payment 
 						for payment in agreement_doc.payments_record:
 							payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
@@ -1016,10 +1013,18 @@ def calculate_irr():
 							if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
 								paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 								if paymentsrentalamount:
+									_last_payment_date = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_date")
 									payments_rental_amount =paymentsrentalamount
 							if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
-								payment_history = payment.payment_history
 
+								payment_history = payment.payment_history
+						
+						_90d_sec_payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
+						payoff_payment_late_days = date_diff(_90d_sec_payment_date,_last_payment_date)
+						if payoff_payment_late_days > 1:
+							payoff_late_month = math.ceil(payoff_payment_late_days/30)
+							for i in range(0,int(payoff_late_month)):
+								payments_rental_amount.append(0)
 						total_payment_received = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
 						receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
 						receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
@@ -1112,7 +1117,7 @@ def calculate_irr():
 						except Exception,e:
 								irr_val = ""
 								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-					elif agreement_doc.agreement_closing_suspending_reason == "Return":
+					elif agreement_doc.agreement_closing_suspending_reason == "Return" or agreement_doc.agreement_closing_suspending_reason == "Financial Difficulties":
 						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
 						for payment in agreement_doc.payments_record:
 							paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
@@ -1409,23 +1414,30 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								amount = amount + flt(payment.monthly_rental_amount) +flt(late_fees)
 				elif late_days < -3:
 					# For Early Payment
-					if payment.idx != 1:
-						early_days = abs(late_days)
-						if early_days > 3 and early_days <= 33:
-							index = int(payment.idx) - 1
-							amount = flt(payments_rental_amount[index])
-							amount = amount + flt(payment.monthly_rental_amount)
+						if payment.idx != 1:
+							early_days = abs(late_days)
+							if early_days > 3 and early_days <= 33:
+								index = int(payment.idx) - 1
+								amount = flt(payments_rental_amount[index])
+								amount = amount + flt(payment.monthly_rental_amount)
+							else:
+								early_month = (early_days/30)
+								start_date = (early_month * 30) + 3
+								end_date = ((early_month + 1) * 30) + 3
+
+								if early_days > start_date and  early_days < end_date:
+									index = int(payment.idx) - int(early_month)
+								elif early_days < start_date:
+									index = int(payment.idx) - int(early_month - 1)
+								elif early_days > end_date:
+									index = int(payment.idx) - int(early_month + 1)
+
+								amount = flt(payments_rental_amount[index])
+								amount = amount + flt(payment.monthly_rental_amount)
 						else:
-							early_month = int(early_days/30)
-							x = (early_month * 30) + 3
-							y = ((early_month + 1) * 30) + 3
-							index = int(payment.idx) - int(early_month)
+							index = int(payment.idx)
 							amount = flt(payments_rental_amount[index])
 							amount = amount + flt(payment.monthly_rental_amount)
-					else:
-						index = int(payment.idx)
-						amount = flt(payments_rental_amount[index])
-						amount = amount + flt(payment.monthly_rental_amount)
 				# For Normal Payment
 				else:
 					index = int(payment.idx)
@@ -1476,6 +1488,7 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 				if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
 					late_days = date_diff(payment.payment_date,payment.due_date)
 					# For Late Payment
+					# print "late days",late_days
 					if late_days > 0 and payment.idx == 1:
 						# If Payement Is First
 						if late_days > 14 and late_days < 30:
@@ -1573,10 +1586,17 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 							else:
-								early_month = int(early_days/30)
-								x = (early_month * 30) + 3
-								y = ((early_month + 1) * 30) + 3
-								index = int(payment.idx) - int(early_month)
+								early_month = (early_days/30)
+								start_date = (early_month * 30) + 3
+								end_date = ((early_month + 1) * 30) + 3
+
+								if early_days > start_date and  early_days < end_date:
+									index = int(payment.idx) - int(early_month)
+								elif early_days < start_date:
+									index = int(payment.idx) - int(early_month - 1)
+								elif early_days > end_date:
+									index = int(payment.idx) - int(early_month + 1)
+
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 						else:
@@ -1736,10 +1756,17 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 							else:
-								early_month = int(early_days/30)
-								x = (early_month * 30) + 3
-								y = ((early_month + 1) * 30) + 3
-								index = int(payment.idx) - int(early_month)
+								early_month = (early_days/30)
+								start_date = (early_month * 30) + 3
+								end_date = ((early_month + 1) * 30) + 3
+
+								if early_days > start_date and  early_days < end_date:
+									index = int(payment.idx) - int(early_month)
+								elif early_days < start_date:
+									index = int(payment.idx) - int(early_month - 1)
+								elif early_days > end_date:
+									index = int(payment.idx) - int(early_month + 1)
+
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 						else:
@@ -1902,10 +1929,17 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 							else:
-								early_month = int(early_days/30)
-								x = (early_month * 30) + 3
-								y = ((early_month + 1) * 30) + 3
-								index = int(payment.idx) - int(early_month)
+								early_month = (early_days/30)
+								start_date = (early_month * 30) + 3
+								end_date = ((early_month + 1) * 30) + 3
+
+								if early_days > start_date and  early_days < end_date:
+									index = int(payment.idx) - int(early_month)
+								elif early_days < start_date:
+									index = int(payment.idx) - int(early_month - 1)
+								elif early_days > end_date:
+									index = int(payment.idx) - int(early_month + 1)
+
 								amount = flt(payments_rental_amount[index])
 								amount = amount + flt(payment.monthly_rental_amount)
 						else:

@@ -95,7 +95,8 @@ def get_data(filters):
 						row[32] =row[32]
 
 		result = get_customer_status(result)
-		result = calculate_real_agreement_income(result)
+		result = calculate_real_agreement_profit(result)
+		result = calculate_real_agreement_profit_percentage(result)
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		tirr_averages = get_tirr_averages(result)
@@ -139,6 +140,7 @@ def get_data(filters):
 					else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
 					case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
 					format(ca.payments_made - item.wholesale_price,2),
+					format(ca.payments_made - item.wholesale_price,2),
 					format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
 					format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
 					ca.campaign_discount_code,
@@ -163,9 +165,10 @@ def get_data(filters):
 						row[32] =round(float(row[32]),2)
 					except Exception,e:
 						row[32] =row[32]
-
+		
 		result = get_customer_status(result)
-		result = calculate_real_agreement_income(result)
+		result = calculate_real_agreement_profit(result)
+		result = calculate_real_agreement_profit_percentage(result)
 		irr_average = get_irr_averages(result)
 		xirr_averages = get_xirr_averages(result)
 		tirr_averages = get_tirr_averages(result)
@@ -229,9 +232,10 @@ def get_customer_status(result):
 			row[4] = 'New'
 	return result
 
-def calculate_real_agreement_income(result):
+
+def calculate_real_agreement_profit(result):
 	'''
-	Real agreement profit EUR = Real agreements incomes - Wholesale price - Transportation costs
+	Real agreement profit = Real agreements incomes - Wholesale price - Transportation costs
 	'''
 	for row in result:
 		if row[22] and row[16]:
@@ -244,8 +248,30 @@ def calculate_real_agreement_income(result):
 				transportation_costs = flt(row[17])
 			if row[18]:
 				transportation_costs = transportation_costs + flt(row[18])
-			row[23] = round(realagreement_income - ( wholesale_price + transportation_costs),2) 
+			row[26] = round(realagreement_income - ( wholesale_price + transportation_costs),2) 
 	return result
+
+
+
+def calculate_real_agreement_profit_percentage(result):
+	'''
+	Real agreement profit % = ( Real agreement incomes * 100 / ( Purchase price + Transportation costs (incoming) + Transportation costs (outgoing)) - 100
+	'''
+	for row in result:
+
+		if row[22] and row[16]:
+			realagreement_income = wholesale_price = transportation_costs = 0.0
+			if row[22]: 
+				realagreement_income =flt(row[22])
+			if row[16]:
+				wholesale_price = flt(row[16])
+			if row[17]:
+				transportation_costs = flt(row[17])
+			if row[18]:
+				transportation_costs = transportation_costs + flt(row[18])
+			row[27] = round(((realagreement_income * 100) / ( wholesale_price + transportation_costs)) - 100,2) 
+	return result
+
 
 def get_irr_averages(result):
 	'''
