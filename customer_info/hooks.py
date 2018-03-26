@@ -36,7 +36,7 @@ app_include_js = "/assets/customer_info/js/customer_info.desk.min.js"
 # get_website_user_home_page = "customer_info.utils.get_home_page"
 
 # Add Fixtures
-fixtures =['Custom Field', "Property Setter","Custom Script","Letter Head","Print Format"]
+fixtures =['Custom Field', "Property Setter","Custom Script","Letter Head","Print Format","File"]
 
 doctype_js = {
     "Customer":["custom_scripts/customer.js"],
