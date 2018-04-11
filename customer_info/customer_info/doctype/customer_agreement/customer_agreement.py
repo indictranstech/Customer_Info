@@ -427,7 +427,7 @@ def payments_done_by_scheduler():
 						row.save(ignore_permissions = True)
 						customer.receivables = receivables - total_charges
 						customer.save(ignore_permissions=True)
-						auto_payment_notification(customer.name,customer_agreement.name,total_charges)	
+						# auto_payment_notification(customer.name,customer_agreement.name,total_charges)	
 
 				# Todays Payment
 				if row.check_box_of_submit == 0 and getdate(row.due_date) == now_date:
@@ -2059,9 +2059,12 @@ def calculate_xirr():
 				where ca.customer = cus.name and ca.product = item.name""",as_list=1)
 	
 	for row in result:
- 		#XIIR Calculations
- 		# if row[3] == "BK-011227":
+ 		# XIIR Calculations
+ 		# if row[3] == "BK-013060":
+ 		# 	print "____________________________________"
+ 		# 	print "Agreement--",row[3]
  		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
+ 			# print "Open"
 			if row[12] and float(row[12])>0: 
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
@@ -2124,15 +2127,20 @@ def calculate_xirr():
 										amount = amount - campaign_discount
 										discounted_payments_left = discounted_payments_left -1
 										submitted_payments_rental_amount.append((payment_r.due_date,amount))	
-									else:
-										submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))
+								else:
+									submitted_payments_rental_amount.append((payment_r.due_date,payment_r.monthly_rental_amount))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)	
 							XIRR = round((float(row[28]) * 100),2)
-							if XIRR:					
+							# print "XIRR",XIRR
+							if XIRR:
+								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)					
 								frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+								# print "_XIIR__",XIRR
 						except Exception,e:
+							# print "\n\n\n ______________________________________________________________________________\n\n\n",e
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	 		
 				else:
@@ -2140,7 +2148,9 @@ def calculate_xirr():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])	
 	 	
 	 	elif frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Closed":
+	 		# print "Closed"
 			if row[12] and float(row[12]) > 0 and row[21] =="Contract Term is over":
+				# print "Contract Term is over"
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
@@ -2192,10 +2202,13 @@ def calculate_xirr():
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))
 						try:
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							if row[28]:
 								XIRR = round((float(row[28]) * 100),2)
+								# print "XIRR",XIRR
 								if XIRR:
 									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+								# print "____Closed Is Working"
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28] )
@@ -2204,6 +2217,7 @@ def calculate_xirr():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 			
 			elif row[12] and float(row[12]) > 0 and row[21] =="90d SAC":
+				# print "90d SAC"
 				if row[13] and float(row[13]) > 0.0:
 					submitted_payments_rental_amount = []
 					pay_off_date = ""
@@ -2306,11 +2320,14 @@ def calculate_xirr():
 						submitted_payments_rental_amount.append((pay_off_date,_90d_sec))
 						frappe.db.set_value("Customer Agreement",row[3],"xirr_calculation_value",str(submitted_payments_rental_amount))					   
 						try:
+							# print "submitted_payments_rental_amount",submitted_payments_rental_amount
 							row[28] = xirr(submitted_payments_rental_amount,0.1)
 							if row[28]:
 								XIRR = round((float(row[28])* 100),2)
+								# print "XIRR"
 								if XIRR:
 									frappe.db.set_value("Customer Agreement",row[3],"xirr",XIRR)
+									# print "90 D SAC IS WOrking"
 						except Exception,e:
 							row[28] = ""
 							frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
@@ -2319,6 +2336,7 @@ def calculate_xirr():
 					frappe.db.set_value("Customer Agreement",row[3],"xirr",row[28])
 		
  			elif row[12] and float(row[12]) > 0 and row[21] == "Early buy offer" or row[21] == "30% Early buy offer":
+ 				# print "Early buy offer"
  				if row[13] and float(row[13]) > 0.0:
 	 				submitted_payments_rental_amount = []
 					agreement_doc = frappe.get_doc("Customer Agreement",row[3])
