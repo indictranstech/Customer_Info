@@ -101,7 +101,7 @@ def get_data(filters):
 		xirr_averages = get_xirr_averages(result)
 		tirr_averages = get_tirr_averages(result)
 		if xirr_averages or irr_average:
-			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
+			last_row = [u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'',u'', u'',u'',u'',u'',u'', u'Weighted average',irr_average,xirr_averages,tirr_averages]
 			result.append(last_row)
 		
 		return result
@@ -139,7 +139,6 @@ def get_data(filters):
 					concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
 					else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
 					case when ca.agreement_close_date then ceil((DATEDIFF(ca.agreement_close_date,ca.date)/30)) else ceil(DATEDIFF(CURDATE(),ca.date)/30) end as active_agreement_months,
-					format(ca.payments_made - item.wholesale_price,2),
 					format(ca.payments_made - item.wholesale_price,2),
 					format((ca.payments_made - item.wholesale_price)/item.wholesale_price * 100,2),
 					format(ca.payments_left,2) as remaining_months_till_the_end_of_agreement,
