@@ -109,15 +109,13 @@ scheduler_events = {
  #      "customer_info.customer_info.doctype.customer_agreement.customer_agreement.sent_check_mail",
  #  	],
 	"daily": [
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms",
-		"customer_info.customer_info.doctype.payments_management.payments_management.execute_schedular"
+		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms",
+		# "customer_info.customer_info.doctype.payments_management.payments_management.execute_schedular"
 	],
 	"hourly": [
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler",
+		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler",
 		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_irr",
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_xirr",
-		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.get_IRR_XIRR"
-		
+		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_xirr"
 	]
 }
 
