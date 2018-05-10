@@ -554,7 +554,7 @@ def set_values_in_agreement(customer_agreement):
 			customer_agreement.agreement_closing_suspending_reason = "Contract Term is over"
 			customer_agreement.merchandise_status = "Agreement over"
 			customer_agreement.agreement_close_date = datetime.now().date()
-			# closed_agreement_notification(customer_agreement.customer,customer_agreement.name)
+			closed_agreement_notification(customer_agreement.customer,customer_agreement.name)
 		customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 	
 	customer_agreement.save(ignore_permissions=True)
