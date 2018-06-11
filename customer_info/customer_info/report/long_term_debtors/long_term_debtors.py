@@ -44,27 +44,26 @@ def get_data():
 								ca.late_fees,
 							    ca.late_fees,
 								ca.late_fees_rate,
-								cus.name,
-								cus.receivables
+								cus.receivables,
+								case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment,
+								cus.name
 								from `tabCustomer Agreement` ca ,`tabCustomer` cus
 								where ca.customer = cus.name and ca.debtor = "Yes"
 								""".format(now_date),as_list=1,debug=1)
-
 	for row in result:
-
 		Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
 												where customer = '{0}'
-												order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
+												order by ca.date limit 1""".format(row[25]),as_list=1)[0][0]
 		if Oldest_agreement and row[0] == Oldest_agreement:
-
-			row[23] = row[24]
+			
+			row[25] = row[25]
 			# print "Agree----",row[0]
 			# print "row18",row[19],"row23",row[24],"row22",row[23]
-			if float(row[24]) > 0.0:
-				row[18] ="{0:.2f}".format(float(str(row[19])) - float(str(row[24]))) if row[24] and row[19] else row[19]
+			if float(row[23]) > 0.0:
+				row[18] ="{0:.2f}".format(float(str(row[19])) - float(str(row[23]))) if row[23] and row[19] else row[19]
 			else: 
 				# print "float",float(row[23])
-				row[19] = "{0:.2f}".format(float(str(row[19])) + abs(float(str(row[24])))) if row[24] and row[19] else row[19]
+				row[19] = "{0:.2f}".format(float(str(row[19])) + abs(float(str(row[23])))) if row[23] and row[19] else row[19]
 				# print "row18",row[19],"row23",row[24],"row22",row[23]		
 		else:
 			row[23] = ""
@@ -72,6 +71,27 @@ def get_data():
 		row[21] = "{0:.2f}".format(flt(str(row[18])) +flt(str(row[20]))) if row[18] and row[20] else 0
 	return result
 
+	# for row in result:
+
+	# 	Oldest_agreement = frappe.db.sql("""select name from `tabCustomer Agreement` ca
+	# 											where customer = '{0}'
+	# 											order by ca.date limit 1""".format(row[23]),as_list=1)[0][0]
+	# 	if Oldest_agreement and row[0] == Oldest_agreement:
+
+	# 		row[23] = row[24]
+	# 		print "Agree----",row[0]
+	# 		print "row18",row[19],"row23",row[24],"row22",row[23]
+	# 		if float(row[24]) > 0.0:
+	# 			row[18] ="{0:.2f}".format(float(str(row[19])) - float(str(row[24]))) if row[24] and row[19] else row[19]
+	# 		else: 
+	# 			# print "float",float(row[23])
+	# 			row[19] = "{0:.2f}".format(float(str(row[19])) + abs(float(str(row[24])))) if row[24] and row[19] else row[19]
+	# 			# print "row18",row[19],"row23",row[24],"row22",row[23]		
+	# 	else:
+	# 		row[23] = ""
+
+	# 	row[21] = "{0:.2f}".format(flt(str(row[18])) +flt(str(row[20]))) if row[18] and row[20] else 0
+	# return result
 
 def get_colums():
 	columns = [
@@ -98,7 +118,8 @@ def get_colums():
 			("Delspinigių suma, EUR") + ":Data:90",
 			("Mokėtina suma su delspinigiais, EUR") + ":Data:100",
 			("Delspinigių dydis už kiekvieną praleistą dieną pagal sutartį, %")+ ":Data:100",
-			("Permoka+/Nepriemoka-") + ":Data:100"
+			("Permoka+/Nepriemoka-") + ":Data:100",
+			("Be avanso") + ":Data:100"
 			]
 	return columns
 
