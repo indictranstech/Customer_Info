@@ -45,7 +45,7 @@ def get_data():
 							    ca.late_fees,
 								ca.late_fees_rate,
 								cus.receivables,
-								case when ca.without_advance_payment = 1 then "Yes" else "No" end as without_advance_payment,
+								case when ca.without_advance_payment = 1 then "Taip" else "Ne" end as without_advance_payment,
 								cus.name
 								from `tabCustomer Agreement` ca ,`tabCustomer` cus
 								where ca.customer = cus.name and ca.debtor = "Yes"
