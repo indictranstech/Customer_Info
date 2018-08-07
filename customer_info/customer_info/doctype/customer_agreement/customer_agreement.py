@@ -940,8 +940,8 @@ def calculate_irr():
 	 	print "______________________________________________"
 	 	print "agreement_doc",agreement_doc.name
 	 	print "agreement_doc",agreement_doc.agreement_status
-	# agreement_doc = frappe.get_doc("Customer Agreement","BK-012714")
-	if agreement_doc:
+	# agreement_doc = frappe.get_doc("Customer Agreement","BK-010965")
+	# if agreement_doc:
 		payments_rental_amount = []
 		if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
 			product_doc = frappe.get_doc("Item",agreement_doc.product)
@@ -949,6 +949,7 @@ def calculate_irr():
 				initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
 				payments_rental_amount.append(initial_price)
 				if str(agreement_doc.agreement_status) == "Open":
+					print "Open"
 
 					payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record])
 					campaign_discount = 0
