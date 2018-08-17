@@ -77,7 +77,7 @@ frappe.query_reports["Customer Agreements Report"] = {
 			"fieldname":"agreement_close_reason",
 			"label": __("Agreement close reason"),
 			"fieldtype": "Select",
-			"options": '\n90d SAC\nEarly buy offer\nReturn\nUpgrade\nFraud/Stolen\nContract term is over\nFinancial difficulties\nTemporary leave\nMerchandise returned to supplier',
+			"options": '\n90d SAC\nEarly buy offer\nReturn\nUpgrade\nFraud/Stolen\nContract term is over\nFinancial difficulties\nTemporary leave\nMerchandise returned to supplier\nAgreement sold',
 			"width": "10",
 		},
 	]
