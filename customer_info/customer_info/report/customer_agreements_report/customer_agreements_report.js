@@ -73,6 +73,7 @@ frappe.query_reports["Customer Agreements Report"] = {
 			"fieldtype": "Date",
 			"width": "10",
 		},
+		
 		{
 			"fieldname":"agreement_close_reason",
 			"label": __("Agreement close reason"),
