@@ -52,7 +52,7 @@ frappe.ui.form.on("Payments Management", {
 			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
-			console.log("render 2")
+			// console.log("render 2")
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -66,7 +66,7 @@ frappe.ui.form.on("Payments Management", {
 			calculate_total_charges("Customer");
 			_get_bonus_summary();
 			get_address_of_customer();	
-			console.log("render 1")		
+			// console.log("render 1")		
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -261,7 +261,7 @@ calculate_total_charges = function(flag){
 
 render_agreements = function(flag){
 	var grid;
-	console.log("render agreements-----------------")
+	// console.log("render agreements-----------------")
 	debugger;
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
 		return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
@@ -272,10 +272,22 @@ render_agreements = function(flag){
 		if(dataContext['suspenison']){
 			return "<input type='button' value = "+dataContext['suspenison']+" id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 70px;'; />";		    
 		}
-		else{
+		else {
 			return "<input type='button' value = 'Call/Commitment' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";		
+			// return "<input type='button' value = 'Sell agreement' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";	
 		}
 	}
+	var buttonFormat_SellAgreement=function(row,cell,value, columnDef, dataContext)
+	 {
+	 	var id = "mybutton" + String(row);
+	 	if(dataContext['SellAgreement']){
+			return "<input type='button' value= "+dataContext['SellAgreement']+" id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 70px;'; />";
+	}
+	    else
+	   {
+	        return "<input type='button' value = 'SellAgreement' id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 100px;'; />";		
+	   }
+ }
 
 	var current_due_date_editable = function(row, cell, value, columnDef, dataContext){
 		var id = "current_due_date"+ String(row)
@@ -288,7 +300,7 @@ render_agreements = function(flag){
 	}
 
 	var campaign_discount = function(row, cell, value, columnDef, dataContext){
-		console.log("campaign_discount______________", dataContext['id'])
+		// console.log("campaign_discount______________", dataContext['id'])
 		var id = "campaign_discount"+ String(row)
 		//console.log(cell,"cell campaign_discount",value,row)
 		if(dataContext['campaign_discount'].split("-")[3] == "Yes"){
@@ -371,7 +383,8 @@ render_agreements = function(flag){
 	    {id: "Campaign discount", name: "Campaign discount", field: "campaign_discount",width: 50,toolTip: "Campaign discount",formatter:campaign_discount},
 	    {id: "payments_made", name: "Payments Made", field: "payments_made",width: 50,toolTip: "Payments Made"},
 	    {id: "detail", name: "Detail", field: "detail",formatter: buttonFormat_detail,toolTip: "Detail"},
-	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension,toolTip: "Call/Commitment"}
+	    {id: "suspenison", name: "Call/Commitment", field: "suspenison",formatter: buttonFormat_suspension,toolTip: "Call/Commitment"},
+	    {id: "SellAgreement", name: "SellAgreement", field: "SellAgreement",formatter: buttonFormat_SellAgreement,toolTip: "SellAgreement"},
   	];
 
 
@@ -406,6 +419,15 @@ render_agreements = function(flag){
 			     		//cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)) > 0 ? flt(total_due_amount)-flt(cur_frm.doc.receivables):"0.00")      		
 						cur_frm.set_value("total_charges",(flt(total_due_amount)-flt(cur_frm.doc.receivables)))
 					}
+					if(cur_frm.doc.customer_agreement){
+						$.each($("#payments_grid").find(".slick-row"),function(i,d)
+						{
+							if(String($($(d).children()[14]).find(".SellAgreement").attr("customer")) == cur_frm.doc.customer_agreement){
+								$(".SellAgreement[customer="+cur_frm.doc.customer_agreement+"]").click();
+								cur_frm.set_value("agreement_no","")
+							}
+						});
+					}
 					/*cur_frm.doc.payment_management_record = []
 					$.each($(".slick-row"),function(i,d){
 						console.log(String($($(d).children()[12]).find(".detail").attr("agreement")))
@@ -430,7 +452,7 @@ render_agreements = function(flag){
 				else{
 					cur_frm.set_df_property("open_agreements","hidden",1)
 					cur_frm.set_df_property("process_payment_section","hidden",1)
-				}	
+				}
 			}
     });
     
@@ -442,7 +464,7 @@ make_grid= function(data1,columns,options){
 	var me = this;
 	/*var index = 0;*/
 	for (var i = 0; i<data1.list_of_agreement.length; i++) {
-		console.log("make_grid", data1.list_of_agreement[i][0])
+		// console.log("make_grid", data1.list_of_agreement[i][0])
           	data[i] = {
           	id : data1.list_of_agreement[i][0],	
           	/*serial:i,*/	
@@ -460,6 +482,7 @@ make_grid= function(data1,columns,options){
             payments_made: data1.list_of_agreement[i][11],
             suspenison: data1.list_of_agreement[i][12],
             campaign_discount: data1.list_of_agreement[i][13],
+            SellAgreement: data1.list_of_agreement[i][14],
         };
     }
 
@@ -541,6 +564,11 @@ make_grid= function(data1,columns,options){
         	var id = $(e.target).attr('id')
         	//new manage_suspenison(id,item)
         	new edit_campaign_discount(id,item)
+        }
+        if($(e.target).hasClass("SellAgreement")) {
+        	var id = $(e.target).attr('id')
+        	//new manage_suspenison(id,item)
+        	new call_sell(id,item)
         }
     });
 
@@ -835,7 +863,7 @@ edit_campaign_discount = Class.extend({
 	        		}
 	        	}
 	        	me.dialog.hide();
-	        	console.log("render 7")
+	        	// console.log("render 7")
 	        	render_agreements();
 	        	//calculate_total_charges("Campaign Discount");
 	        }
@@ -894,7 +922,7 @@ edit_current_due_date = Class.extend({
 			},
 			callback: function(r) {
 				if(r.message){
-					console.log("render 6")
+					// console.log("render 6")
 					render_agreements();
 					me.dialog.hide();
 				}
@@ -967,7 +995,7 @@ edit_late_fees = Class.extend({
 	        	"late_fees": flt(me.fd.late_fees.$input.val())
 	        },
 	        callback: function(r) {
-	        	console.log("render 5")
+	        	// console.log("render 5")
 	        	render_agreements("from_late_fees");
 	        	me.dialog.hide();	        	
 	        	//calculate_total_charges("Customer");
@@ -976,6 +1004,19 @@ edit_late_fees = Class.extend({
 	}
 })
 
+// call dialogue=Class.extend({
+// 	init:function(id,item){
+// 		this.item=item;
+// 		this.id=id;
+// 		this.get_contact_result()
+// 	},
+// 	get_contact_result:function(){
+// 		var me  = this;
+// 		this.dialog = new frappe.ui.Dialog({
+// 	}
+// });
+// 		this.dialog.show();
+// }
 
 call_commit = Class.extend({
 	init:function(id,item){
@@ -1141,7 +1182,7 @@ call_commit = Class.extend({
 	            },
 	            callback: function(r) {
 	            	me.dialog.hide();
-	            	console.log("render 4")
+	            	// console.log("render 4")
 	            	render_agreements();
 	            }
 	        });
@@ -1181,7 +1222,7 @@ call_commit = Class.extend({
               "all_or_individual":me.item == "Common" ? "All":"Individual"		
             },
             callback: function(r){
-            	console.log("render 3")
+            	// console.log("render 3")
         		render_agreements();
         		me.fd.contact_result.$input.val()
         		me.fd.contact_result.$input.val() == "Sent SMS/Email" ? cur_frm.set_value("notes_on_customer_payments"," "+me.fd.contact_result.$input.val()):
@@ -1203,3 +1244,73 @@ call_commit = Class.extend({
 		})
 	}
 });
+
+// Sell Agreement 
+call_sell= Class.extend({
+	init:function(id,item){
+		this.item = item;
+		this.id = id;
+		this.get_contact_result()
+	},
+	get_contact_result:function(){
+		var me  = this;
+		var row = this.item
+		if(row){
+			var agreement 	
+			// console.log(row['agreement_no'])
+			this.dialog = new frappe.ui.Dialog({
+				title: "Sell agreement",
+				fields: [
+					{	
+						"fieldtype": "Data", 
+						"fieldname": "agreement_no", 
+						"label": "Agreement No",
+						"default":row.agreement_no,
+						"hidden":1
+					},
+					{	
+						"fieldtype": "Section Break" , 
+						"fieldname": "sb" , 
+						"label": "Sell Agreement",
+					},
+					{
+						"fieldtype": "Float" , 
+						"fieldname": "agreement_price" , 
+						"label": "Agreement price"
+					},
+					{
+						"fieldtype": "Button" , 
+						"fieldname": "sell" , 
+						"label": "Sell"
+					}
+				],
+  			});
+	  		this.dialog.show();
+	  		var me=this
+	  		me.dialog.fields_dict.sell.$input.click(function() {
+	  			sell_price = me.dialog.fields_dict.agreement_price.$input.val()
+	  			if(sell_price){
+	  				frappe.call({
+	        			method: "customer_info.customer_info.doctype.payments_management.payments_management.sell_agreement",
+						args: {
+							"agreement":row['agreement_no'],
+							"sell_price": flt(sell_price)
+						},
+						callback: function(r) {
+							if(r.message){	
+								me.dialog.hide();
+								// console.log(r.message)
+								frappe.set_route("Form", "Customer Agreement", r.message);
+							}
+				        }
+	  				});
+
+	  			}
+	  			else{
+	  				frappe.msgprint(__("Please Enter Agreement Price"))
+	  			}
+	  		});
+		}
+   },
+});
+

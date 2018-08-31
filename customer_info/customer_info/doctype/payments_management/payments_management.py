@@ -372,6 +372,8 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										from `tabCustomer Agreement`
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
+	print "****************************************************************************"
+	print data
 
 	for entry in data['list_of_agreement']:
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
@@ -1277,4 +1279,16 @@ def execute_schedular():
 		flag = "Onload"
 		now_date = datetime.now().date()
 		calculate_total_charges(customer,flag,now_date)
-	
+
+
+@frappe.whitelist()
+def sell_agreement(agreement,sell_price):
+	if agreement and sell_price:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+		agreement_doc.agreement_status = 'Closed'
+		agreement_doc.agreement_closing_suspending_reason = 'Agreement sold'
+		agreement_doc.agreement_sold_price = sell_price
+		agreement_doc.save()
+		return agreement_doc.name
+
+
