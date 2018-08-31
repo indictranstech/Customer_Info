@@ -262,7 +262,6 @@ calculate_total_charges = function(flag){
 render_agreements = function(flag){
 	var grid;
 	// console.log("render agreements-----------------")
-	debugger;
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
 		return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
 	}
@@ -277,17 +276,14 @@ render_agreements = function(flag){
 			// return "<input type='button' value = 'Sell agreement' id= "+id+" class='suspenison' style='height:20px;padding: 0px;width: 100px;'; />";	
 		}
 	}
-	var buttonFormat_SellAgreement=function(row,cell,value, columnDef, dataContext)
-	 {
+	var buttonFormat_SellAgreement=function(row,cell,value, columnDef, dataContext){
 	 	var id = "mybutton" + String(row);
 	 	if(dataContext['SellAgreement']){
 			return "<input type='button' value= "+dataContext['SellAgreement']+" id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 70px;'; />";
+		}else{
+	        return "<input type='button' value = 'SellAgreement' id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 100px;'; />";
+	    }
 	}
-	    else
-	   {
-	        return "<input type='button' value = 'SellAgreement' id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 100px;'; />";		
-	   }
- }
 
 	var current_due_date_editable = function(row, cell, value, columnDef, dataContext){
 		var id = "current_due_date"+ String(row)
@@ -453,6 +449,7 @@ render_agreements = function(flag){
 					cur_frm.set_df_property("open_agreements","hidden",1)
 					cur_frm.set_df_property("process_payment_section","hidden",1)
 				}
+				// }	
 			}
     });
     
@@ -570,7 +567,7 @@ make_grid= function(data1,columns,options){
         	//new manage_suspenison(id,item)
         	new call_sell(id,item)
         }
-    });
+   });
 
 }
 
@@ -1018,6 +1015,7 @@ edit_late_fees = Class.extend({
 // 		this.dialog.show();
 // }
 
+
 call_commit = Class.extend({
 	init:function(id,item){
 		this.item = item;
@@ -1313,4 +1311,3 @@ call_sell= Class.extend({
 		}
    },
 });
-
