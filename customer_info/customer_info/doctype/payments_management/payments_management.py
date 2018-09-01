@@ -1277,4 +1277,14 @@ def execute_schedular():
 		flag = "Onload"
 		now_date = datetime.now().date()
 		calculate_total_charges(customer,flag,now_date)
-	
+
+
+@frappe.whitelist()
+def sell_agreement(agreement,sell_price):
+	if agreement and sell_price:
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+		agreement_doc.agreement_status = 'Closed'
+		agreement_doc.agreement_closing_suspending_reason = 'Agreement sold'
+		agreement_doc.agreement_sold_price = sell_price
+		agreement_doc.save()
+		return agreement_doc.name
