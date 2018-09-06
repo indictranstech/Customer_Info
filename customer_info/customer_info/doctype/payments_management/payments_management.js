@@ -280,7 +280,8 @@ render_agreements = function(flag){
 	 	var id = "mybutton" + String(row);
 	 	if(dataContext['SellAgreement']){
 			return "<input type='button' value= "+dataContext['SellAgreement']+" id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 70px;'; />";
-		}else{
+		}
+		else{
 	        return "<input type='button' value = 'SellAgreement' id= "+id+" class='SellAgreement' style='height:20px;padding: 0px;width: 100px;'; />";
 	    }
 	}
@@ -1297,8 +1298,7 @@ call_sell= Class.extend({
 						callback: function(r) {
 							if(r.message){	
 								me.dialog.hide();
-								// console.log(r.message)
-								frappe.set_route("Form", "Customer Agreement", r.message);
+								render_agreements();
 							}
 				        }
 	  				});
