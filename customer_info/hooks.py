@@ -103,7 +103,7 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
+# scheduler_events = {
 
 	# "all": [
  #      "customer_info.customer_info.doctype.customer_agreement.customer_agreement.sent_check_mail",
@@ -112,12 +112,12 @@ scheduler_events = {
 	# 	# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.reset_contact_result_of_sent_sms",
 	# 	# "customer_info.customer_info.doctype.payments_management.payments_management.execute_schedular"
 	# ],
-	"hourly": [
+	# "hourly": [
 		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.payments_done_by_scheduler",
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_irr",
-		"customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_xirr"
-	]
-}
+		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_irr",
+		# "customer_info.customer_info.doctype.customer_agreement.customer_agreement.calculate_xirr"
+# 	# ]
+# }
 
 # scheduler_events = {
 # 	"all": [
