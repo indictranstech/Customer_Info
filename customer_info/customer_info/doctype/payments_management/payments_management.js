@@ -1298,6 +1298,9 @@ call_sell= Class.extend({
 						callback: function(r) {
 							if(r.message){	
 								me.dialog.hide();
+								calculate_total_charges("Customer");
+								_get_bonus_summary();
+								get_address_of_customer();	
 								render_agreements();
 							}
 				        }
