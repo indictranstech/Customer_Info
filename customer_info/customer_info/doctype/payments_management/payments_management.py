@@ -1283,9 +1283,11 @@ def execute_schedular():
 def sell_agreement(agreement,sell_price):
 	if agreement and sell_price:
 		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
-		agreement_doc.agreement_status = 'Closed'
-		agreement_doc.agreement_closing_suspending_reason = 'Agreement sold'
-		agreement_doc.merchandise_status = 'Stolen'
+		agreement_doc.agreement_status = "Closed"
+		agreement_doc.agreement_closing_suspending_reason = "Agreement sold"
+		agreement_doc.merchandise_status = "Stolen"
 		agreement_doc.agreement_sold_price = sell_price
+		agreement_doc.agreement_close_date = getdate()
 		agreement_doc.save()
+		frappe.db.set_value("Item",agreement_doc.product,"merchandise_status","Stolen")
 		return agreement_doc.name
