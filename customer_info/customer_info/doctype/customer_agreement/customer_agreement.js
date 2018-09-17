@@ -258,6 +258,10 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.set_value("merchandise_status","Returned to supplier")
  
         }
+        if(cur_frm.doc.agreement_closing_suspending_reason  == "Agreement sold"){
+            cur_frm.set_value("merchandise_status","Stolen")
+ 
+        }
     },
     campaign_discount:function(frm){
         if(cur_frm.doc.campaign_discount < 0){
