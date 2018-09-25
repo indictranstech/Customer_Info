@@ -934,15 +934,15 @@ def tirr_schedular():
 
 @frappe.whitelist()
 def calculate_irr():
-	# agreements = frappe.db.get_all("Customer Agreement")
-	agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
+	agreements = frappe.db.get_all("Customer Agreement")
+	# agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
 	# print "______________________________________________"
-	# for agreement in agreements:
-	# 	agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
-	# 	print "______________________________________________"
-	# 	print "agreement_doc",agreement_doc.name
-	# 	print "agreement_doc",agreement_doc.agreement_status
-	if agreement_doc:
+	for agreement in agreements:
+		agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
+		# print "______________________________________________"
+		# print "agreement_doc",agreement_doc.name
+		# print "agreement_doc",agreement_doc.agreement_status
+		if agreement_doc:
 			payments_rental_amount = []
 			if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
 				product_doc = frappe.get_doc("Item",agreement_doc.product)
@@ -983,7 +983,7 @@ def calculate_irr():
 							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
 					elif agreement_doc.agreement_status == "Closed":
-						print "agreement_doc.agreement_closing_suspending_reason",agreement_doc.agreement_closing_suspending_reason
+						# print "agreement_doc.agreement_closing_suspending_reason",agreement_doc.agreement_closing_suspending_reason
 						if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
 							payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
 							for payment in agreement_doc.payments_record:
@@ -1172,7 +1172,7 @@ def calculate_irr():
 					    		irr_val = round(irr(payments_for_irr),5)
 					    		if irr_val:
 					    			IRR = round((float(irr_val) * 12 * 100),2)
-					    			print "IRR",IRR
+					    			# print "IRR",IRR
 					    			frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
 					    	except Exception,e:
 					    			irr_val = ""
