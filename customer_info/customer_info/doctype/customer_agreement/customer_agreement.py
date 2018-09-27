@@ -711,6 +711,17 @@ def closed_agreement_notification(customer,agreement):
 				message = frappe.render_template("templates/email/closed_agreement_notification.html", {"agreement":agreement,"customer": customer,"date": date}),
 	)
 
+@frappe.whitelist()
+def irr_xirr_issue_notification(issue_from,agreement,exception_message):
+	date = frappe.utils.data.now_datetime()
+	frappe.sendmail(
+				recipients = "sukrut.j@indictranstech.com",
+				# recipients = "bekredito@bekredito.lt",
+				sender = "sukrut.j@indictranstech.com",
+				subject = agreement + " having "+ issue_from +' script execution on ' + " - " ,
+				message = exception_message,
+	)
+
 
 
 """
@@ -935,133 +946,44 @@ def tirr_schedular():
 @frappe.whitelist()
 def calculate_irr():
 	agreements = frappe.db.get_all("Customer Agreement")
-	# agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
+	# agreement_doc = frappe.get_doc("Customer Agreement","BK-011919")
 	# print "______________________________________________"
 	for agreement in agreements:
-		# agreement_doc = frappe.get_doc("Customer Agreement","BK-011622")
-		# print "______________________________________________"
-		# print "agreement_doc",agreement_doc.name
-		# print "agreement_doc",agreement_doc.agreement_status
-		if agreement_doc:
-			payments_rental_amount = []
-			if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
-				product_doc = frappe.get_doc("Item",agreement_doc.product)
-				if product_doc.wholesale_price:
-					initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
-					payments_rental_amount.append(initial_price)
-					if str(agreement_doc.agreement_status) == "Open":
-						# print "Open"
-						payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record])
-						campaign_discount = 0
-						discounted_payments_left = 0
+		agreement_doc = frappe.get_doc("Customer Agreement",agreement)
+		print "______________________________________________"
+		print "agreement_doc",agreement_doc.name
+		print "agreement_doc",agreement_doc.agreement_status
+		try:
+			if agreement_doc:
+				payments_rental_amount = []
+				if agreement_doc and agreement_doc.payments_record and agreement_doc.product:
+					product_doc = frappe.get_doc("Item",agreement_doc.product)
+					if product_doc.wholesale_price:
+						initial_price = round(-(product_doc.wholesale_price + product_doc.transportation_costs_incoming + product_doc.transportation_costs_outgoing),2)
+						payments_rental_amount.append(initial_price)
+						if str(agreement_doc.agreement_status) == "Open":
+							# print "Open"
+							payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record])
+							campaign_discount = 0
+							discounted_payments_left = 0
 
-						if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
-							campaign_discount = agreement_doc.campaign_discount
-							discounted_payments_left = agreement_doc.discounted_payments_left 
-				
-						for payment in agreement_doc.payments_record:
-							payments_rental_amount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
 							if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
-								if not payment.check_box_of_submit == 1:
-									if campaign_discount > 0 and discounted_payments_left > 0:
-										idx = payment.idx
-										if payments_rental_amount[idx] > 0:
-											amount = payments_rental_amount[idx]
-											amount = amount - campaign_discount
-											payments_rental_amount[idx] = amount	
-											discounted_payments_left = discounted_payments_left -1
-						payments_for_irr = payments_rental_amount
-						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-						try:
-							irr_val = round(irr(payments_for_irr),5)
-							if irr_val:						
-								IRR = round((float(irr_val) * 12 * 100),2)
-								print "IRR",IRR
-								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-						except Exception,e:
-							irr_val = ""
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-
-					elif agreement_doc.agreement_status == "Closed":
-						# print "agreement_doc.agreement_closing_suspending_reason",agreement_doc.agreement_closing_suspending_reason
-						if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
-							payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
-							for payment in agreement_doc.payments_record:
-								paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
-								if paymentsrentalamount:
-									payments_rental_amount = paymentsrentalamount
-							payments_for_irr = payments_rental_amount
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-							try:
-								irr_val = round(irr(payments_for_irr),5)
-								if irr_val:						
-									IRR = round((float(irr_val) * 12 * 100),2)
-									print "IRR",IRR
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-							except Exception,e:
-									irr_val = ""
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-
-						elif agreement_doc.agreement_closing_suspending_reason == "90d SAC":
-							for payment in agreement_doc.payments_record:
-								payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
-								payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
-								if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-									payments_rental_amount.append(0)
-										
-							payment_history = ''
-							_90d_sec = 0.0
-							_last_payment_date = ''
-							# validate Payment 
-							for payment in agreement_doc.payments_record:
-								payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
-								payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
-								if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-									paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
-									print "paymentsrentalamount",paymentsrentalamount
-									if paymentsrentalamount:
-										_last_payment_date = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_date")
-										payments_rental_amount =paymentsrentalamount
-								if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
-
-									payment_history = payment.payment_history
-							
-							_90d_sec_payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
-							payoff_payment_late_days = date_diff(_90d_sec_payment_date,_last_payment_date)
-							if payoff_payment_late_days > 1:
-								payoff_late_month = math.ceil(payoff_payment_late_days/30)
-								for i in range(0,int(payoff_late_month)):
-									payments_rental_amount.append(0)
-							total_payment_received = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-							receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
-							receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
-							is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
-							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
-							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
-							bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
-							# Bonus Calculation
-							if payment_history:
-								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
+								campaign_discount = agreement_doc.campaign_discount
+								discounted_payments_left = agreement_doc.discounted_payments_left 
 					
-							# Discount Calculation and Campaign Discount Calculation
-							if is_discount or is_campaign_discount or camp_disc_amount:
-								if is_discount:								
-									number_of_payments_done = len(payment_history.split(",")) - 1
-									discount_calculation = is_discount
-								if is_campaign_discount and camp_disc_amount:
-									campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
-									# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-									# campaign_discount_calculation =  camp_disc_amount
-							amount = bonus_calculation + discount_calculation + campaign_discount_calculation
-							_90d_sec = flt(receivables) + flt(total_payment_received) - amount
-							payments_rental_amount.append(_90d_sec) if _90d_sec else 0
+							for payment in agreement_doc.payments_record:
+								payments_rental_amount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
+								if agreement_doc.campaign_discount and agreement_doc.discounted_payments_left:
+									if not payment.check_box_of_submit == 1:
+										if campaign_discount > 0 and discounted_payments_left > 0:
+											idx = payment.idx
+											if payments_rental_amount[idx] > 0:
+												amount = payments_rental_amount[idx]
+												amount = amount - campaign_discount
+												payments_rental_amount[idx] = amount	
+												discounted_payments_left = discounted_payments_left -1
 							payments_for_irr = payments_rental_amount
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
 							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-							# print "___",payments_for_irr
 							try:
 								irr_val = round(irr(payments_for_irr),5)
 								if irr_val:						
@@ -1069,117 +991,211 @@ def calculate_irr():
 									print "IRR",IRR
 									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
 							except Exception,e:
-									irr_val = ""
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+								irr_val = ""
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
-						elif agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason =="30% Early buy offer":
-							for payment in agreement_doc.payments_record:
-								payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
-								payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
-								if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-									payments_rental_amount.append(0)
-
-							early_buy_amount = 0.0
-							payment_history = ''
-							# validate Payment 
-							for payment in agreement_doc.payments_record:
-								payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
-								payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
-								if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
-									paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
+						elif agreement_doc.agreement_status == "Closed":
+							# print "agreement_doc.agreement_closing_suspending_reason",agreement_doc.agreement_closing_suspending_reason
+							if agreement_doc.agreement_closing_suspending_reason == "Contract Term is over":
+								payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
+								for payment in agreement_doc.payments_record:
+									paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
 									if paymentsrentalamount:
 										payments_rental_amount = paymentsrentalamount
-								if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" or payoff_cond =="Early buy-40" and payment.check_box_of_submit ==1:
-									payment_history = payment.payment_history
+								payments_for_irr = payments_rental_amount
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+								try:
+									irr_val = round(irr(payments_for_irr),5)
+									if irr_val:						
+										IRR = round((float(irr_val) * 12 * 100),2)
+										print "IRR",IRR
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+								except Exception,e:
+										irr_val = ""
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+
+							elif agreement_doc.agreement_closing_suspending_reason == "90d SAC":
+								print "90d SAC"
+								for payment in agreement_doc.payments_record:
+									payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
+									payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
+									if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
+										payments_rental_amount.append(0)
+											
+								payment_history = ''
+								_90d_sec = 0.0
+								_last_payment_date = ''
+								# validate Payment 
+								for payment in agreement_doc.payments_record:
+									payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
+									payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
+									if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
+										paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
+										print "paymentsrentalamount",paymentsrentalamount
+										if paymentsrentalamount:
+											_last_payment_date = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_date")
+											payments_rental_amount =paymentsrentalamount
+									if payment_type == "Payoff Payment" and  payoff_cond == "90d SAC":
+
+										payment_history = payment.payment_history
 								
-							total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
-							receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
-							payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
-							is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
-							is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
-							# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
-							camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
-							bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
-							# Bonus Calculation
-							if payment_history:
-								number_of_payments_done = len(payment_history.split(",")) - 1
-								bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
-							# Discount Calculation and Campaign Discount Calculation
-							if is_discount or is_campaign_discount or camp_disc_amount:
-								if is_discount:								
+								_90d_sec_payment_date = frappe.db.get_value("Payments History",{"name":payment_history},"payment_date")
+								payoff_payment_late_days = date_diff(_90d_sec_payment_date,_last_payment_date)
+								if payoff_payment_late_days > 1:
+									payoff_late_month = math.ceil(payoff_payment_late_days/30)
+									for i in range(0,int(payoff_late_month)):
+										payments_rental_amount.append(0)
+								total_payment_received = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
+								receivables_collected = frappe.db.get_value("Payments History",{"name":payment_history},"receivables_collected")
+								receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
+								is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
+								is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+								# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+								camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
+								bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
+								# Bonus Calculation
+								if payment_history:
 									number_of_payments_done = len(payment_history.split(",")) - 1
-									discount_calculation = is_discount
-								if is_campaign_discount and camp_disc_amount:
-									campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
-									# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
-									# campaign_discount_calculation =  camp_disc_amount
-							amount = bonus_calculation + discount_calculation + campaign_discount_calculation
-							early_buy_amount = 	flt(total_payoff_amount) + flt(receivables) - flt(amount)					
-							payments_rental_amount.append(flt(early_buy_amount)) if early_buy_amount else 0
-							payments_for_irr = payments_rental_amount
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-							try:
-								irr_val = round(irr(payments_for_irr),5)
-								if irr_val:						
-									IRR = round((float(irr_val) * 12 * 100),2)
-									print "IRR",IRR
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-							except Exception,e:
-									irr_val = ""
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-						elif agreement_doc.agreement_closing_suspending_reason == "Return" or agreement_doc.agreement_closing_suspending_reason == "Financial Difficulties":
-							payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
-							for payment in agreement_doc.payments_record:
-								paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
-								if paymentsrentalamount:
-									payments_rental_amount = paymentsrentalamount
-							payments_for_irr = payments_rental_amount
-							# frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
-							frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-							try:
-								irr_val = round(irr(payments_for_irr),5)
-								if irr_val:						
-									IRR = round((float(irr_val) * 12 * 100),2)
-									print "IRR",IRR
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-							except Exception,e:
-									irr_val = ""
-									frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-
+									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
 						
-						elif agreement_doc.agreement_closing_suspending_reason == "Merchandise returned to supplier":
-							if agreement_doc:
-								agreement_doc.irr =	agreement_doc.xirr = agreement_doc.tirr = " "
-								agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
-								agreement_doc.real_agreement_income = 0.0
-								agreement_doc.save()	
-						elif agreement_doc.agreement_closing_suspending_reason == "Agreement sold":
-							# print "1--payments_rental_amount",payments_rental_amount
-							payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
-					    	# print "2 --payments_rental_amount",payments_rental_amount
-					    	for payment in agreement_doc.payments_record:
-					    		paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
-					    		if paymentsrentalamount:
-					    			payments_rental_amount = paymentsrentalamount
-					    		payments_for_irr = payments_rental_amount
-					    	# print "3--",payments_for_irr
-					    	payments_for_irr.append(agreement_doc.agreement_sold_price)
-					    	# print "4--",payments_for_irr
-					    	frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round((sum(payments_rental_amount[1:])),2)) if len(payments_rental_amount) > 0 else ""
-					    	frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
-					    	try:
-					    		irr_val = round(irr(payments_for_irr),5)
-					    		if irr_val:
-					    			IRR = round((float(irr_val) * 12 * 100),2)
-					    			# print "IRR",IRR
-					    			frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
-					    	except Exception,e:
-					    			irr_val = ""
-					    			frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
-				else:
-					frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr","Wholesale price is not set")
+								# Discount Calculation and Campaign Discount Calculation
+								if is_discount or is_campaign_discount or camp_disc_amount:
+									if is_discount:								
+										number_of_payments_done = len(payment_history.split(",")) - 1
+										discount_calculation = is_discount
+									if is_campaign_discount and camp_disc_amount:
+										campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+										# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										# campaign_discount_calculation =  camp_disc_amount
+								amount = bonus_calculation + discount_calculation + campaign_discount_calculation
+								_90d_sec = flt(receivables) + flt(total_payment_received) - amount
+								payments_rental_amount.append(_90d_sec) if _90d_sec else 0
+								payments_for_irr = payments_rental_amount
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+								# print "___",payments_for_irr
+								try:
+									irr_val = round(irr(payments_for_irr),5)
+									if irr_val:						
+										IRR = round((float(irr_val) * 12 * 100),2)
+										print "IRR",IRR
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+								except Exception,e:
+										irr_val = ""
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
 
+							elif agreement_doc.agreement_closing_suspending_reason == "Early buy offer" or agreement_doc.agreement_closing_suspending_reason =="30% Early buy offer":
+								for payment in agreement_doc.payments_record:
+									payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
+									payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
+									if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
+										payments_rental_amount.append(0)
+
+								early_buy_amount = 0.0
+								payment_history = ''
+								# validate Payment 
+								for payment in agreement_doc.payments_record:
+									payment_type = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payment_type")
+									payoff_cond = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payoff_cond")
+									if payment_type =="Normal Payment" and payoff_cond =="Rental Payment":
+										paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name)
+										if paymentsrentalamount:
+											payments_rental_amount = paymentsrentalamount
+									if payment_type =="Payoff Payment" and payoff_cond =="Early buy-30" or payoff_cond =="Early buy-40" and payment.check_box_of_submit ==1:
+										payment_history = payment.payment_history
+									
+								total_payoff_amount = frappe.db.get_value("Payments History",{"name":payment_history},"total_payment_received")
+								receivables = frappe.db.get_value("Payments History",{"name":payment_history},"receivables")
+								payment_history = frappe.db.get_value("Payments History",{"name":payment.payment_history},"payments_ids")
+								is_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"discount")
+								is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount_of_agreements")
+								# is_campaign_discount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"assigned_bonus_and_discount")
+								camp_disc_amount = frappe.db.get_value("Payments History",{"name":payment.payment_history},"campaign_discount")
+								bonus_calculation = discount_calculation =campaign_discount_calculation = 0.0
+								# Bonus Calculation
+								if payment_history:
+									number_of_payments_done = len(payment_history.split(",")) - 1
+									bonus_calculation = frappe.db.get_value("Payments History",{"name":payment.payment_history},"bonus")
+								# Discount Calculation and Campaign Discount Calculation
+								if is_discount or is_campaign_discount or camp_disc_amount:
+									if is_discount:								
+										number_of_payments_done = len(payment_history.split(",")) - 1
+										discount_calculation = is_discount
+									if is_campaign_discount and camp_disc_amount:
+										campaign_discount_calculation = get_campaign_discount(is_campaign_discount,agreement_doc)
+										# total_discount_agreements = len(re.findall(is_campaign_discount, payment_history))
+										# campaign_discount_calculation =  camp_disc_amount
+								amount = bonus_calculation + discount_calculation + campaign_discount_calculation
+								early_buy_amount = 	flt(total_payoff_amount) + flt(receivables) - flt(amount)					
+								payments_rental_amount.append(flt(early_buy_amount)) if early_buy_amount else 0
+								payments_for_irr = payments_rental_amount
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_for_irr[1:]),2))
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+								try:
+									irr_val = round(irr(payments_for_irr),5)
+									if irr_val:						
+										IRR = round((float(irr_val) * 12 * 100),2)
+										print "IRR",IRR
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+								except Exception,e:
+										irr_val = ""
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+							elif agreement_doc.agreement_closing_suspending_reason == "Return" or agreement_doc.agreement_closing_suspending_reason == "Financial Difficulties":
+								payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
+								for payment in agreement_doc.payments_record:
+									paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
+									if paymentsrentalamount:
+										payments_rental_amount = paymentsrentalamount
+								payments_for_irr = payments_rental_amount
+								# frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round(sum(payments_rental_amount[1:]),2)) if len(payments_rental_amount) > 0 else ""
+								frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+								try:
+									irr_val = round(irr(payments_for_irr),5)
+									if irr_val:						
+										IRR = round((float(irr_val) * 12 * 100),2)
+										print "IRR",IRR
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+								except Exception,e:
+										irr_val = ""
+										frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+
+							
+							elif agreement_doc.agreement_closing_suspending_reason == "Merchandise returned to supplier":
+								if agreement_doc:
+									agreement_doc.irr =	agreement_doc.xirr = agreement_doc.tirr = " "
+									agreement_doc.irr_calculation_value = agreement_doc.xirr_calculation_value = agreement_doc.tirr_calculation_value = " "
+									agreement_doc.real_agreement_income = 0.0
+									agreement_doc.save()	
+							elif agreement_doc.agreement_closing_suspending_reason == "Agreement sold":
+								print "1--payments_rental_amount",payments_rental_amount
+								payments_rental_amount.extend([ 0 for payment in frappe.get_doc("Customer Agreement",agreement_doc.name).payments_record if payment.get("check_box_of_submit") == 1 ])
+						    	print "2 --payments_rental_amount",payments_rental_amount
+						    	for payment in agreement_doc.payments_record:
+						    		paymentsrentalamount = validate_payment_for_irr(payment,payments_rental_amount,agreement_doc.name) 
+						    		if paymentsrentalamount:
+						    			payments_rental_amount = paymentsrentalamount
+						    		payments_for_irr = payments_rental_amount
+						    	print "3--",payments_for_irr
+						    	payments_for_irr.append(agreement_doc.agreement_sold_price)
+						    	print "4--",payments_for_irr
+						    	# print "real_agreement_income",real_agreement_income
+						    	frappe.db.set_value("Customer Agreement",agreement_doc.name,"real_agreement_income",round((sum(payments_rental_amount[1:])),2)) if len(payments_rental_amount) > 0 else ""
+						    	frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr_calculation_value",str(payments_for_irr))
+						    	try:
+						    		irr_val = round(irr(payments_for_irr),5)
+						    		if irr_val:
+						    			IRR = round((float(irr_val) * 12 * 100),2)
+						    			print "IRR",IRR
+						    			frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",IRR)
+						    	except Exception,e:
+						    			irr_val = ""
+						    			frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr",irr_val)
+					else:
+						frappe.db.set_value("Customer Agreement",agreement_doc.name,"irr","Wholesale price is not set")
+		except Exception,e:
+			irr_xirr_issue_notification("IRR",agreement_doc.name,e.message)
+			
 
 def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 	agreement_doc = frappe.get_doc("Customer Agreement",agreement)
@@ -2267,9 +2283,10 @@ def calculate_xirr():
 	
 	for row in result:
  		# XIIR Calculations
- 		if row[3] == "BK-011224":
+ 		# if row[3] == "BK-011224":
  		# print "____________________________________"
  		# print "Agreement--",row[3]
+	 	try:
 	 		if frappe.get_doc("Customer Agreement",row[3]).agreement_status == "Open":
 	 			# print "Open"
 				if row[12] and float(row[12])>0: 
@@ -2797,3 +2814,6 @@ def calculate_xirr():
 					row[28] = ""
 			else:
 				row[28] = ""
+		except Exception,e:
+			irr_xirr_issue_notification("XIRR",str(row[3]),e.message)
+
