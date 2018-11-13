@@ -59,7 +59,7 @@ def get_data(filters):
 					format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
 					format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
 					format(ca.monthly_rental_payment * ca.agreement_period,2),
-					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income + ca.agreement_sold_price,2)
+					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
 					else format(ca.payments_made,2) end as real_agreement_income,
 					case when ca.agreement_status = "Closed" then ca.agreement_close_date
 					when ca.agreement_status = "Suspended" then ca.suspended_from
@@ -134,7 +134,11 @@ def get_data(filters):
 					else format(ca.payments_made,2) end as real_agreement_income,
 					case when ca.agreement_status = "Closed" then ca.agreement_close_date
 					when ca.agreement_status = "Suspended" then ca.suspended_from
+<<<<<<< HEAD
+					else "-" end as agreement_closing_suspension_date,x
+=======
 					else "-" end as agreement_closing_suspension_date,
+>>>>>>> ba0e55aaebe6f699a8d61663dc57c5d2d2cb6e23
 					case when ca.agreement_closing_suspending_reason = "Early buy offer" then
 					concat(ca.early_buy_discount_percentage,"% ",ca.agreement_closing_suspending_reason)
 					else ca.agreement_closing_suspending_reason end as agreement_closing_suspension_reason,
