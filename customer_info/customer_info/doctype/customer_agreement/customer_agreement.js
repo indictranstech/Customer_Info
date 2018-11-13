@@ -3,6 +3,7 @@ cur_frm.add_fetch('product', 's90d_sac_price', 'duplicate_s90d_sac_price');
 cur_frm.add_fetch('product', 'monthly_rental_payment', 'monthly_rental_payment');
 cur_frm.add_fetch('product', 'period', 'agreement_period');
 cur_frm.add_fetch('product', 'product_category', 'product_category');
+cur_frm.add_fetch('product_category','delivery_price','delivery_price')
 cur_frm.add_fetch('product', 'merchandise_status', 'merchandise_status');
 cur_frm.add_fetch('customer','customer_group','customer_group')
 
@@ -268,7 +269,21 @@ frappe.ui.form.on("Customer Agreement",{
             msgprint("Please enter positive value")
             cur_frm.set_value("campaign_discount",0)
         }
-    }
+    },
+    product_category:function(frm){
+        console.log("knknbkkngk")
+        frappe.call({
+            method: "frappe.client.get_value",
+            args: {
+                doctype: "Product Category",
+                fieldname: "delivery_price",
+                filters: { "name": cur_frm.doc.product_category },
+            },
+            callback: function(r){
+                cur_frm.set_value("delivery_price",r.message['delivery_price'])
+            }   
+        });
+    },
 
 })
 
