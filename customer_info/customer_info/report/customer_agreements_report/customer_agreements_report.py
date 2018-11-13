@@ -59,7 +59,7 @@ def get_data(filters):
 					format((ca.s90d_sac_price - item.wholesale_price)/item.wholesale_price * 100,2),
 					format((ca.monthly_rental_payment * ca.agreement_period -item.wholesale_price)/item.wholesale_price * 100,2),
 					format(ca.monthly_rental_payment * ca.agreement_period,2),
-					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income + ca.agreement_sold_price,2)
+					case when ca.agreement_status = "Closed"  then format(ca.real_agreement_income,2)
 					else format(ca.payments_made,2) end as real_agreement_income,
 					case when ca.agreement_status = "Closed" then ca.agreement_close_date
 					when ca.agreement_status = "Suspended" then ca.suspended_from
