@@ -5,7 +5,7 @@ from datetime import datetime
 from frappe.utils import nowdate, nowtime
 from datetime import datetime, timedelta,date
 from frappe.utils import nowdate, getdate,add_months,add_days,get_last_day
-from frappe.utils import date_diff
+from frappe.utils import date_diff,flt
 from customer_info.customer_info.doctype.customer_agreement.customer_agreement import payments_done_by_api
 from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
 
@@ -84,7 +84,7 @@ def payments_done_by_api(customer):
 	# Step - 4 : Sort Pending Payments
 	for key, value in sorted(payments.iteritems(), key=lambda (k,v): (v,k)):
 		payments_sorted.append(key)
-	print  "------------1---",payments_sorted 
+	# print  "------------1---",payments_sorted 
 	
 	# Step - 5 :Get Flagged Receivables amount
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
@@ -202,7 +202,7 @@ def payments_done_by_api(customer):
 		args['assigned_bonus_discount'] = ""
 		args['customer'] = customer
 		args['receivables'] = frappe.get_doc("Customer",customer).receivables
-		args['add_in_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
+		args['add_in_receivables'] =  flt(frappe.get_doc("Customer",customer).receivables) + flt(frappe.get_doc("Customer",customer).flagged_receivables)
 		args['payment_date'] = str(now_date)
 		args['rental_payment'] = sum(monthly_rental_amount)
 		args['payment_type'] = "Normal Payment"
