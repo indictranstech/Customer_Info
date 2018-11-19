@@ -205,39 +205,62 @@ class CustomerAgreement(Document):
 	# add row in child table	
 	def add_payments_record(self):
 		if self.delivery_price > 0.0 and not self.without_delivery_fee:
-			self.agreement_period = int(self.agreement_period) + 1
-			current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
+			# self.agreement_period = int(self.agreement_period) + 1
+			# current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
 			
-			list_of_payments_record = []
+			# list_of_payments_record = []
 
+			# list_of_payments_record.append({
+			# 'no_of_payments':'Payment 1',
+			# 'monthly_rental_amount':self.delivery_price,
+			# 'due_date':self.date,
+			# 'payment_id':self.name + '-' + 'Payment 1'
+			# })
+
+			# list_of_payments_record.append({
+			# 'no_of_payments':'Payment 2',
+			# 'monthly_rental_amount':self.monthly_rental_payment,
+			# 'due_date':self.date,
+			# 'payment_id':self.name + '-' + 'Payment 2'
+			# })
+
+			# for i in range(2,int(self.agreement_period)):
+			# 	list_of_payments_record.append({
+			# 		'no_of_payments':'Payment {0}'.format(i+1),
+			# 		'monthly_rental_amount':self.monthly_rental_payment,
+			# 		'due_date':self.get_next_due_date(current_date,i-1),
+			# 		'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
+			# 		})	
+			# for d in list_of_payments_record:
+			# 	nl = self.append('payments_record', {})
+			# 	nl.no_of_payments = d['no_of_payments']
+			# 	nl.monthly_rental_amount = d['monthly_rental_amount']
+			# 	nl.due_date = d['due_date']
+			# 	nl.payment_id = d['payment_id']	
+
+			current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
+			list_of_payments_record = []
 			list_of_payments_record.append({
 			'no_of_payments':'Payment 1',
-			'monthly_rental_amount':self.delivery_price,
-			'due_date':self.date,
-			'payment_id':self.name + '-' + 'Payment 1'
-			})
-
-			list_of_payments_record.append({
-			'no_of_payments':'Payment 2',
 			'monthly_rental_amount':self.monthly_rental_payment,
 			'due_date':self.date,
-			'payment_id':self.name + '-' + 'Payment 2'
-			})
-
-			for i in range(2,int(self.agreement_period)):
+			'payment_id':self.name + '-' + 'Payment 1'
+			})	
+			for i in range(1,int(self.agreement_period)):
 				list_of_payments_record.append({
 					'no_of_payments':'Payment {0}'.format(i+1),
 					'monthly_rental_amount':self.monthly_rental_payment,
 					'due_date':self.get_next_due_date(current_date,i-1),
 					'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
-					})	
+					})
+
 			for d in list_of_payments_record:
 				nl = self.append('payments_record', {})
 				nl.no_of_payments = d['no_of_payments']
 				nl.monthly_rental_amount = d['monthly_rental_amount']
 				nl.due_date = d['due_date']
 				nl.payment_id = d['payment_id']	
-		
+
 		else:	
 			current_date = datetime.strptime(self.due_date_of_next_month, '%Y-%m-%dT%H:%M:%S.%fZ') if isinstance(self.due_date_of_next_month, unicode) else getdate(self.due_date_of_next_month)
 			list_of_payments_record = []
