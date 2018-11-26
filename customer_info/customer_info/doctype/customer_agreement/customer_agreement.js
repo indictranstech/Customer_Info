@@ -34,6 +34,9 @@ frappe.ui.form.on("Customer Agreement",{
             });
         }
 	},
+    // without_delivery_fee:function (frm) {
+    //     frappe.msgprint("You Are Not Able To Add Transportation Fee")
+    // },
     update_due_date:function(frm){
         if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal && cur_frm.doc.payments_record && cur_frm.doc.update_due_date){
             cur_frm.doc.due_date_of_next_month = cur_frm.doc.update_due_date
@@ -107,6 +110,7 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.product && !cur_frm.doc.__islocal){
             cur_frm.set_df_property("product","read_only",1)
+            frm.set_df_property("without_delivery_fee","read_only",1)
         }
         if(cur_frm.doc.document_type == "Updated" && cur_frm.doc.__islocal){
             cur_frm.set_df_property("agreement_period","read_only",0)
@@ -149,6 +153,7 @@ frappe.ui.form.on("Customer Agreement",{
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
         }
+        
         /*if(cur_frm.doc.product_category && cur_frm.doc.product){
             cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
         }*/
@@ -227,6 +232,10 @@ frappe.ui.form.on("Customer Agreement",{
                 frm.events.respond_with_customer_agreement, __("Generate PDF"));
             }*/
         }
+         if(cur_frm.doc.product && !cur_frm.doc.__islocal){
+               frm.set_df_property("without_delivery_fee","read_only",1)
+        }
+       
 
     },
     respond_with_customer_agreement:function(frm){
