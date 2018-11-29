@@ -6,6 +6,10 @@ from frappe import _
 from datetime import datetime,date
 from frappe.utils import date_diff
 from frappe.model.document import Document
+from frappe.model.naming import set_new_name
+from frappe.model.rename_doc import rename_doc
+import json
+
 
 
 @frappe.whitelist(allow_guest = True)
@@ -90,3 +94,14 @@ def check_code(code,code_label,digits):
 
 	except ValueError:
    		frappe.throw(msg)
+
+@frappe.whitelist()
+def update_item_details(name,serial_number,item_code):
+	if name and serial_number and item_code:
+		frappe.db.set_value("Item",name,"serial_number",serial_number)
+		frappe.db.set_value("Item",name,"item_code",item_code)
+		frappe.db.set_value("Item",name,"item_name",item_code)
+		return "Updated"
+	else:
+		return 0
+	

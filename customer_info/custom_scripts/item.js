@@ -28,6 +28,43 @@ frappe.ui.form.on("Item", {
         cur_frm.doc.item_name = cur_frm.doc.item_code
         refresh_field(["item_code","item_name"])    
     },
+    update_serial_no:function (frm){
+        $('[data-fieldname="update_serials_number"]').show()
+        cur_frm.set_df_property("update_serials_number","reqd",1)
+    },
+    update_serials_number:function(frm){
+        
+        cur_frm.doc.item_code = cur_frm.doc.brand + "-" +cur_frm.doc.update_serials_number
+        frappe.call({
+            method:"frappe.model.rename_doc.rename_doc",
+             args: {
+                 doctype:cur_frm.doc.doctype,
+                 old: cur_frm.doc.name,
+                 new:cur_frm.doc.item_code
+                },
+             callback: function(r) {
+                if (r.message){
+                    var new_item_code = r.message
+                    frappe.call({
+                        method:"customer_info.customer_info.custom_item.update_item_details",
+                        args: {
+                            name:r.message,
+                            serial_number: cur_frm.doc.update_serials_number,
+                            item_code:cur_frm.doc.item_code
+                        },
+                        callback: function(r) {
+                            console.log(r.message)
+                            if (r.message == 'Updated'){
+                                frappe.set_route('Form', 'Item', new_item_code)    
+                            }                      
+                        }
+                    });
+                }
+            }
+        });
+            
+    },
+
     purchase_price_with_vat: function(frm){
         if(cur_frm.doc.period && cur_frm.doc.ratio){
             this.calculation_for_monthly_rental_and_90d(frm)
@@ -83,11 +120,13 @@ frappe.ui.form.on("Item", {
             refresh_field("old_agreement_period")
         }
     },
+
     validate: function(frm){
         if (cur_frm.doc.serial_number){
             cur_frm.set_df_property("serial_number","read_only",1)
             refresh_field("serial_number")
         }
+        
         if (cur_frm.doc.brand){
             cur_frm.set_df_property("brand","read_only",1)
             refresh_field("brand")
@@ -106,6 +145,11 @@ frappe.ui.form.on("Item", {
         }
         cur_frm.doc.stock_uom = "Unit"
         refresh_field("stock_uom")
+        if (cur_frm.doc.update_serials_number){
+            cur_frm.doc.serial_number = cur_frm.doc.update_serials_number
+            cur_frm.doc.item_code = cur_frm.doc.brand + "-" +cur_frm.doc.serial_number
+            cur_frm.doc.item_name = cur_frm.doc.item_code
+        }
     },
     onload:function(frm){
         if (cur_frm.doc.serial_number){
@@ -121,11 +165,14 @@ frappe.ui.form.on("Item", {
             refresh_field("product_category")
         }
          cur_frm.set_df_property("log","read_only",1)
+         $('[data-fieldname="update_serials_number"]').hide()
+
 
     },
     refresh:function(frm){
         $('[data-fieldname="stock_uom"]').hide()
         $('[data-fieldname="item_group"]').hide()
+        $('[data-fieldname="update_serials_number"]').hide()
     }
 });
 
