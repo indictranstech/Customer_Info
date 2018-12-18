@@ -35,7 +35,8 @@ def update_customer_agreement(customer):
 	# Step - 1 : Get All  Customer Agreement
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
-
+	
+	print "________________customer_agreements____________",customer_agreements
 	# Step - 2 : Globally declare all payment list
 
 	payments = {}
@@ -56,6 +57,7 @@ def update_customer_agreement(customer):
 
 	# # Step - 3 : Find out pending payment's from all customer open agreements.
 	for agreement in customer_agreements:
+		print"__________________________________",agreement
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
 			if row.check_box_of_submit == 0:
@@ -85,6 +87,7 @@ def update_customer_agreement(customer):
 		 						late_payments.append(row.monthly_rental_amount)
 		 						if customer_agreement.late_fees_updated != "Yes":
 		 							row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+									print "+++++++++++++++++++++++++++late fess",row.late_fees_payment
 		 						row.save(ignore_permissions = True)
 		 						total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
 
