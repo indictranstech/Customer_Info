@@ -36,6 +36,7 @@ def update_late_by_api(customer):
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
 										where agreement_status = "Open" and late_fees_updated="No" and customer = '{0}'""".format(customer),as_list=1)
 
+	print "__________customer_agreements_____",customer_agreements
 	# Step - 2 : Globally declare all payment list
 
 	payments = {}
@@ -72,12 +73,14 @@ def update_late_by_api(customer):
 
 				print "ABBN ",row.due_date,__due_date,now_date
 			 	if (row.due_date<__due_date) : 
+					print "_____con _______(row.due_date<__due_date)_____________"
 					if date_diff(now_date,row.due_date) > 3:
 						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
 						late_payments.append(row.monthly_rental_amount)
 						row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
 						print "___row._",row.late_fees_payment
 						total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
+						print "___________________________late fess",total_late_fees
 		agreement_doc.late_fees=total_late_fees
 		agreement_doc.save(ignore_permissions = True)
 		return "Agreement is successfully updated"
