@@ -17,8 +17,8 @@ def update_customer_agreement(customer):
 		try:
 			# cust_doc.save(ignore_permissions=True)
 			# frappe.db.commit()
-			update_customer_agreement(customer)
-			return "%customer agreement are successfully updated {0}#".format(cust_doc.name)
+			update_late_by_api(customer)
+			return "Agreement is successfully updated"
 		except Exception, e:
 			raise e
 	else:
@@ -27,14 +27,14 @@ def update_customer_agreement(customer):
 
 
 @frappe.whitelist()
-def update_customer_agreement(customer):
+def update_late_by_api(customer):
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
 	last_day_of_month = get_last_day(now_date)
 
 	# Step - 1 : Get All  Customer Agreement
 	customer_agreements = frappe.db.sql("""select name from `tabCustomer Agreement`
-										where agreement_status = "Open" and customer = '{0}'""".format(customer),as_list=1)
+										where agreement_status = "Open" and late_fees_updated="No" and customer = '{0}'""".format(customer),as_list=1)
 
 	# Step - 2 : Globally declare all payment list
 
@@ -56,45 +56,35 @@ def update_customer_agreement(customer):
 
 	# # Step - 3 : Find out pending payment's from all customer open agreements.
 	for agreement in customer_agreements:
+		total_late_fees=0
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
+			print "row",row
+			print "row.due_date ",row.due_date,row.payment_date,now_date
 			if row.check_box_of_submit == 0:
-				payments[row.payment_id] = row.due_date
+				__due_date = now_date
+				if row.payment_date:
+					print "Here!!!!"
+					__due_date = row.payment_date
+				else:
+					print "Here actually ###"
+					__due_date = now_date
 
-	# Step - 4 : Sort Pending Payments
-	for key, value in sorted(payments.iteritems(), key=lambda (k,v): (v,k)):
-		payments_sorted.append(key)
-
-	# Step - 6 : Process Pending Payments
-	for payment in payments_sorted:
-		print "______________________________________--",payment
-
-	# Step -6(1) - Validate Agreement
-		if frappe.db.exists("Customer Agreement", payment.split('-P')[0]):				
-			customer_agreement = frappe.get_doc("Customer Agreement",payment.split('-P')[0])
-			# Step -6(2) - Validate Payment
-			for row in customer_agreement.payments_record:
-		 		if row.payment_id == payment:											
-		 			merchandise_status += str(customer_agreement.name)+"/"+str(customer_agreement.merchandise_status)+"/"+str(customer_agreement.agreement_closing_suspending_reason)+","
-
-		 			if row.check_box_of_submit == 0 and row.payment_id == payment:	
-		 				# step late_payments
-		 				if (getdate(row.due_date) < firstDay_of_month or getdate(row.due_date) < now_date):
-		 					if date_diff(now_date,row.due_date) > 3:
-		 						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-		 						late_payments.append(row.monthly_rental_amount)
-		 						if customer_agreement.late_fees_updated != "Yes":
-		 							row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-		 						row.save(ignore_permissions = True)
-		 						total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
-
-	# print "____________---",total_late_fees
-				customer_agreement.late_fees=total_late_fees
-				customer_agreement.save(ignore_permissions = True)
-				return "customer agreement are successfully updated"
+				print "ABBN ",row.due_date,__due_date,now_date
+			 	if (row.due_date<__due_date) : 
+					if date_diff(now_date,row.due_date) > 3:
+						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+						late_payments.append(row.monthly_rental_amount)
+						row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
+						print "___row._",row.late_fees_payment
+						total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
+		agreement_doc.late_fees=total_late_fees
+		agreement_doc.save(ignore_permissions = True)
+		return "Agreement is successfully updated"
 				
- 
 
+
+	
 		 					
 	
 
