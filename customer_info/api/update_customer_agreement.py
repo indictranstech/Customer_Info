@@ -60,7 +60,7 @@ def update_late_by_api(customer):
 		total_late_fees=0
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
-			print "row",row
+			print "row___________________",row
 			print "row.due_date ",row.due_date,row.payment_date,now_date
 			if row.check_box_of_submit == 0:
 				__due_date = now_date
@@ -75,7 +75,9 @@ def update_late_by_api(customer):
 			 	if (row.due_date<__due_date) : 
 					print "_____con _______(row.due_date<__due_date)_____________"
 					if date_diff(now_date,row.due_date) > 3:
+						print "__________date diffrence greter than 3__________"
 						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+						print "________no_of_late_days__________",no_of_late_days
 						late_payments.append(row.monthly_rental_amount)
 						row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
 						print "___row._",row.late_fees_payment
