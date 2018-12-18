@@ -51,6 +51,7 @@ def update_late_by_api(customer):
 	late_payments = []
 	late_fees = []
 	total_late_fees=0
+	firstDay_this_month = date(now_date.year, now_date.month, 1)
 	args = {'values':{}}
 
 
@@ -59,28 +60,28 @@ def update_late_by_api(customer):
 		total_late_fees=0
 		agreement_doc =frappe.get_doc("Customer Agreement",agreement[0])
 		for row in agreement_doc.payments_record:
-			print "row",row
-			print "row.due_date ",row.due_date,row.payment_date,now_date
-			if row.check_box_of_submit == 0:
-				__due_date = now_date
-				if row.payment_date:
-					print "Here!!!!"
-					__due_date = row.payment_date
-				else:
-					print "Here actually ###"
-					__due_date = now_date
-
-				print "ABBN ",row.due_date,__due_date,now_date
-			 	if (row.due_date<__due_date) : 
-					if date_diff(now_date,row.due_date) > 3:
-						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
-						late_payments.append(row.monthly_rental_amount)
-						row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
-						print "___row._",row.late_fees_payment
-						total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
+			print "___________",row
+			print "firstDay_of_month",firstDay_of_month
+			if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_of_month and getdate(row.due_date) <= now_date:
+				print "1 scinirio__________-"
+				if date_diff(now_date,row.due_date) > 3:
+					no_of_late_days = date_diff(now_date,row.due_date) - 3
+					late_payments.append(row.monthly_rental_amount)
+					row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
+					total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
+			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
+				print "ABBN ",row.due_date,now_date
+				print "______________"
+				if date_diff(now_date,row.due_date) > 3:
+					no_of_late_days = date_diff(now_date,row.due_date) - 3
+					late_payments.append(row.monthly_rental_amount)
+					row.late_fees_payment = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
+					print "___row._",row.late_fees_payment
+					total_late_fees=float(total_late_fees)+float(row.late_fees_payment)
+					print "total_late_fees",total_late_fees
 		agreement_doc.late_fees=total_late_fees
 		agreement_doc.save(ignore_permissions = True)
-		return "Agreement is successfully updated"
+	return "Agreement is successfully updated"
 				
 
 
