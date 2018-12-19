@@ -133,8 +133,9 @@ class CustomerAgreement(Document):
 		if  customer_agreement and customer_agreement[0][0] != self.name:
 			customer_agreement_doc = frappe.get_doc("Customer Agreement",self.name)
 			if customer_agreement_doc.document_type == "New":
-				customer_agreement_doc.new_agreement_bonus = 20
-				customer_agreement_doc.bonus = 20
+				# Change this scinirio due to ticket no Be 0277
+				# customer_agreement_doc.new_agreement_bonus = 20
+				# customer_agreement_doc.bonus = 20
 				customer_agreement_doc.save(ignore_permissions=True)
 				customer = frappe.get_doc("Customer",self.customer)
 				customer.bonus = customer.bonus + 20
