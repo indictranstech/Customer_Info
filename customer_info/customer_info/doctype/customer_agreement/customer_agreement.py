@@ -229,9 +229,10 @@ class CustomerAgreement(Document):
 				list_of_payments_record.append({
 					'no_of_payments':'Payment {0}'.format(i),
 					'monthly_rental_amount':self.monthly_rental_payment,
-					'due_date':self.get_next_due_date(current_date,i-2),
+					'due_date':self.get_next_due_date(current_date,i-3),
 					'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
 					})
+				# print "list_of_payments_record",list_of_payments_record
 			for d in list_of_payments_record:
 				nl = self.append('payments_record', {})
 				nl.no_of_payments = d['no_of_payments']
@@ -251,7 +252,7 @@ class CustomerAgreement(Document):
 				list_of_payments_record.append({
 					'no_of_payments':'Payment {0}'.format(i+1),
 					'monthly_rental_amount':self.monthly_rental_payment,
-					'due_date':self.get_next_due_date(current_date,i-1),
+					'due_date':self.get_next_due_date(current_date,i-2),
 					'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
 					})
 
@@ -270,7 +271,7 @@ class CustomerAgreement(Document):
 			for i,row in enumerate(self.payments_record):
 				if row.idx > 1 and row.check_box_of_submit == 0:
 					row.update({
-						"due_date":self.get_next_due_date(due_date_of_next_month,i-1)
+						"due_date":self.get_next_due_date(due_date_of_next_month,i)
 					})
 
 	# get date after i month
@@ -607,13 +608,24 @@ def get_primary_address(customer):
 
 @frappe.whitelist()
 def update_due_dates_of_payments(update_date,name):
+	
 	agreement = frappe.get_doc("Customer Agreement",name)
+	
 	counter_of_row = 0
 	date_dict = {}
-	for row in agreement.payments_record:
-		if row.check_box_of_submit == 0:
-			date_dict[row.payment_id] = get_next_due_date(update_date,counter_of_row)
-			counter_of_row += 1
+	for idx,row in enumerate(agreement.payments_record):
+		if not agreement.without_delivery_fee and  agreement.delivery_price > 0.0:
+			if row.check_box_of_submit == 0 and idx==0:
+				date_dict[row.payment_id] = update_date
+			
+			if row.check_box_of_submit == 0 and idx>0:
+				date_dict[row.payment_id] = get_next_due_date(update_date,counter_of_row)
+				counter_of_row += 1
+		else:
+			if row.check_box_of_submit == 0:
+				date_dict[row.payment_id] = get_next_due_date(update_date,counter_of_row)
+				counter_of_row += 1
+
 	return date_dict
 
 @frappe.whitelist()
