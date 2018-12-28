@@ -10,7 +10,6 @@ from frappe.utils import date_diff,flt
 @frappe.whitelist()
 def update_customer_agreement(customer):
 	cust_doc = frappe.get_doc("Customer",customer)
-	if cust_doc:	cust_doc = frappe.get_doc("Customer",customer)
 	if cust_doc:
 		try:
 			update_late_fees(customer)
