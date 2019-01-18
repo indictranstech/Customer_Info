@@ -39,8 +39,8 @@ class CustomerAgreement(Document):
 		self.get_active_agreement_month()
 		self.merchandise_return_agreement_closing()
 		#self.remove_bonus_of_customer()
-		# self.next_due_date =  getdate(self.next_due_date)
-		# self.due_date_of_next_month=getdate(self.due_date_of_next_month)
+		self.next_due_date =  getdate(self.next_due_date)
+		self.due_date_of_next_month=getdate(self.due_date_of_next_month)
 	
 	def merchandise_return_agreement_closing(self):
 		if self.merchandise_status == "Returned to supplier":		
@@ -116,7 +116,7 @@ class CustomerAgreement(Document):
 				#frappe.throw("Increase Payment Day")
 
 	def after_insert(self):
-		self.add_bonus_for_this_agreement()
+		# self.add_bonus_for_this_agreement()
 		self.comment_for_agreement_creation()
 		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
 		customer_agreement = frappe.get_doc("Customer Agreement",self.name)
@@ -126,20 +126,20 @@ class CustomerAgreement(Document):
 		self.add_item_log()
 		self.get_tirr()
 
-	def add_bonus_for_this_agreement(self):
-		customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
-											where agreement_status = "Open" and  customer = '{0}'  
-											and name != "{1}" order by creation desc limit 1""".format(self.customer,self.name),as_list=1)
-		if  customer_agreement and customer_agreement[0][0] != self.name:
-			customer_agreement_doc = frappe.get_doc("Customer Agreement",self.name)
-			if customer_agreement_doc.document_type == "New":
-				# Change this scinirio due to ticket no Be 0277
-				# customer_agreement_doc.new_agreement_bonus = 20
-				# customer_agreement_doc.bonus = 20
-				customer_agreement_doc.save(ignore_permissions=True)
-				customer = frappe.get_doc("Customer",self.customer)
-				customer.bonus = customer.bonus + 20
-				customer.save(ignore_permissions=True)
+# Change this Scinirio due to Ticket no Be 0277
+	# def add_bonus_for_this_agreement(self):
+	# 	customer_agreement = frappe.db.sql("""select name from `tabCustomer Agreement`
+	# 										where agreement_status = "Open" and  customer = '{0}'  
+	# 										and name != "{1}" order by creation desc limit 1""".format(self.customer,self.name),as_list=1)
+	# 	if  customer_agreement and customer_agreement[0][0] != self.name:
+	# 		customer_agreement_doc = frappe.get_doc("Customer Agreement",self.name)
+	# 		if customer_agreement_doc.document_type == "New":
+	# 			customer_agreement_doc.new_agreement_bonus = 20
+	# 			customer_agreement_doc.bonus = 20
+	# 			customer_agreement_doc.save(ignore_permissions=True)
+	# 			customer = frappe.get_doc("Customer",self.customer)
+	# 			customer.bonus = customer.bonus + 20
+	# 			customer.save(ignore_permissions=True)
 
 
 	def change_sold_date_on_agreement_creation(self):
@@ -229,7 +229,7 @@ class CustomerAgreement(Document):
 				list_of_payments_record.append({
 					'no_of_payments':'Payment {0}'.format(i),
 					'monthly_rental_amount':self.monthly_rental_payment,
-					'due_date':self.get_next_due_date(current_date,i-3),
+					'due_date':self.get_next_due_date(current_date,i-2),
 					'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
 					})
 				# print "list_of_payments_record",list_of_payments_record
@@ -252,7 +252,7 @@ class CustomerAgreement(Document):
 				list_of_payments_record.append({
 					'no_of_payments':'Payment {0}'.format(i+1),
 					'monthly_rental_amount':self.monthly_rental_payment,
-					'due_date':self.get_next_due_date(current_date,i-2),
+					'due_date':self.get_next_due_date(current_date,i-1),
 					'payment_id':self.name + '-' + 'Payment {0}'.format(i+1)
 					})
 
