@@ -153,7 +153,7 @@ def calculate_total_charges(customer,flag,payment_date):
 					# print "late_days",late_days
 					late_fee = float("{0:.2f}".format(late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 					# late_fee =round(float((date_diff(payment_date,row.due_date) - 3) * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)))
-					# print "late_fee 1",late_fee
+					# print "late_fee Cond #1 : ",late_days, row.monthly_rental_amount , customer_agreement.late_fees_rate, late_fee
 					# print "rental_amount_of_late_payments",rental_amount_of_late_payments
 					# print "rental_amount_of_late_payments",len(rental_amount_of_late_payments)
 					if agreement in agreements_and_late_fees_dict.keys():
@@ -161,6 +161,7 @@ def calculate_total_charges(customer,flag,payment_date):
 					else:
 						agreements_and_late_fees_dict[agreement] = late_fee
 					late_fees_of_agreement.append(late_fee)
+					# print "late_fee Cond #100 : ",late_days, row.monthly_rental_amount , customer_agreement.late_fees_rate, late_fee
 					rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 			
 			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
@@ -179,12 +180,16 @@ def calculate_total_charges(customer,flag,payment_date):
 						late_days = 180
 					late_fee = float("{0:.2f}".format(late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)))
 					# print "late_days 2",late_days
-					# print "late_fee",late_fee
+					# print "late_fee Cond #2 :  ",late_fee
+					# print "agreements_and_late_fees_dict[agreement]:",agreements_and_late_fees_dict
+					#print "late_days2:",late_days
 					# print "rental_amount_of_late_payments",rental_amount_of_late_payments
 					# print "rental_amount_of_late_payments",len(rental_amount_of_late_payments)
+					# print "late_fee Cond #200 :  ",late_days, row.monthly_rental_amount , customer_agreement.late_fees_rate, late_fee
 					late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
 					if agreement in agreements_and_late_fees_dict.keys(): # for adding late fees of all agreements
 						agreements_and_late_fees_dict[agreement] += late_fee
+						# print "-----------------------------------------------------",late_fee
 					else:
 						agreements_and_late_fees_dict[agreement] = late_fee
 					rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
@@ -194,8 +199,9 @@ def calculate_total_charges(customer,flag,payment_date):
 		#customer_agreement.total_late_payments = sum(rental_amount_of_late_payments)
 
 		if customer_agreement.late_fees_updated == "No":
+			# print "late_fees_of_agreement",late_fees_of_agreement
 			customer_agreement.late_fees = "{0:.2f}".format(sum(late_fees_of_agreement))
-			# print "__________________________",late_fees_of_agreement
+			# print "sum of late fees of agreement__________________________",sum(late_fees_of_agreement)
 		if customer_agreement.discount_updated == "Yes":
 			#agreements_discount_list.append(customer_agreement.campaign_discount)
 			agreements_discount_list.append(customer_agreement.discount)
@@ -213,6 +219,7 @@ def calculate_total_charges(customer,flag,payment_date):
 	# print "sum",sum(agreements_due_amount_list)
 	# print "float(discount_amount_of_agreements)",float(discount_amount_of_agreements)
 	# print sum(agreements_due_amount_list) - float(discount_amount_of_agreements)
+	# print "1----agreements_and_late_fees_dict----",agreements_and_late_fees_dict
 	return {"amount_of_due_payments":sum(agreements_due_amount_list) - float(discount_amount_of_agreements), # deduct campaign discount of all agreements
 			"receivables":receivables,
 			"bonus":bonus,
@@ -299,6 +306,7 @@ def calculate_total_charges(customer,flag,payment_date):
 
 @frappe.whitelist()
 def update_due_date(agreement,update_due_date):
+	# print "1 update due date______________________________________________",agreement,update_due_date
 	customer_agreement = frappe.get_doc("Customer Agreement",agreement)
 	date_dict = update_due_dates_of_payments(update_due_date,agreement)
 	for row_data in customer_agreement.payments_record:
@@ -308,6 +316,7 @@ def update_due_date(agreement,update_due_date):
 	customer_agreement.update_due_date = update_due_date
 	customer_agreement.current_due_date = update_due_date
 	customer_agreement.next_due_date = get_next_due_date(update_due_date,1)
+	# customer_agreement.next_due_date =update_due_date
 	customer_agreement.save(ignore_permissions=True)
 	return "True"
 
@@ -373,6 +382,8 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
 
+
+
 	for entry in data['list_of_agreement']:
 		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
 										`tabPayments Record`
@@ -388,13 +399,13 @@ def get_customer_agreement(customer,payment_date,flag=None):
 
 		if float(entry[3]) > 0:
 			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
-	# print "\n\ndata",data
 	return data	
 
 
 @frappe.whitelist()
 def temporary_payments_update_to_child_table_of_customer_agreement(row_to_update=None,row_to_uncheck=None,row_to_check=None,row_to_pre_select_uncheck=None,parent=None,payment_date=None):
 	row_to_update = json.loads(row_to_update)
+	# print "row to update____________________________________________---",row_to_update
 	row_to_uncheck = json.loads(row_to_uncheck)
 	row_to_check = json.loads(row_to_check)
 	row_to_pre_select_uncheck = json.loads(row_to_pre_select_uncheck)
@@ -431,7 +442,6 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		row_to_uncheck = json.loads(row_to_uncheck)
 	now_date = datetime.now().date()
 	#firstDay_next_month = date(now_date.year, now_date.month+1, 1)
-	
 	no_of_late_days = 0
 	late_payments = []
 
@@ -447,7 +457,6 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	submitable_payments = []
 
 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
-	
 	if customer_agreement.payments_record:
 		for row in customer_agreement.payments_record:
 			if row.check_box == 1 and row.check_box_of_submit == 0:
@@ -534,11 +543,11 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				late_payment_list_with_date = {}
 				late_days_list =[]
 				for payment_record in customer_agreement.payments_record:
+
 					no_of_late_days_new = 0
 					no_of_late_days_new += (date_diff(payment_record.payment_date,payment_record.due_date) -3)					
 
-					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 3:				
-						
+					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 3: 
 						late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
 						maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
 						# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
@@ -553,7 +562,15 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 						# print float(no_of_late_days_greater_than_180),"*",customer_agreement.monthly_rental_payment ,"*",(customer_agreement.late_fees_rate/100)
 						# print "late_days_list",late_days_list
 						customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
-						# print "customer_agreement.late_fees",customer_agreement.late_fees
+						# if row_to_uncheck:
+						# 	print "--------------------------------------",row_to_uncheck
+						# 	if payment_record.payment_id not in row_to_uncheck:
+						# 		customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+						# else:
+						# 	# print "else----------------------------------------------------------"
+						# 	customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+						# 	print "---------------------------",customer_agreement.late_fees		
+						# print "no_of_late_days_new",no_of_late_days_new
 						# print "customer_agreement",customer_agreement.agreement_no
 						# else:
 						# customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_new * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
@@ -574,7 +591,9 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 
 @frappe.whitelist()
 def get_next_due_date(date,i):
+	# print "2:- get next due date___________________________________",date,i
 	add_month_to_date = add_months(date,i)
+	# print "3:-______________________________________",add_month_to_date
 	return add_month_to_date
 
 
@@ -819,9 +838,14 @@ def remove_new_bonus(submitted_payments_ids_info):
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
 	if customer_agreement.payments_record:
-		for row in customer_agreement.payments_record:
-			if row.check_box_of_submit == 1:
-				payment_made.append(row.monthly_rental_amount)				
+		for idx,row in enumerate(customer_agreement.payments_record):
+			if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
+				if row.check_box_of_submit == 1 and row.idx > 1:
+					payment_made.append(row.monthly_rental_amount)
+			else:
+				if row.check_box_of_submit == 1:
+					payment_made.append(row.monthly_rental_amount)
+
 		for index,row in enumerate(customer_agreement.payments_record):
 			if row.check_box_of_submit == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
 				customer_agreement.current_due_date = row.due_date
@@ -842,6 +866,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 			# 	break	
 	payment_made = map(float,payment_made)
+	
+
 
 	#print sum(payment_made),"sum of payments_made"
 
