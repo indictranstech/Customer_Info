@@ -39,8 +39,8 @@ class CustomerAgreement(Document):
 		self.get_active_agreement_month()
 		self.merchandise_return_agreement_closing()
 		#self.remove_bonus_of_customer()
-		self.next_due_date =  getdate(self.next_due_date)
-		self.due_date_of_next_month=getdate(self.due_date_of_next_month)
+		# self.next_due_date =  getdate(self.next_due_date)
+		# self.due_date_of_next_month=getdate(self.due_date_of_next_month)
 	
 	def merchandise_return_agreement_closing(self):
 		if self.merchandise_status == "Returned to supplier":		
@@ -788,7 +788,6 @@ Reduce receivables
 # def payments_done_by_api():
 @frappe.whitelist()
 def payments_done_by_api(customer):
-	
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -812,7 +811,7 @@ def payments_done_by_api(customer):
 		# print "payment",payment
 		if frappe.db.exists("Customer Agreement", payment.split('-P')[0]):				
 			customer_agreement = frappe.get_doc("Customer Agreement",payment.split('-P')[0])	
-			# print "___",customer_agreement.name
+			print "___",customer_agreement.name
 		 	for row in customer_agreement.payments_record:
 				if row.payment_id == payment:
 					customer_bonus = []
