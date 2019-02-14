@@ -1090,7 +1090,7 @@ def get_summary_records(agreement,receivable,late_fees):
 	payment_made = 0.0
 	for payment in agreement.payments_record:
 		if payment.get("check_box_of_submit") == 1 and payment.no_of_payments != 'Transportation Fee':
-			payment_made += payment.monthly_rental_amounts
+			payment_made += payment.monthly_rental_amount
 	print "-------payment_made-------------------------",payment_made
 	payments_made = "{0:.2f}".format(payment_made)
 
