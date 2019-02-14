@@ -98,7 +98,7 @@ def calculate_total_charges(customer,flag,payment_date):
 	bonus = frappe.db.get_value("Customer",{"name":customer},"bonus")
 
 	if flag == "Customer" or flag == "Onload":
-		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = "",
+		frappe.db.sql("""update `tabPayments Record` set check_box = 0,pre_select_uncheck = 0,payment_date = 0,
 						add_bonus_to_this_payment = 0,
 						bonus_type = ""
 						where check_box_of_submit = 0
@@ -839,6 +839,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
 	if customer_agreement.payments_record:
 		for idx,row in enumerate(customer_agreement.payments_record):
+			print "payment_made",payment_made
 			if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
 				if row.check_box_of_submit == 1 and row.idx > 1:
 					payment_made.append(row.monthly_rental_amount)
@@ -1086,7 +1087,13 @@ def get_summary_records(agreement,receivable,late_fees):
 	agreement = frappe.get_doc("Customer Agreement",agreement)
 	late_fees = "{0:.2f}".format(flt(late_fees))
 	#payments_made = "{0:.2f}".format(agreement.payments_made + float(receivable))
-	payments_made = "{0:.2f}".format(agreement.payments_made)
+	payment_made = 0.0
+	for payment in agreement..payments_record:
+		if payment.get("check_box_of_submit") == 1 and payment.no_of_payments != 'Transportation Fee':
+			payment_made += payment.monthly_rental_payment
+	print "-------payment_made-------------------------",payment_made
+	payments_made = "{0:.2f}".format(payment_made)
+
 	if agreement.today_plus_90_days >= datetime.now().date():
 		day_pay_Off = "{0:.2f}".format(agreement.s90d_sac_price - agreement.payments_made - float(receivable) + float(late_fees) \
 					+ float(agreement.assigned_bonus) + float(agreement.assigned_discount) + float(agreement.assigned_campaign_discount))
