@@ -39,8 +39,8 @@ class CustomerAgreement(Document):
 		self.get_active_agreement_month()
 		self.merchandise_return_agreement_closing()
 		#self.remove_bonus_of_customer()
-		# self.next_due_date =  getdate(self.next_due_date)
-		# self.due_date_of_next_month=getdate(self.due_date_of_next_month)
+		self.next_due_date =  getdate(self.next_due_date)
+		self.due_date_of_next_month=getdate(self.due_date_of_next_month)
 	
 	def merchandise_return_agreement_closing(self):
 		if self.merchandise_status == "Returned to supplier":		
@@ -215,14 +215,16 @@ class CustomerAgreement(Document):
 			'no_of_payments':'Transportation Fee',
 			'monthly_rental_amount':self.delivery_price,
 			'due_date':self.date,
-			'payment_id':self.name + '-' + 'Payment 1'
+			'payment_id':self.name + '-' + 'Payment 1',
+			'payment_type':'Transportation Fee'
 			})
 
 			list_of_payments_record.append({
 			'no_of_payments':'Payment 1',
 			'monthly_rental_amount':self.monthly_rental_payment,
 			'due_date':self.date,
-			'payment_id':self.name + '-' + 'Payment 2'
+			'payment_id':self.name + '-' + 'Payment 2',
+			'payment_type':'Rental Payment'
 			})
 
 			for i in range(2,int(self.agreement_period)):
