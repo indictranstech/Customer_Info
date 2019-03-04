@@ -786,11 +786,10 @@ Add bonus for payments
 Process payments_ids
 Reduce receivables
 """
-@frappe.whitelist()
-def payments_done_by_api():
 # @frappe.whitelist()
-# def payments_done_by_api(customer):
-	customer = "Javad A"
+# def payments_done_by_api():
+@frappe.whitelist()
+def payments_done_by_api(customer):
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
