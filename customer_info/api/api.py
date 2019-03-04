@@ -5,7 +5,7 @@ from datetime import datetime
 from frappe.utils import nowdate, nowtime
 from customer_info.customer_info.doctype.customer_agreement.customer_agreement import payments_done_by_api
 
-
+# Version 1 API
 """
 Addding receivables to customer for payment process
 """

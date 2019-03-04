@@ -6,10 +6,11 @@ from frappe.utils import nowdate, nowtime
 from datetime import datetime, timedelta,date
 from frappe.utils import nowdate, getdate,add_months,add_days,get_last_day
 from frappe.utils import date_diff,flt
-from customer_info.customer_info.doctype.customer_agreement.customer_agreement import payments_done_by_api
-from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
 from customer_info.customer_info.doctype.customer_agreement.customer_agreement import closed_agreement_notification
+from customer_info.customer_info.doctype.payments_management.make_payment_history import make_payment_history
 
+
+# Version 2 API
 
 """
 Addding receivables to customer for payment process
@@ -84,11 +85,9 @@ def payments_done_by_api(customer):
 	# Step - 4 : Sort Pending Payments
 	for key, value in sorted(payments.iteritems(), key=lambda (k,v): (v,k)):
 		payments_sorted.append(key)
-	# print  "------------1---",payments_sorted 
 	
 	# Step - 5 :Get Flagged Receivables amount
 	args['flagged_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
-	
 	# Step - 6 : Process Pending Payments
 	for payment in payments_sorted:
 	# Step -6(1) - Validate Agreement
