@@ -786,10 +786,11 @@ Add bonus for payments
 Process payments_ids
 Reduce receivables
 """
-
-# def payments_done_by_api():
 @frappe.whitelist()
-def payments_done_by_api(customer):
+def payments_done_by_api():
+# @frappe.whitelist()
+# def payments_done_by_api(customer):
+	customer = "Javad A"
 	from customer_info.customer_info.doctype.payments_management.payments_management import get_bonus_summary
 	now_date = datetime.now().date()
 	firstDay_of_month = date(now_date.year, now_date.month, 1)
@@ -929,7 +930,7 @@ def payments_done_by_api(customer):
 						args['assigned_bonus_discount'] = ""
 						args['customer'] = customer
 						args['receivables'] = frappe.get_doc("Customer",customer).receivables
-						args['add_in_receivables'] = frappe.get_doc("Customer",customer).receivables
+						args['add_in_receivables'] = frappe.get_doc("Customer",customer).flagged_receivables
 						args['payment_date'] = str(now_date)
 						args['rental_payment'] = sum(monthly_rental_amount)
 						args['payment_type'] = "Normal Payment"
