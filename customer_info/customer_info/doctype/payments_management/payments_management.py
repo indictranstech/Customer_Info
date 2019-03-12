@@ -841,7 +841,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		for idx,row in enumerate(customer_agreement.payments_record):
 			print "payment_made",payment_made
 			if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
-				if row.check_box_of_submit == 1 and row.idx > 1:
+				# if row.check_box_of_submit == 1 and row.idx > 1: 
+				if row.check_box_of_submit == 1:
 					payment_made.append(row.monthly_rental_amount)
 			else:
 				if row.check_box_of_submit == 1:
