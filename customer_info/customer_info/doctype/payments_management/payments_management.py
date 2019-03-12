@@ -465,7 +465,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
 				late_payments.append(row.monthly_rental_amount)	
 
-			if not row.payment_date:
+			if row.check_box_of_submit == 0:
 			 	amount_of_payment_left.append(row.monthly_rental_amount)
 			
 			if row.check_box_of_submit == 1:
@@ -841,8 +841,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 		for idx,row in enumerate(customer_agreement.payments_record):
 			print "payment_made",payment_made
 			if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
-				# if row.check_box_of_submit == 1 and row.idx > 1: 
-				if row.check_box_of_submit == 1:
+				if row.check_box_of_submit == 1 and row.idx > 1:
 					payment_made.append(row.monthly_rental_amount)
 			else:
 				if row.check_box_of_submit == 1:
