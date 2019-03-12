@@ -465,7 +465,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
 				late_payments.append(row.monthly_rental_amount)	
 
-			if not row.payment_date:
+			if row.check_box_of_submit == 0:
 			 	amount_of_payment_left.append(row.monthly_rental_amount)
 			
 			if row.check_box_of_submit == 1:
