@@ -123,7 +123,7 @@ def payments_done_by_api(customer):
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
 		 						#show payment-wise late fees i
-		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
 		 						row.update({
 		 							"check_box":1,
 		 							"check_box_of_submit":1,
@@ -154,7 +154,7 @@ def payments_done_by_api(customer):
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
 		 						#show payment-wise late fees i
-		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
 
 		 						if row.idx != 1:
 		 							add_bonus_of_one_eur.append(row.idx)
