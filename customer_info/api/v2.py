@@ -135,7 +135,6 @@ def payments_done_by_api(customer):
 		 						# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 		 						# print "____Latepayments__",row.payment_id
 		 				# Step -6(4) Todays Payment (on_time Payments)
-		 				print "____________________Call3"
 		 				if getdate(row.due_date) == now_date:
 		 					customer_doc = frappe.get_doc("Customer",customer)
 		 					flagged_receivables = customer_doc.flagged_receivables
