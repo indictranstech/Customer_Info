@@ -34,19 +34,19 @@ Addding flagged receivables to customer for payment process
 """
 @frappe.whitelist()
 def add_flagged_receivables(customer,flagged_receivables):
-	return "This Api in process"
-	# cust_doc = frappe.get_doc("Customer",customer)
-	# if cust_doc and float(flagged_receivables):
-	# 	try:
-	# 		cust_doc.flagged_receivables += float(flagged_receivables)
-	# 		cust_doc.save(ignore_permissions=True)
-	# 		frappe.db.commit()
-	# 		payments_done_by_api(customer)
-	# 		return "%Flagged Receivables are successfully added for customer {0}#".format(cust_doc.name)
-	# 	except Exception, e:
-	# 		raise e
-	# else:
-	# 		return "%Invalid Customer#"
+	#return "This Api in process"
+	cust_doc = frappe.get_doc("Customer",customer)
+	if cust_doc and float(flagged_receivables):
+		try:
+			cust_doc.flagged_receivables += float(flagged_receivables)
+			cust_doc.save(ignore_permissions=True)
+			frappe.db.commit()
+			payments_done_by_api(customer)
+			return "%Flagged Receivables are successfully added for customer {0}#".format(cust_doc.name)
+		except Exception, e:
+			raise e
+	else:
+			return "%Invalid Customer#"
 
 
 @frappe.whitelist()
@@ -73,6 +73,7 @@ def payments_done_by_api(customer):
 	add_bonus_of_two_eur = []
 	late_payments = []
 	late_fees = []
+	late_payment_ids_list = []
 	args = {'values':{}}
 		
 	
@@ -110,6 +111,9 @@ def payments_done_by_api(customer):
 		 						late_payments.append(row.monthly_rental_amount)
 		 						if customer_agreement.late_fees_updated == "No":
 		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+		 							# late fees calculated row
+		 							row.late_fees_calculated = customer_agreement.late_fees
+		 							row.late_days_calculated = no_of_late_days
 		 						late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:
@@ -118,6 +122,8 @@ def payments_done_by_api(customer):
 		 						payment_ids_list.append(row.payment_id)
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
+		 						#show payment-wise late fees i
+		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
 		 						row.update({
 		 							"check_box":1,
 		 							"check_box_of_submit":1,
@@ -137,12 +143,18 @@ def payments_done_by_api(customer):
 		 						late_payments.append(row.monthly_rental_amount)
 		 						if customer_agreement.late_fees_updated == "No":
 		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+		 							# late fees calculated row
+		 							row.late_fees_calculated = customer_agreement.late_fees
+		 							row.late_days_calculated = no_of_late_days
 		 					late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:				
 		 						payment_ids_list.append(row.payment_id)
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
+		 						#show payment-wise late fees i
+		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+
 		 						if row.idx != 1:
 		 							add_bonus_of_one_eur.append(row.idx)
 		 						row.update({
@@ -165,13 +177,19 @@ def payments_done_by_api(customer):
 		 						no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
 		 						late_payments.append(row.monthly_rental_amount)
 		 						if customer_agreement.late_fees_updated == "No":
-		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))					
+		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+		 							# late fees calculated row
+		 							row.late_fees_calculated = customer_agreement.late_fees
+		 							row.late_days_calculated = no_of_late_days
 		 						late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:
 		 						payment_ids_list.append(row.payment_id)
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
+		 						#show payment-wise late fees i
+		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+
 		 						if row.idx != 1:
 		 							add_bonus_of_two_eur.append(row.idx)
 		 						row.update({
@@ -215,6 +233,7 @@ def payments_done_by_api(customer):
 		args['new_bonus'] = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
 		args['total_charges'] = 0
 		args['total_amount'] = 0
+		args['late_payment_ids_list'] = late_payment_ids_list
 		args['special_associate'] = "Automatic API"
 		
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")

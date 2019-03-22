@@ -29,6 +29,7 @@ def make_payment_history(args,payment_ids,payments_ids_list,payment_type,merchan
 	payments_history.late_fees_updated = late_fees_updated_status
 	payments_history.assigned_bonus_and_discount = args['assigned_bonus_discount'] if args['assigned_bonus_discount'] else ""
 	payments_history.special_associate = args.get("special_associate")
+	payments_history.late_payment_ids_list = args['late_payment_ids_list']
 	special_associate = args.get("special_associate")
 
 	if payment_type == "Payoff Payment" or payment_type == "Normal Payment":
