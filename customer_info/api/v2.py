@@ -34,18 +34,19 @@ Addding flagged receivables to customer for payment process
 """
 @frappe.whitelist()
 def add_flagged_receivables(customer,flagged_receivables):
-	cust_doc = frappe.get_doc("Customer",customer)
-	if cust_doc and float(flagged_receivables):
-		try:
-			cust_doc.flagged_receivables += float(flagged_receivables)
-			cust_doc.save(ignore_permissions=True)
-			frappe.db.commit()
-			payments_done_by_api(customer)
-			return "%Flagged Receivables are successfully added for customer {0}#".format(cust_doc.name)
-		except Exception, e:
-			raise e
-	else:
-			return "%Invalid Customer#"
+	return "This Api in process"
+	# cust_doc = frappe.get_doc("Customer",customer)
+	# if cust_doc and float(flagged_receivables):
+	# 	try:
+	# 		cust_doc.flagged_receivables += float(flagged_receivables)
+	# 		cust_doc.save(ignore_permissions=True)
+	# 		frappe.db.commit()
+	# 		payments_done_by_api(customer)
+	# 		return "%Flagged Receivables are successfully added for customer {0}#".format(cust_doc.name)
+	# 	except Exception, e:
+	# 		raise e
+	# else:
+	# 		return "%Invalid Customer#"
 
 
 @frappe.whitelist()
@@ -157,7 +158,7 @@ def payments_done_by_api(customer):
 		 						# auto_payment_notification(customer_doc.name,customer_agreement.name,total_charges)
 		 						# print "____Todayspayments__",row.payment_id
 		 				#  Step -6(5) Early Payments (Future Payments)
-		 				if firstDay_of_month <= getdate(row.due_date) and getdate(row.due_date) > now_date:	
+		 				if firstDay_of_month <= getdate(row.due_date) and getdate(row.due_date) > now_date:
 		 					customer_doc = frappe.get_doc("Customer",customer)
 		 					flagged_receivables = customer_doc.flagged_receivables
 		 					if date_diff(now_date,row.due_date) > 3:
