@@ -73,7 +73,7 @@ def payments_done_by_api(customer):
 	add_bonus_of_two_eur = []
 	late_payments = []
 	late_fees = []
-	late_payment_ids_list = []
+	late_payment_ids_list = ""
 	args = {'values':{}}
 		
 	
@@ -113,7 +113,7 @@ def payments_done_by_api(customer):
 		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		 							# late fees calculated row
 		 							row.late_fees_calculated = customer_agreement.late_fees
-		 							row.late_days_calculated = no_of_late_days
+		 							row.late_days_calculated = no_of_late_days if no_of_late_days else 0
 		 						late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:
@@ -123,7 +123,7 @@ def payments_done_by_api(customer):
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
 		 						#show payment-wise late fees i
-		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+		 						late_payment_ids_list += (str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated)+"\n")
 		 						row.update({
 		 							"check_box":1,
 		 							"check_box_of_submit":1,
@@ -145,7 +145,7 @@ def payments_done_by_api(customer):
 		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		 							# late fees calculated row
 		 							row.late_fees_calculated = customer_agreement.late_fees
-		 							row.late_days_calculated = no_of_late_days
+		 							row.late_days_calculated = no_of_late_days if no_of_late_days else 0
 		 					late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:				
@@ -153,7 +153,7 @@ def payments_done_by_api(customer):
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
 		 						#show payment-wise late fees i
-		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
+		 						late_payment_ids_list += (str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated)+"\n")
 
 		 						if row.idx != 1:
 		 							add_bonus_of_one_eur.append(row.idx)
@@ -180,7 +180,7 @@ def payments_done_by_api(customer):
 		 							customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		 							# late fees calculated row
 		 							row.late_fees_calculated = customer_agreement.late_fees
-		 							row.late_days_calculated = no_of_late_days
+		 							row.late_days_calculated = no_of_late_days if no_of_late_days else 0
 		 						late_fees.append(customer_agreement.late_fees)
 		 					total_charges = float(row.monthly_rental_amount) + float(customer_agreement.late_fees)
 		 					if float(flagged_receivables) >= total_charges:
@@ -188,8 +188,7 @@ def payments_done_by_api(customer):
 		 						payments_detalis_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(row.monthly_rental_amount)+"/"+str(now_date))
 		 						monthly_rental_amount.append(row.monthly_rental_amount)
 		 						#show payment-wise late fees i
-		 						late_payment_ids_list.append(str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated))
-		 						print "____________call4"
+		 						late_payment_ids_list += (str(row.payment_id)+"/"+str(row.due_date)+"/"+str(now_date)+"/"+str(row.late_days_calculated)+"(days)"+"/"+str(row.late_fees_calculated)+"\n")
 
 		 						if row.idx != 1:
 		 							add_bonus_of_two_eur.append(row.idx)
