@@ -195,6 +195,7 @@ frappe.ui.form.on("Customer Agreement",{
                 make_new_child_agreement(frm);
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
+            cur_frm.set_df_property("delivery_price","read_only",1)
             refresh_field("agreement_no")
             if(cur_frm.doc.agreement_status == "Open"){
                 cur_frm.add_custom_button(__('Payments Management'),function(){
