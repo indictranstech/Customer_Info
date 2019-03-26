@@ -234,7 +234,7 @@ def payments_done_by_api(customer):
 		args['total_charges'] = 0
 		args['total_amount'] = 0
 		args['late_payment_ids_list'] = late_payment_ids_list
-		args['special_associate'] = "Automatic API"
+		args['special_associate'] = "Automatic API V2"
 		
 		make_payment_history(args,payments_detalis_list,payment_ids_list,"Normal Payment",merchandise_status,"","Rental Payment")
 		cust_doc = frappe.get_doc("Customer",customer)
