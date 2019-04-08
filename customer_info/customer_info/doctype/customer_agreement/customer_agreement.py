@@ -119,8 +119,16 @@ class CustomerAgreement(Document):
 		self.comment_for_agreement_creation()
 		self.change_sold_date_on_agreement_creation()  #change_sold_date_of_item_on_agreement_creation
 		customer_agreement = frappe.get_doc("Customer Agreement",self.name)
-		customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)
-		customer_agreement.payments_left = customer_agreement.agreement_period
+		if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
+			customer_agreement.balance = (customer_agreement.monthly_rental_payment * (float(customer_agreement.agreement_period) -1)) + customer_agreement.delivery_price
+		else:
+			customer_agreement.balance = customer_agreement.monthly_rental_payment * float(customer_agreement.agreement_period)
+		
+		if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
+			customer_agreement.payments_left = (float(customer_agreement.agreement_period) -1)
+		else:
+			customer_agreement.payments_left = customer_agreement.agreement_period
+		# customer_agreement.payments_left = customer_agreement.agreement_period
 		customer_agreement.save(ignore_permissions=True)
 		self.add_item_log()
 		self.get_tirr()
