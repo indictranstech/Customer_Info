@@ -72,6 +72,6 @@ def update_late_fees(customer):
 			agreement_doc.late_fees = total_late_fees
 			agreement_doc.total_due = "{0:.2f}".format(round(total_due,2))
 			agreement_doc.save(ignore_permissions = True)
-
+			frappe.db.commit()
 	except Exception,e:
 		raise e
