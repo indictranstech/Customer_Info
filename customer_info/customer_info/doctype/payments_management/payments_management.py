@@ -701,8 +701,8 @@ def remove_new_bonus(submitted_payments_ids_info):
 def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 	payment_made = []
 	amount_of_payment_left = []
-
 	if customer_agreement.payments_record:
+		
 		# Calculating Payment Made
 		for idx,row in enumerate(customer_agreement.payments_record):
 			if not customer_agreement.without_delivery_fee and  customer_agreement.delivery_price > 0.0:
@@ -755,6 +755,8 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 
 		#if customer_agreement.discount_updated == "No" and customer_agreement.discounted_payments_left > 0 and customer_agreement.discount > 0 and customer_agreement.campaign_discount > 0:
 		#	customer_agreement.discounted_payments_left = float(customer_agreement.discounted_payments_left) - (float(customer_agreement.discount)/float(customer_agreement.campaign_discount))
+		customer_agreement.balance = sum(amount_of_payment_left)
+		# customer_agreement.balance = float(customer_agreement.payments_left) * customer_aamount_of_payment_leftgreement.monthly_rental_payment 
 		# customer_agreement.balance = (len(customer_agreement.payments_record) - len(payment_made)) * customer_agreement.monthly_rental_payment
 		customer_agreement.total_due = 0
 	#customer_agreement.save(ignore_permissions=True)
@@ -962,7 +964,6 @@ def get_summary_records(agreement,receivable,late_fees):
 	for payment in agreement.payments_record:
 		if payment.get("check_box_of_submit") == 1 and payment.no_of_payments != 'Transportation Fee':
 			payment_made += payment.monthly_rental_amount
-	print "-------payment_made-------------------------",payment_made
 	payments_made = "{0:.2f}".format(payment_made)
 
 	if agreement.today_plus_90_days >= datetime.now().date():
