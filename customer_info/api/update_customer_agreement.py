@@ -23,10 +23,10 @@ def update_customer_agreement(customer):
 		return "% Invalid Customer#"
 
 '''
-	1. Get Open Agreement for given customer and iterate
+	1. Get all Open Agreement for given customer and iterate
 	2. Calcualte late-fees for each payment. 
-	3. Add it to total_due.
-	4. Calculate amount_of_payment_left. 
+	3. Calculate amount_of_payment_left. 
+	4. Calculate Total Due
 	5. Save for each agreement.
  
 '''
@@ -53,8 +53,7 @@ def update_late_fees(customer):
 						row.late_fees_calculated = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
 						total_late_fees = float(total_late_fees) + float(row.late_fees_calculated)
 						if no_of_late_days:
-							payment_amt = float(agreement_doc.monthly_rental_payment) + float(row.late_fee_for_payment)
-							total_due = round((total_due + payment_amt),2)
+							total_due = round((total_due +float(agreement_doc.monthly_rental_payment)),2)
 
 				if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < first_day_of_this_month):
 					if date_diff(now_date,row.due_date) > 3:
@@ -62,12 +61,11 @@ def update_late_fees(customer):
 						row.late_fees_calculated = "{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
 						total_late_fees = float(total_late_fees) + float(row.late_fees_calculated)
 						if no_of_late_days:
-							payment_amt = float(agreement_doc.monthly_rental_payment) + float(row.late_fee_for_payment)
-							total_due = round((total_due + payment_amt),2)
+							total_due = round((total_due +float(agreement_doc.monthly_rental_payment)),2)
 				
 				if row.check_box_of_submit == 0:
 					amount_of_payment_left.append(row.monthly_rental_amount)					
-
+			total_due = total_due + total_late_fees
 			agreement_doc.amount_of_payment_left = sum(amount_of_payment_left)
 			agreement_doc.late_fees = total_late_fees
 			agreement_doc.total_due = "{0:.2f}".format(round(total_due,2))
