@@ -394,6 +394,7 @@ render_agreements = function(flag){
   		/*editable: true,*/
   	};
   	var data = [];
+  	
   	frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
             type: "GET",

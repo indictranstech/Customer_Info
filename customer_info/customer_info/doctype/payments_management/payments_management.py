@@ -131,49 +131,77 @@ def calculate_total_charges(customer,flag,payment_date):
 				row.check_box = 1
 				row.payment_date = payment_date
 				if date_diff(payment_date,row.due_date) > 3:
-					late_days =(date_diff(payment_date,row.due_date) - 3)		
-					
-					if late_days < 180 and late_days > 3:						
-						late_days = late_days 
-					elif late_days > 180:
+					late_days =(date_diff(payment_date,row.due_date) - 3)
+					if late_days > 180:
 						late_days = 180
-					late_fee = float("{0:.2f}".format(late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+					late_fee = round(float(late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)),2)
 					if agreement in agreements_and_late_fees_dict.keys():
 						agreements_and_late_fees_dict[agreement] += late_fee
 					else:
 						agreements_and_late_fees_dict[agreement] = late_fee
+					
 					late_fees_of_agreement.append(late_fee)
-					rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
+					rental_amount_of_late_payments.append(row.monthly_rental_amount)
+
+				# if date_diff(payment_date,row.due_date) > 3:
+				# 	late_days =(date_diff(payment_date,row.due_date) - 3)		
+					
+				# 	if late_days < 180 and late_days > 3:						
+				# 		late_days = late_days 
+				# 	elif late_days > 180:
+				# 		late_days = 180
+				# 	late_fee = float("{0:.2f}".format(late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+				# 	"{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
+				# 	"{0:.2f}".format(float(no_of_late_days * agreement_doc.monthly_rental_payment * (agreement_doc.late_fees_rate/100)))
+				# 	if agreement in agreements_and_late_fees_dict.keys():
+				# 		agreements_and_late_fees_dict[agreement] += late_fee
+				# 	else:
+				# 		agreements_and_late_fees_dict[agreement] = late_fee
+				# 	late_fees_of_agreement.append(late_fee)
+				# 	rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 			
 			if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < firstDay_this_month):
 				agreements_due_amount_list.append(row.monthly_rental_amount)
 				row.check_box = 1
 				row.payment_date = payment_date
+				# if date_diff(payment_date,row.due_date) > 3:
+				# 	"""
+				# 		# Earlier Late fees Calculations 
+				# 		# Algorithm changed on request of Ticket Number 208
+				# 	"""
+				# 	late_days =(date_diff(payment_date,row.due_date) - 3)		
+				# 	if late_days < 180 and late_days > 3:						
+				# 		late_days = late_days 
+				# 	elif late_days > 180:
+				# 		late_days = 180
+				# 	late_fee = float("{0:.2f}".format(late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)))
+				# 	late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
+				# 	if agreement in agreements_and_late_fees_dict.keys(): # for adding late fees of all agreements
+				# 		agreements_and_late_fees_dict[agreement] += late_fee
+				# 	else:
+				# 		agreements_and_late_fees_dict[agreement] = late_fee
+				# 	rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
 				if date_diff(payment_date,row.due_date) > 3:
-					"""
-						# Earlier Late fees Calculations 
-						# Algorithm changed on request of Ticket Number 208
-					"""
-					late_days =(date_diff(payment_date,row.due_date) - 3)		
-					if late_days < 180 and late_days > 3:						
-						late_days = late_days 
-					elif late_days > 180:
+					late_days =(date_diff(payment_date,row.due_date) - 3)
+					if late_days > 180:
 						late_days = 180
-					late_fee = float("{0:.2f}".format(late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)))
-					late_fees_of_agreement.append(late_fee) # for adding late fees of agreement
-					if agreement in agreements_and_late_fees_dict.keys(): # for adding late fees of all agreements
+					late_fee = round(float(late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)),2)
+					if agreement in agreements_and_late_fees_dict.keys():
 						agreements_and_late_fees_dict[agreement] += late_fee
 					else:
 						agreements_and_late_fees_dict[agreement] = late_fee
-					rental_amount_of_late_payments.append(row.monthly_rental_amount) # for adding rental payment of late payment of agreement
+					
+					late_fees_of_agreement.append(late_fee)
+					rental_amount_of_late_payments.append(row.monthly_rental_amount)
 
 		customer_agreement.late_payment = sum(rental_amount_of_late_payments)	# 	updating by addition of rental payment of late payment of agreement
 
+		
 		if customer_agreement.late_fees_updated == "No":
 			customer_agreement.late_fees = "{0:.2f}".format(sum(late_fees_of_agreement))
 		if customer_agreement.discount_updated == "Yes":
 			agreements_discount_list.append(customer_agreement.discount)
-
+		# late_fees_of_agreement =map(float,late_fees_of_agreement)
 		if customer_agreement.late_fees_updated == "Yes":
 			agreements_and_late_fees_dict[customer_agreement.name] = customer_agreement.late_fees	
 		customer_agreement.save(ignore_permissions=True)
@@ -260,21 +288,21 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
 
-	for entry in data['list_of_agreement']:
-		entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
-										`tabPayments Record`
-										where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
-		if entry[3] == 0:
-			entry[3] = frappe.db.sql("""select count(payment_id) from
-										`tabPayments Record`
-										where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
-			if entry[3] > 0:
-				entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
-			else:	
-				entry[10] = "{0:.2f}".format(float(entry[9])-float(entry[14]))
+	# for entry in data['list_of_agreement']:
+	# 	entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
+	# 									`tabPayments Record`
+	# 									where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
+	# 	if entry[3] == 0:
+	# 		entry[3] = frappe.db.sql("""select count(payment_id) from
+	# 									`tabPayments Record`
+	# 									where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
+	# 		if entry[3] > 0:
+	# 			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
+	# 		else:	
+	# 			entry[10] = "{0:.2f}".format(float(entry[9])-float(entry[14]))
 
-		if float(entry[3]) > 0:
-			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
+	# 	if float(entry[3]) > 0:
+	# 		entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
 	return data	
 
 
@@ -311,16 +339,159 @@ def set_check_and_uncheck(list_of_payment_id,parent,value=None,pre_select_unchec
 	customer_agreement.save(ignore_permissions = True)
 
 
+# @frappe.whitelist()
+# def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row_to_uncheck=None):
+# 	if flag != "Make Refund" and row_to_uncheck:
+# 		row_to_uncheck = json.loads(row_to_uncheck)
+# 	now_date = datetime.now().date()
+# 	no_of_late_days = 0
+# 	late_payments = []
+
+# 	amount_of_payment_left = []
+	
+# 	add_bonus_of_one_eur = []
+# 	add_bonus_of_two_eur = []
+	
+# 	remove_bonus_of_one_eur = []
+# 	remove_bonus_of_two_eur = []
+	
+# 	received_payments = []
+# 	submitable_payments = []
+
+# 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
+# 	if customer_agreement.payments_record:
+# 		for row in customer_agreement.payments_record:
+# 			if row.check_box == 1 and row.check_box_of_submit == 0:
+# 				received_payments.append(row.monthly_rental_amount)	
+# 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3 and row.check_box == 1 and row.check_box_of_submit == 0:
+# 				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
+# 				late_payments.append(row.monthly_rental_amount)	
+
+# 			if row.check_box_of_submit == 0:
+# 			 	amount_of_payment_left.append(row.monthly_rental_amount)
+			
+# 			if row.check_box_of_submit == 1:
+# 				submitable_payments.append(row.idx)
+			
+# 			if customer_agreement.customer_group == "Individual" and flag != "Payoff" and (customer_agreement.discount_updated == "No" or customer_agreement.discount == 0):# and customer_agreement.document_type == "New":
+# 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
+# 					add_bonus_of_one_eur.append(row.idx)
+# 					row.update({
+# 						'add_bonus_to_this_payment':1,
+# 						'bonus_type':"On Time Bonus"
+# 						})
+# 					row.save(ignore_permissions = True)
+
+# 				elif row.payment_date and row.idx != 1 and getdate(row.payment_date) < getdate(row.due_date)  and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
+# 					add_bonus_of_two_eur.append(row.idx)
+# 					row.update({
+# 						'add_bonus_to_this_payment':1,
+# 						'bonus_type':"Early Bonus"
+# 						})
+# 					row.save(ignore_permissions = True)
+				
+# 				if row_to_uncheck:
+# 					if row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
+# 						remove_bonus_of_one_eur.append(row.idx)
+# 						row.update({
+# 							'add_bonus_to_this_payment':0,
+# 							'bonus_type':""
+# 							})
+# 						row.save(ignore_permissions = True)
+
+# 					elif row.payment_id in row_to_uncheck and row.idx != 1 and getdate(now_date) < getdate(row.due_date) and row.add_bonus_to_this_payment == 1 and (row.check_box_of_submit==0 or row.check_box_of_submit==1):
+# 						remove_bonus_of_two_eur.append(row.idx)	
+# 						row.update({
+# 							'add_bonus_to_this_payment':0,
+# 							'bonus_type':""
+# 							})
+# 						row.save(ignore_permissions = True)
+
+# 	received_payments = map(float,received_payments)
+	
+# 	amount_of_payment_left = map(float,amount_of_payment_left)
+
+# 	late_payments = map(float,late_payments)
+
+# 	add_bonus = len(add_bonus_of_one_eur)*1 + len(add_bonus_of_two_eur)*2
+
+# 	subtract_bonus = len(remove_bonus_of_one_eur)*1 + len(remove_bonus_of_two_eur)*2
+
+# 	if customer_agreement.payments_record and customer_agreement.date:
+# 		customer_agreement.total_late_payments = sum(late_payments)
+# 		customer_agreement.late_payment = sum(late_payments)
+# 		customer_agreement.amount_of_payment_left = sum(amount_of_payment_left)
+# 		customer_agreement.number_of_payments = len(received_payments)
+# 		customer_agreement.payment_on_time_bonus = customer_agreement.payment_on_time_bonus + (len(add_bonus_of_one_eur)*1 - len(remove_bonus_of_one_eur)*1)  # update early payment bonus
+# 		customer_agreement.early_payments_bonus = customer_agreement.early_payments_bonus +  (len(add_bonus_of_two_eur)*2 - len(remove_bonus_of_two_eur)*2) # update on time payment bonus
+		
+		
+# 		# Earlier Late fees Calculations 
+# 		# Algorithm changed on request of Ticket Number 208
+# 		# if customer_agreement.late_fees_updated == "No":
+# 		# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+# 		if customer_agreement.late_fees_updated == "No":
+# 			# late_days_list =[]
+# 			# if no_of_late_days > 0:
+# 			# 	no_of_late_days_greater_than_180 = 0
+# 			# 	if no_of_late_days < 180:
+# 			# 		no_of_late_days_greater_than_180 = no_of_late_days 
+# 			# 	elif no_of_late_days > 180:
+# 			# 		no_of_late_days_greater_than_180 = 180
+# 			# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+
+# 			if no_of_late_days > 3:	
+# 				late_payment_list_with_date = {}
+# 				late_days_list =[]
+# 				for payment_record in customer_agreement.payments_record:
+
+# 					no_of_late_days_new = 0
+# 					no_of_late_days_new += (date_diff(payment_record.payment_date,payment_record.due_date) -3)					
+
+# 					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 3: 
+# 						late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
+# 						maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
+# 						# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
+
+# 						if no_of_late_days_new < 180 and no_of_late_days_new > 3:						
+# 							no_of_late_days_greater_than_180 = no_of_late_days_new 
+# 						elif no_of_late_days_new > 180:
+# 							no_of_late_days_greater_than_180 = 180
+# 						# late_days_list.append("{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100))).encode('utf-8'))
+# 						late_days_list.append(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+# 						customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+# 						# if row_to_uncheck:
+# 						# 	if payment_record.payment_id not in row_to_uncheck:
+# 						# 		customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+# 						# else:
+# 						# 	customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+# 						# else:
+# 						# customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_new * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+
+# 		customer_agreement.bonus = customer_agreement.bonus + add_bonus - subtract_bonus
+# 		# if  flag != "Make Refund":
+# 		# 	customer_agreement.temporary_new_bonus = add_bonus - subtract_bonus
+# 		# else:
+# 		# 	customer_agreement.temporary_new_bonus = 0
+# 		customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
+# 	customer_agreement.save(ignore_permissions=True)
+# 	total_bonus = float(frm_bonus) + add_bonus - float(subtract_bonus)
+
+# 	return str(total_bonus)
+
+
+''' New changes in above set_values_in_agreement_temporary method '''
 @frappe.whitelist()
 def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row_to_uncheck=None):
 	if flag != "Make Refund" and row_to_uncheck:
 		row_to_uncheck = json.loads(row_to_uncheck)
+	
 	now_date = datetime.now().date()
 	no_of_late_days = 0
 	late_payments = []
-
-	amount_of_payment_left = []
 	
+	amount_of_payment_left = []
+
 	add_bonus_of_one_eur = []
 	add_bonus_of_two_eur = []
 	
@@ -329,22 +500,42 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 	
 	received_payments = []
 	submitable_payments = []
+	total_late_fees = 0
+	total_due = 0
 
 	customer_agreement = frappe.get_doc("Customer Agreement",customer_agreement)
+	
 	if customer_agreement.payments_record:
 		for row in customer_agreement.payments_record:
+			
+			# Received Payments
 			if row.check_box == 1 and row.check_box_of_submit == 0:
 				received_payments.append(row.monthly_rental_amount)	
+				
+			# Late Fees
 			if row.due_date and row.payment_date and date_diff(row.payment_date,row.due_date) > 3 and row.check_box == 1 and row.check_box_of_submit == 0:
-				no_of_late_days += date_diff(row.payment_date,row.due_date) - 3
-				late_payments.append(row.monthly_rental_amount)	
+				no_of_late_days = date_diff(row.payment_date,row.due_date) - 3
+				if no_of_late_days > 180:
+					no_of_late_days = 180
+				late_payments.append(row.monthly_rental_amount)
+				late_fees_calculated = round(float(no_of_late_days * row.monthly_rental_amount * (customer_agreement.late_fees_rate/100)),2)
+				row.update({
+					'late_fees_calculated': late_fees_calculated
+				})
+				row.save(ignore_permissions = True)
+				total_late_fees = float(total_late_fees) + float(late_fees_calculated)
+				if no_of_late_days:
+					total_due = round((total_due +float(row.monthly_rental_amount)),2)
 
+			# Payment Left	
 			if row.check_box_of_submit == 0:
 			 	amount_of_payment_left.append(row.monthly_rental_amount)
 			
+			# For Bonus on payment
 			if row.check_box_of_submit == 1:
 				submitable_payments.append(row.idx)
 			
+			# For Bonus on payment
 			if customer_agreement.customer_group == "Individual" and flag != "Payoff" and (customer_agreement.discount_updated == "No" or customer_agreement.discount == 0):# and customer_agreement.document_type == "New":
 				if row.payment_date and row.idx != 1 and getdate(row.payment_date) == getdate(row.due_date) and row.add_bonus_to_this_payment == 0 and row.check_box_of_submit==0 and row.check_box == 1:
 					add_bonus_of_one_eur.append(row.idx)
@@ -403,6 +594,8 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		# if customer_agreement.late_fees_updated == "No":
 		# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 		if customer_agreement.late_fees_updated == "No":
+			customer_agreement.late_fees = total_late_fees
+
 			# late_days_list =[]
 			# if no_of_late_days > 0:
 			# 	no_of_late_days_greater_than_180 = 0
@@ -412,26 +605,26 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 			# 		no_of_late_days_greater_than_180 = 180
 			# 	customer_agreement.late_fees = "{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
 
-			if no_of_late_days > 3:	
-				late_payment_list_with_date = {}
-				late_days_list =[]
-				for payment_record in customer_agreement.payments_record:
+			# if no_of_late_days > 3:	
+			# 	late_payment_list_with_date = {}
+			# 	late_days_list =[]
+			# 	for payment_record in customer_agreement.payments_record:
 
-					no_of_late_days_new = 0
-					no_of_late_days_new += (date_diff(payment_record.payment_date,payment_record.due_date) -3)					
+			# 		no_of_late_days_new = 0
+			# 		no_of_late_days_new += (date_diff(payment_record.payment_date,payment_record.due_date) -3)					
 
-					if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 3: 
-						late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
-						maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
-						# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
+			# 		if payment_record.check_box_of_submit == 0 and no_of_late_days_new > 3: 
+			# 			late_payment_list_with_date[payment_record.payment_id] = payment_record.due_date
+			# 			maximum = min(late_payment_list_with_date, key=late_payment_list_with_date.get)
+			# 			# late_date = (late_payment_list_with_date[maximum] + timedelta(days=180))
 
-						if no_of_late_days_new < 180 and no_of_late_days_new > 3:						
-							no_of_late_days_greater_than_180 = no_of_late_days_new 
-						elif no_of_late_days_new > 180:
-							no_of_late_days_greater_than_180 = 180
-						# late_days_list.append("{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100))).encode('utf-8'))
-						late_days_list.append(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
-						customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
+			# 			if no_of_late_days_new < 180 and no_of_late_days_new > 3:						
+			# 				no_of_late_days_greater_than_180 = no_of_late_days_new 
+			# 			elif no_of_late_days_new > 180:
+			# 				no_of_late_days_greater_than_180 = 180
+			# 			# late_days_list.append("{0:.2f}".format(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100))).encode('utf-8'))
+			# 			late_days_list.append(float(no_of_late_days_greater_than_180 * customer_agreement.monthly_rental_payment * (customer_agreement.late_fees_rate/100)))
+						# customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
 						# if row_to_uncheck:
 						# 	if payment_record.payment_id not in row_to_uncheck:
 						# 		customer_agreement.late_fees = "{0:.2f}".format(sum(late_days_list))
@@ -445,12 +638,13 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		# 	customer_agreement.temporary_new_bonus = add_bonus - subtract_bonus
 		# else:
 		# 	customer_agreement.temporary_new_bonus = 0
-		customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
+		# customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
+		total_due = total_due + total_late_fees
+		customer_agreement.total_due = "{0:.2f}".format(round(total_due,2))
 	customer_agreement.save(ignore_permissions=True)
 	total_bonus = float(frm_bonus) + add_bonus - float(subtract_bonus)
 
 	return str(total_bonus)
-
 
 @frappe.whitelist()
 def get_next_due_date(date,i):
@@ -712,10 +906,12 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			else:
 				if row.check_box_of_submit == 1:
 					payment_made.append(row.monthly_rental_amount)
+		
 		# calculating amount_of_payment_left
 		for idx,row in enumerate(customer_agreement.payments_record):
 			if row.check_box_of_submit == 0: 
 				amount_of_payment_left.append(row.monthly_rental_amount)
+		
 		# Seting current_due_date,next_due_date
 		for index,row in enumerate(customer_agreement.payments_record):
 			if row.check_box_of_submit == 0 and row.idx > 1 and row.idx < len(customer_agreement.payments_record):
@@ -735,6 +931,7 @@ def set_values_in_agreement_on_submit(customer_agreement,flag=None):
 			# 	customer_agreement.current_due_date = customer_agreement.date
 			# 	customer_agreement.next_due_date = get_next_due_date(row.due_date,1)
 			# 	break	
+	
 	payment_made = map(float,payment_made)
 	
 	if customer_agreement.payments_record and customer_agreement.date:
