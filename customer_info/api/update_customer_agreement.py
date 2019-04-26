@@ -50,6 +50,8 @@ def update_late_fees(customer):
 				if row.check_box_of_submit == 0 and getdate(row.due_date) >= firstDay_of_month and getdate(row.due_date) <= now_date:
 					if date_diff(now_date,row.due_date) > 3:
 						no_of_late_days = date_diff(now_date,row.due_date) - 3
+						if no_of_late_days > 180:
+							no_of_late_days = 180
 						row.late_fees_calculated = "{0:.2f}".format(float(no_of_late_days * row.monthly_rental_amount * (agreement_doc.late_fees_rate/100)))
 						total_late_fees = float(total_late_fees) + float(row.late_fees_calculated)
 						if no_of_late_days:
@@ -58,6 +60,8 @@ def update_late_fees(customer):
 				if (row.pre_select_uncheck == 0 and row.check_box_of_submit == 0 and getdate(row.due_date) < first_day_of_this_month):
 					if date_diff(now_date,row.due_date) > 3:
 						no_of_late_days = date_diff(now_date,row.due_date) - 3
+						if no_of_late_days > 180:
+							no_of_late_days = 180
 						row.late_fees_calculated = "{0:.2f}".format(float(no_of_late_days * row.monthly_rental_amount * (agreement_doc.late_fees_rate/100)))
 						total_late_fees = float(total_late_fees) + float(row.late_fees_calculated)
 						if no_of_late_days:
