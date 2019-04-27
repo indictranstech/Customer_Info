@@ -52,7 +52,6 @@ frappe.ui.form.on("Payments Management", {
 			_get_bonus_summary();
 			get_bonus_link();
 			get_address_of_customer()
-			// console.log("render 2")
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -66,7 +65,6 @@ frappe.ui.form.on("Payments Management", {
 			calculate_total_charges("Customer");
 			_get_bonus_summary();
 			get_address_of_customer();	
-			// console.log("render 1")		
 			render_agreements();
 			render_suspended_agreements();
 			change_color_of_debtor_button()
@@ -81,6 +79,7 @@ frappe.ui.form.on("Payments Management", {
 		new bonus_summary()
 	},
 	submit:function(){
+		// On Process Payments payoff_details will call.
 		if(cur_frm.doc.customer){
 			var me = "Process Payments";
 			new payoff_details(me)
@@ -258,10 +257,12 @@ calculate_total_charges = function(flag){
     	}	
     });
 }
-
+/*
+	Common function to render agreemnet in SlickGrid ..!!
+*/
 render_agreements = function(flag){
 	var grid;
-	// console.log("render agreements-----------------")
+	console.log("render agreements-----------------")
 	var buttonFormat_detail = function (row, cell, value, columnDef, dataContext) {
 		return "<input type='button' value='Detail' agreement = "+dataContext['agreement_no']+" class='detail' style='height:20px;padding: 0px;width: 70px;'; />";    
 	}
@@ -393,6 +394,7 @@ render_agreements = function(flag){
   		/*editable: true,*/
   	};
   	var data = [];
+  	
   	frappe.call({
             method: "customer_info.customer_info.doctype.payments_management.payments_management.get_customer_agreement",
             type: "GET",
@@ -645,7 +647,7 @@ bonus_summary = Class.extend({
 	}
 })
 
-
+// Bonus Related Methods
 edit_bonus = Class.extend({
 	init:function(bonus){
 		this.bonus = bonus;
@@ -769,6 +771,7 @@ edit_bonus = Class.extend({
 	}
 });	
 
+// Campaign Discount Related Methods
 edit_campaign_discount = Class.extend({
 	init:function(id,item){
 		this.item = item;
@@ -869,6 +872,7 @@ edit_campaign_discount = Class.extend({
 	}	
 })
 
+// Due date change method
 edit_current_due_date = Class.extend({
 	init:function(id,item){
 		this.item = item;
@@ -929,7 +933,7 @@ edit_current_due_date = Class.extend({
 	}
 })
 
-
+//Late fee Related
 edit_late_fees = Class.extend({
 	init:function(id,item){
 		this.item = item;
@@ -1001,22 +1005,7 @@ edit_late_fees = Class.extend({
 	    });
 	}
 })
-
-// call dialogue=Class.extend({
-// 	init:function(id,item){
-// 		this.item=item;
-// 		this.id=id;
-// 		this.get_contact_result()
-// 	},
-// 	get_contact_result:function(){
-// 		var me  = this;
-// 		this.dialog = new frappe.ui.Dialog({
-// 	}
-// });
-// 		this.dialog.show();
-// }
-
-
+// Call Commit 
 call_commit = Class.extend({
 	init:function(id,item){
 		this.item = item;

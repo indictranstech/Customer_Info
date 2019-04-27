@@ -412,11 +412,13 @@ payoff_details = Class.extend({
 				me.update_payments_records();
 			}
 			else{
+				/* Called when processing Payoff Payment  */
 				me.payoff_submit();	
 			}
 		});
 	},
 	payoff_submit:function(){
+		console.log("Payoff Submit")
 		var me = this;
 		frappe.call({
 	        method: "customer_info.customer_info.doctype.payments_management.payments_management.update_payments_records_on_payoff_submit",
@@ -468,6 +470,9 @@ payoff_details = Class.extend({
 	    });
 	},
 	update_payments_records:function(){
+		/*
+			Method will update processed payment &, late fees in agreement
+		*/
 		var me = this;
 		value = me.dialog.get_values();
 		frappe.call({

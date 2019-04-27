@@ -19,7 +19,6 @@ var print_format_mapper = {
 frappe.ui.form.on("Customer Agreement",{
 	payment_day:function(frm){
 		if(cur_frm.doc.payment_day && cur_frm.doc.__islocal){
-            console.log("in payment_day")
 			cur_frm.doc.old_date = cur_frm.doc.payment_day
 			refresh_field("old_date")
 		}
@@ -29,19 +28,14 @@ frappe.ui.form.on("Customer Agreement",{
                 method: "change_due_dates_in_child_table",
                 doc: frm.doc,
                 callback: function(r){
-                    console.log(r.message)
                 }   
             });
         }
 	},
-    // without_delivery_fee:function (frm) {
-    //     frappe.msgprint("You Are Not Able To Add Transportation Fee")
-    // },
     update_due_date:function(frm){
         if(cur_frm.doc.payment_day && !cur_frm.doc.__islocal && cur_frm.doc.payments_record && cur_frm.doc.update_due_date){
             cur_frm.doc.due_date_of_next_month = cur_frm.doc.update_due_date
             refresh_field("due_date_of_next_month")
-            console.log(cur_frm.doc.due_date_of_next_month,"due_date_of_next_month")
             frappe.call({
                 method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.update_due_dates_of_payments",
                 args:{
@@ -74,7 +68,6 @@ frappe.ui.form.on("Customer Agreement",{
                 },
              	callback: function(r){
                     if(r.message){
-                        //cur_frm.set_value("address",r.message[0]['name'])
                         cur_frm.set_value("address_line1",r.message[0]['address_line1'])
                         cur_frm.set_value("city",r.message[0]['city'])
                         if(r.message[0]['address_line2']){
@@ -85,7 +78,6 @@ frappe.ui.form.on("Customer Agreement",{
                         }
                     }
                     else{
-                        //cur_frm.set_value("address","")
                         cur_frm.set_value("city","")
                         cur_frm.set_value("address_line1","")
                         cur_frm.set_value("address_line2","")   
@@ -138,12 +130,6 @@ frappe.ui.form.on("Customer Agreement",{
             cur_frm.doc.old_merchandise_status = cur_frm.doc.merchandise_status
             refresh_field("old_merchandise_status")
         }
-        /*if(cur_frm.doc.agreement_period && cur_frm.doc.__islocal){
-            cur_frm.doc.payments_left = cur_frm.doc.agreement_period
-            refresh_field("payments_left")
-            cur_frm.set_value("discounted_payments_left",cur_frm.doc.agreement_period)
-            cur_frm.set_value("balance",cur_frm.doc.monthly_rental_payment * flt(cur_frm.doc.agreement_period))
-        }*/
         if(cur_frm.doc.product){
             cur_frm.set_df_property("product","read_only",1)
         }
@@ -152,46 +138,12 @@ frappe.ui.form.on("Customer Agreement",{
         }
         if(cur_frm.doc.agreement_status != "Updated"){
             cur_frm.set_df_property("agreement_update_date","hidden",1)    
-        }
-        
-        /*if(cur_frm.doc.product_category && cur_frm.doc.product){
-            cur_frm.set_value("concade_product_name_and_category",cur_frm.doc.product_category + " " + cur_frm.doc.product)
-        }*/
-        /*if(cur_frm.doc.__islocal){ //add bonus of new agreement
-            if(cur_frm.doc.customer_group == "Individual"){    
-                frappe.call({
-                    async:false,
-                    method: "frappe.client.get_value",
-                    args: {
-                        doctype: "Customer Agreement",
-                        fieldname: "name",
-                        filters: { customer: cur_frm.doc.customer },
-                    },
-                    callback: function(res){
-                        if (res && res.message){
-                            cur_frm.set_value("bonus",20)
-                            cur_frm.set_value("new_agreement_bonus",20)
-                        }
-                    }   
-                });
-                frappe.call({
-                    async:false,
-                    method: "customer_info.customer_info.doctype.customer_agreement.customer_agreement.set_bonus_in_customer",
-                    args: {
-                        "customer": cur_frm.doc.customer,
-                        "bonus":cur_frm.doc.bonus
-                    },
-                    callback: function(res){
-                    }   
-                });
-            }
-        }*/         
+        }      
     },
     refresh:function(frm){
         $('.page-icon-group').hide();
         if(!cur_frm.doc.__islocal){
             cur_frm.add_custom_button(__('Update Agreement'),function(){
-                //make_update_agreement();
                 make_new_child_agreement(frm);
             });
             cur_frm.set_df_property("agreement_no","hidden",0)
@@ -281,7 +233,6 @@ frappe.ui.form.on("Customer Agreement",{
         }
     },
     product_category:function(frm){
-        console.log("knknbkkngk")
         frappe.call({
             method: "frappe.client.get_value",
             args: {
@@ -323,34 +274,6 @@ function make_new_child_agreement(frm){
     locals['Customer Agreement'][tn].agreement_status_changed_date = frappe.datetime.nowdate()
     frappe.set_route('Form', 'Customer Agreement', tn);
 }
-
-//date_of_next_month_according_to_payment_day
-/*date_of_next_month_according_to_payment_day = function(frm){
-    var date_after_one_month = frappe.datetime.add_months(cur_frm.doc.date,1)
-    var newDate = new Date(date_after_one_month)
-    var a = parseInt(cur_frm.doc.date.substr(-2))
-    var b = parseInt(cur_frm.doc.payment_day)
-    if(a > b){
-        var c = a - b
-        cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
-        refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
-    }
-    if(a < b){
-        var c = b - a
-        cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
-        refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
-    }
-    if(a == b){
-        cur_frm.doc.due_date_of_next_month = newDate
-        refresh_field("due_date_of_next_month")
-        cur_frm.set_value("current_due_date",cur_frm.doc.due_date_of_next_month)
-        cur_frm.set_value("next_due_date",cur_frm.doc.due_date_of_next_month)    
-    }
-}*/
 date_of_next_month_according_to_payment_day = function(frm){
     var date_after_one_month = frappe.datetime.add_months(cur_frm.doc.date,1)
     var newDate = new Date(date_after_one_month)
@@ -358,7 +281,6 @@ date_of_next_month_according_to_payment_day = function(frm){
     var b = parseInt(cur_frm.doc.payment_day)
     if(a > b){
         var c = a - b
-        //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate()-c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,-c))
         refresh_field("due_date_of_next_month")
         cur_frm.set_value("current_due_date",cur_frm.doc.date)
@@ -366,7 +288,6 @@ date_of_next_month_according_to_payment_day = function(frm){
     }
     if(a < b){
         var c = b - a
-        //cur_frm.doc.due_date_of_next_month = new Date(newDate.setDate(newDate.getDate() + c))
         cur_frm.doc.due_date_of_next_month = new Date(frappe.datetime.add_days(newDate,+c))
         refresh_field("due_date_of_next_month")
         cur_frm.set_value("current_due_date",cur_frm.doc.date)
@@ -384,12 +305,9 @@ date_of_next_month_according_to_payment_day = function(frm){
     }
 }
 
-
-
 //update_due_date_in_payments_records_according_to_payment_day
 get_update_due_date = function(due_date_of_next_month,i){
     var CurrentDate = new Date(due_date_of_next_month);
-    console.log(((new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i))) instanceof Date),"dates")
     return new Date(CurrentDate.setMonth(CurrentDate.getMonth() + i));
 }
 
