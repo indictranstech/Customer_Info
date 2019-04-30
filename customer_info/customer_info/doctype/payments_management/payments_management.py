@@ -288,21 +288,21 @@ def get_customer_agreement(customer,payment_date,flag=None):
 										where customer = '{0}' {1} """.format(customer,condition,suspended_until_date),as_list=1)
 	}
 
-	# for entry in data['list_of_agreement']:
-	# 	entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
-	# 									`tabPayments Record`
-	# 									where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
-	# 	if entry[3] == 0:
-	# 		entry[3] = frappe.db.sql("""select count(payment_id) from
-	# 									`tabPayments Record`
-	# 									where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
-	# 		if entry[3] > 0:
-	# 			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
-	# 		else:	
-	# 			entry[10] = "{0:.2f}".format(float(entry[9])-float(entry[14]))
+	for entry in data['list_of_agreement']:
+		# entry[7] = float(entry[1]) - frappe.db.sql("""select count(payment_id) from
+		# 								`tabPayments Record`
+		# 								where parent = '{1}' and check_box_of_submit = 1 """.format(payment_date,entry[0]),as_list=1)[0][0]
+		# # if entry[3] == 0:
+		# 	entry[3] = frappe.db.sql("""select count(payment_id) from
+		# 								`tabPayments Record`
+		# 								where parent = '{1}' and check_box =1 and check_box_of_submit = 0 """.format(payment_date,entry[0]),as_list=1)[0][0]
+		if entry[3] > 0:
+			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
+		else:	
+			entry[10] = "{0:.2f}".format(float(entry[9])-float(entry[14]))
 
-	# 	if float(entry[3]) > 0:
-	# 		entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
+		if float(entry[3]) > 0:
+			entry[10] = "{0:.2f}".format(float(entry[4])*float(entry[3])+ float(entry[9])-float(entry[14]))
 	return data	
 
 
@@ -639,7 +639,7 @@ def set_values_in_agreement_temporary(customer_agreement,frm_bonus,flag=None,row
 		# else:
 		# 	customer_agreement.temporary_new_bonus = 0
 		# customer_agreement.total_due = "{0:.2f}".format(len(received_payments) * customer_agreement.monthly_rental_payment + (no_of_late_days * customer_agreement.monthly_rental_payment * 0.02))
-		total_due = total_due + total_late_fees
+		total_due = total_due + customer_agreement.late_fees
 		customer_agreement.total_due = "{0:.2f}".format(round(total_due,2))
 	customer_agreement.save(ignore_permissions=True)
 	total_bonus = float(frm_bonus) + add_bonus - float(subtract_bonus)
