@@ -2249,6 +2249,8 @@ def validate_payment_for_irr(payment,payments_rental_amount,agreement):
 
 def get_late_fees(agreement_name,date1,date2,rental_payment):
 	date_diffirence = date_diff(date2,date1)
+	if date_diffirence > 180:
+		date_diffirence = 180
 	late_fees_amount = 0
 	agreement_doc = frappe.get_doc("Customer Agreement",agreement_name)
 	if flt(date_diffirence) > 3:
