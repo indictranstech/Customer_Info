@@ -70,6 +70,7 @@ def update_late_fees(customer):
 				if row.check_box_of_submit == 0:
 					amount_of_payment_left.append(row.monthly_rental_amount)					
 			total_due = total_due + total_late_fees
+			agreement_doc.payments_left = len(amount_of_payment_left)
 			agreement_doc.amount_of_payment_left = sum(amount_of_payment_left)
 			agreement_doc.late_fees = total_late_fees
 			agreement_doc.total_due = "{0:.2f}".format(round(total_due,2))
